@@ -18,16 +18,17 @@ from os import remove
 
 # Clase usada por xml.sax para procesar el archivo.xml
 class Ofertas( xml.sax.ContentHandler ):
-    def __init__(self, corresDiaDistancia):
+    def __init__(self, listaMaterias, corresDiaDistancia):
         self.filas = []
         self.celda = ""
         self.tuplas = []
+        self.listaMaterias = listaMaterias
         self.corresDiaDistancia = corresDiaDistancia
         self.ultimoDia = ''
         self.patronDia = "(L[Uu][Nn](es)?|M[Aa][Rr](tes)?|M[Ii][Eeé]([Rr]|rcoles)?|" \
             + "[Jj][Uu][Ee](ves)?|V[Ii][Ee]([Rr]|nes)?)"
         self.patronHoras = "\d{1,2}-\d{1,2}"
-        self.patronMateria = "\w\w-?\d\d\d\d"
+        self.patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
         self.patronHorario = "(" + self.patronDia + "(\s*-\s*" + self.patronDia + ")?" \
          + "(\s+|;)" + self.patronHoras + "(\s+|;)?){1,2}"
         self.patronBloque = "[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+\D"
@@ -38,10 +39,10 @@ class Ofertas( xml.sax.ContentHandler ):
    # Call when an elements ends
     def endElement(self, tag):
         if tag == "table:table-row":
-            #print("table:table-row", self.filas, end='\n\n')
-            self.tuplas.append(self.filas)
+            if self.filas and self.filas[0] in self.listaMaterias:
+                print("table:table-row", self.filas, end='\n')
+                self.tuplas.append(self.filas)
             self.filas = []
-            #self.ultimoDia = ''
             self.celda = ""
 
         if tag == "table:table-cell":
@@ -49,7 +50,7 @@ class Ofertas( xml.sax.ContentHandler ):
             searchMateria = re.search(self.patronMateria,self.celda, re.I)
             if searchMateria:
                 #print("Materia", searchMateria.group())
-                self.filas.append(searchMateria.group())
+                self.filas.append(self.normalizarMateria(searchMateria.group()))
 
             searchBloque = re.search(self.patronBloque,self.celda, re.I)
             if searchBloque:
@@ -102,6 +103,13 @@ class Ofertas( xml.sax.ContentHandler ):
 
         return nuevoTxt
 
+    def normalizarMateria(self,txt):
+        mat = ""
+        for char in txt:
+            if char != ' ' and char != '-':
+                mat += char
+        return mat
+
 def componerHorarioCSV(listaHorarios):
    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
    ultimoDia = ''
@@ -150,7 +158,7 @@ def dividirStr(txt, delim = " "):
    return cadena
 
 # Función principal exportada para otros modulos.
-def procesarDOC(nombreArchivoEntrada,fdSalida):
+def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
     corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
     # create an XMLReader
     parser = xml.sax.make_parser()
@@ -158,7 +166,7 @@ def procesarDOC(nombreArchivoEntrada,fdSalida):
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
     # override the default ContextHandler
-    Handler = Ofertas(corresDiaDistancia)
+    Handler = Ofertas(listaMaterias, corresDiaDistancia)
     parser.setContentHandler( Handler )
     parser.parse(nombreArchivoEntrada)
 
@@ -192,10 +200,15 @@ if ( __name__ == "__main__"):
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
+    listaMateriasComputo = ["CO4411","CO5212", "CO5213", "CO5313", "CO5412",
+        "CO5413","CO5422", "CO5423","CO5511","CO5512","CO6315","CO6345",
+        "CO6412","CO6531","CO6532","CO6612"]
+
+    listaMateriasPB = ["PB5671" ,"PB5611"]
     # override the default ContextHandler
-    Handler = Ofertas(corresDiaDistancia)
+    Handler = Ofertas(listaMateriasComputo, corresDiaDistancia)
     parser.setContentHandler( Handler )
-    parser.parse("OfertaPB.xml")
+    parser.parse("OfertaComputo.xml")
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,HORARIO)
     if isfile('OfertaDOC.csv'):
@@ -207,7 +220,7 @@ if ( __name__ == "__main__"):
     f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
     acum = ""
     #print("Filas", Handler.tuplas[1:])
-    for fil in Handler.tuplas[1:]:
+    for fil in Handler.tuplas:
       #Eliminar Len si todos las filas deben tener horario
       if len(fil) > 1:
          #print("Fila", fil, fil[1:])
@@ -222,7 +235,7 @@ if ( __name__ == "__main__"):
          acum += componerHorarioCSV(horariosOrdenados)
       else:
          acum = fil[0] + ',A'
-      #print("Al escribir", acum)
+      print("Al escribir", acum)
       f.write(acum + '\n')
       acum = ""
     f.close()

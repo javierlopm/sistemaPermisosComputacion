@@ -15,9 +15,15 @@ def imprimirResultados(mensaje,listaOfertas):
 if __name__ == '__main__':
     # if isfile('ListaDACE.csv'):
     #     remove('ListaDACE.csv')
-    longEntrada = len(sys.argv)
-    nomArchivoDace = sys.argv[longEntrada - 2]
-    nomArchivoSalida = sys.argv[longEntrada - 1]
+    nomArchivoDace = sys.argv[-2]
+    nomArchivoSalida = sys.argv[-1]
+    nomArchivoMaterias = sys.argv[1]
+
+    # Obtener las materias requeridas
+    listaMaterias = []
+    for materia in open(nomArchivoMaterias, 'r'):
+        listaMaterias.append(materia.rstrip(' \t\n\r'))
+    print(listaMaterias)
 
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
@@ -34,7 +40,7 @@ if __name__ == '__main__':
             listaOfertas = listaDACE
 
         if  ext == ".xml":
-            procesarDOC(archivo, listaOfertas)
+            procesarDOC(archivo,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
             procesarPDF(archivo, listaOfertas)
         elif ext == ".xls" or ext == ".xlsx":
@@ -42,11 +48,34 @@ if __name__ == '__main__':
 
     listaOfertas = temp
     print("\nOfertas cargadas con éxito")
+
+    materiasDacePorBorrar = []
+    filaEncontrada = False
     # Realizar comparación entre listas del dpto y las listas de DACE
+
+    for filaDace in listaDACE:
+        for filaOfertas in listaOfertas:
+            # Comprobar materia y bloque, salvo las materias CI
+            if filaOfertas[0] == filaDace[0] \
+                and filaOfertas[1] == filaDace[1] \
+                and (not (filaDace[0][0] == 'C' \
+                        and filaDace[0][1] == 'I')):
+                filaEncontrada = True
+                break
+        # Caso 2:
+        if not filaEncontrada:
+            materiasDacePorBorrar.append(filaDace)
+            procesado.append(filaDace + ['-','0800','E'])
+            filaEncontrada = False
+
+    # Descartar las materias de la lista de DACE
+    # que no se encuentren en la oferta de dptos
+    for filaPorBorrar in materiasDacePorBorrar:
+        listaDACE.remove(filaPorBorrar)
+
     filaEncontrada = None
     materiasCompIncorporadas = False
-    while listaOfertas:
-        filaOfertas = listaOfertas.pop()
+    for filaOfertas in listaOfertas:
         for filaDace in listaDACE:
             # Incorporar las materias de computación
             if (not materiasCompIncorporadas) and filaDace[0][0] == 'C' \
@@ -93,5 +122,5 @@ if __name__ == '__main__':
     #imprimirResultados("Materias que existen", procesado)
     #fdDace.close()
 
-# OfertaMatematicas.xls OfertaComputo.xml OfertaID.xlsx OfertaCE.xls OfertaSIG.pdf 0800DACE.xls OfertaProcesadas.csv
+# materiasRequeridas.txt OfertaMatematicas.xls OfertaComputo.xml OfertaID.xlsx OfertaCE.xls OfertaSIG.pdf 0800DACE.xls OfertaProcesadas.csv
 

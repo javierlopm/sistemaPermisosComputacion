@@ -182,7 +182,7 @@ def procesarPDF(nombreArchivoEntrada, fdSalida):
 if ( __name__ == "__main__"):
     #Diccionario para distancias entre comas
     corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
-    doc = fitz.open('OfertaSIG.pdf')
+    doc = fitz.open('PENSUM2013.pdf')
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namepsaces
@@ -191,16 +191,14 @@ if ( __name__ == "__main__"):
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
-    if isfile('OfertSIG.csv'):
-        remove('OfertSIG.csv')
+    if isfile('PENSUM2013.csv'):
+        remove('PENSUM2013.csv')
 
-    salida = open('OfertSIG.csv', 'a')
-    salida.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
     #for num in range(0,doc.pageCount - 1):
         #print("Pagina: ", num)
         # Procesar los PDFs usando MuPDF. Se extrae el texto del documento en
         # archivo XML.
-    page = doc.loadPage(0)
+    page = doc.loadPage(16)
     xmlText = page.getText(output = "xml")
     f = open('textPDFXML0.xml', 'w')
     f.write(xmlText)
@@ -216,6 +214,9 @@ if ( __name__ == "__main__"):
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
     nroCampo = 0
+    salida = open('PENSUM2013.csv', 'a')
+    salida.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+
     for fil in Handler.tuplas[1:]:    #Eliminar residuos de la cabecera
         for txt in fil:
             nroCampo += 1
@@ -247,8 +248,9 @@ if ( __name__ == "__main__"):
             row += ((5 - corresDiaDistancia[ultimoDia]) * ',-')
 
         row = row [1:]    #Remover la primera coma (,)
-        salida.write(row + '\n')
-        print(row) #para debugging
+        if row:
+            salida.write(row + '\n')
+            print(row) #para debugging
         row = ""
         ultimoDia = ''
         nroCampo = 0
@@ -261,6 +263,4 @@ if ( __name__ == "__main__"):
     # f = open('jsonPDF.txt', 'w')
     # f.write(xmlText)
     # f.close()
-
-#pdftohtml -xml -stdout OfertaSIG.pdf | pdftable -f OfertaSIG%d.csv
 
