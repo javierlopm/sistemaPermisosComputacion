@@ -11,10 +11,8 @@ buildform:
 builddownloader:
 	pyinstaller coord_downloader.py
 	cp -R /usr/local/selenium dist/coord_downloader
+	cp carnets.txt dist/coord_downloader
 	tar -zcvf coord_downloader.tar.gz dist/coord_downloader
-# /home/javierlopm/.virtualenvs/appointment/lib/python2.7/site-packages/selenium/webdriver/firefox/webdriver_prefs.json
-# cp $VIRTUAL_ENV/lib/python2.7/site-packages/selenium/webdriver/firefox/webdriver_prefs.json selenium/webdriver/firefox
-
 
 cleanup: buildform builddownloader
 	rm -rf build
