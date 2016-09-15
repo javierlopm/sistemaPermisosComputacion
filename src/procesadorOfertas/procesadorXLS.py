@@ -38,14 +38,11 @@ def analizarCabecera(cabecera):
     else:
         return (False,posCamposValidos, posCamposInvalidos, existeCarrera, campoCarrera)
 
-def filtrarHorario(txt):
-    return len(txt) == 3 and txt[0].isdigit() and txt[1] == '-' and txt[2].isdigit()
-
 def filtrarBloque(txt):
-    return len(txt) == 1 and txt.isalpha()
+    return len(txt) == 1 and txt[0].isalpha()
 
 def filtrarMateria(txt):
-  #print("TXT", txt)
+    #print("TXT", txt)
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
@@ -97,7 +94,7 @@ if ( __name__ == "__main__"):
         else:
             #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
-            #print(entrada)
+            #print("Nueva linea", entrada)
             if existeCarrera and \
                 (not re.search("0800",str(entrada[campoCarrera]))):
                 continue
@@ -109,14 +106,14 @@ if ( __name__ == "__main__"):
 
                 if filtrarMateria(entrada[pos]) \
                     or filtrarBloque(entrada[pos]) \
-                    or filtrarHorario(entrada[pos]) \
+                    or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
                     or entrada[pos] == '-':
                     nuevaEntrada += ',' + entrada[pos]
 
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != '-' :
-                print(nuevaEntrada) # Para debugging
-            #f.write(','.join(entrada) + "\n")
+                print("Nueva entrada", nuevaEntrada) # Para debugging
+                #f.write(','.join(entrada) + "\n")
     # f.close()
 
 
