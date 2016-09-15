@@ -14,7 +14,7 @@ builddownloader:
 	cp carnets.txt dist/coord_downloader
 	tar -zcvf coord_downloader.tar.gz dist/coord_downloader
 
-cleanup: buildform builddownloader
+cleanup: builddownloader
 	rm -rf build
 	rm -rf dist
 	rm -f *.spec
