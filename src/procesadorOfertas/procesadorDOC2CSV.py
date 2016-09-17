@@ -193,3 +193,5 @@ if ( __name__ == "__main__"):
    # # print(sorted(prueba,key=ordenarDias))
    # horarios = sorted(prueba,key=ordenarDias)
    # print(componerHorarioCSV(horarios))
+
+#"C:\Program Files (x86)\LibreOffice 5\program\soffice.exe" --headless -convert-to xml oferta-computo-sd2016-version-final.doc

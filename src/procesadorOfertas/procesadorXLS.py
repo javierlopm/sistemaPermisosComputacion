@@ -7,7 +7,6 @@ import re
 def analizarCabecera(cabecera):
     nroCampo = 0
     posCamposValidos = []
-    posCamposInvalidos = []
     existeCarrera = False
     campoCarrera = -1
     patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
@@ -22,21 +21,17 @@ def analizarCabecera(cabecera):
         if searchCodMateria or searchHorario or searchBloque:
             #posCamposValidos.append((nroCampo,celda)) #para debugging
             posCamposValidos.append(nroCampo)
-        else:
-            if searchCarrera:
+        elif searchCarrera:
                 existeCarrera = True
                 campoCarrera = nroCampo
-            posCamposInvalidos.append(nroCampo)
         nroCampo += 1
 
     #print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
     #print("posCamposInvalidos: ",posCamposInvalidos)
-
-    #print("NroCampos",len(posCamposValidos))
     if len(posCamposValidos) == 7:
-        return (True,posCamposValidos, posCamposInvalidos, existeCarrera, campoCarrera)
+        return (True,posCamposValidos, existeCarrera, campoCarrera)
     else:
-        return (False,posCamposValidos, posCamposInvalidos, existeCarrera, campoCarrera)
+        return (False,posCamposValidos, existeCarrera, campoCarrera)
 
 def filtrarBloque(txt):
     return len(txt) == 1 and txt[0].isalpha()
@@ -67,7 +62,7 @@ if ( __name__ == "__main__"):
     bookCE = open_workbook('OfertaCE.xls')
     bookID = open_workbook('OfertaID.xlsx')
     bookMAT = open_workbook('OfertaMatematicas.xls')
-    sheet0 = bookID.sheet_by_index(0)
+    sheet0 = bookMAT.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
     if isfile('OfertaXLS.csv'):
@@ -87,7 +82,6 @@ if ( __name__ == "__main__"):
         if not cabeceraProcesada:
             (cabeceraProcesada, \
              posCamposValidos, \
-             posCamposInvalidos, \
              existeCarrera, \
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
             #print(sheet0.row_values(nroFila), cabeceraProcesada, "\n\n")
