@@ -1,7 +1,13 @@
-#!/usr/bin/python 3.5
+#!/usr/bin/python3.5
+#!/usr/bin/python3.4
+
 # Nombre: Daniel Leones
-# Descripción: script para procesar PDFs para formato CSV. Luego se usa en Pentaho
-# para integración de datos.
+# Carné: 09-10977
+# Fecha: 18/09/2016
+# Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
+# Se apoya en las etiquetas "table:table-cell" y "table:table-row".
+# La salida es un archivo.csv conforme al siguiente formato :
+# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES)
 
 import fitz # Usando MuPDf 1.9.2
 import xml.sax
