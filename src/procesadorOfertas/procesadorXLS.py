@@ -46,16 +46,36 @@ def procesarXLS(nomArchivoEntrante,fdArchivoSalida):
     sheet0 = book.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
-
-    #f = open(nombreArchivoSalida, 'a')
-    #f.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES\n")
+    cabeceraProcesada = False
     for nroFila in range(sheet0.nrows):
-        rowModif = sheet0.row_values(nroFila)
-        if filtrarMateria(rowModif[0]):
-            del rowModif[1]
-            print()
-            fdArchivoSalida.write(','.join(rowModif) + "\n")
-    #f.close()
+        if not cabeceraProcesada:
+            (cabeceraProcesada, \
+             posCamposValidos, \
+             existeCarrera, \
+             campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
+            #print(sheet0.row_values(nroFila), cabeceraProcesada, "\n\n")
+        else:
+            #print("Listo para procesar entradas")
+            entrada = sheet0.row_values(nroFila)
+            #print("Nueva linea", entrada)
+            if existeCarrera and \
+                (not re.search("0800",str(entrada[campoCarrera]))):
+                continue
+
+            nuevaEntrada = ""
+            for pos in posCamposValidos:
+                if entrada[pos] == '':
+                    entrada[pos] = '-'
+
+                if re.search("^(\w\w-?\d\d\d\d|\w\w\w-?\d\d\d)$", entrada[pos]) \
+                    or filtrarBloque(entrada[pos]) \
+                    or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
+                    or entrada[pos] == '-':
+                    nuevaEntrada += ',' + entrada[pos]
+
+            nuevaEntrada = nuevaEntrada[1:]
+            if nuevaEntrada and nuevaEntrada[0] != '-' :
+                fdArchivoSalida.write(nuevaEntrada + "\n")
 
 
 if ( __name__ == "__main__"):
@@ -109,6 +129,3 @@ if ( __name__ == "__main__"):
                 print("Nueva entrada", nuevaEntrada) # Para debugging
                 #f.write(','.join(entrada) + "\n")
     # f.close()
-
-
-

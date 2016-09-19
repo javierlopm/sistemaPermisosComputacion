@@ -142,7 +142,7 @@ def procesarPDF(nombreArchivoEntrada, fdArchivoSalida):
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
-    # Variable para escribir las filas en el archivo destino
+   # Variable para escribir las filas en el archivo destino
     row = ""
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
@@ -159,12 +159,12 @@ def procesarPDF(nombreArchivoEntrada, fdArchivoSalida):
                 hor, dia = txt
 
                 if ultimoDia == '':
-                    row += (corresDiaDistancia[dia] * ',-') + hor
-                    row = row[:-1]
+                    row += (corresDiaDistancia[dia] * ',-')
+                    row = row[:-1] + hor
                 else:
                     row += ((corresDiaDistancia[dia] -  \
-                             corresDiaDistancia[ultimoDia]) * ',-') + hor
-                    row = row[:-1]
+                             corresDiaDistancia[ultimoDia]) * ',-')
+                    row = row[:-1] + hor
                 ultimoDia = dia
                 continue
 
@@ -229,9 +229,9 @@ if ( __name__ == "__main__"):
 
                 if ultimoDia == '':
                     row += (corresDiaDistancia[dia] * ',-')
-                    print("row", row)
+                    #print("row", row)
                     row += row[:-1] + hor
-                    print("row", row)
+                    #print("row", row)
                 else:
                     row += ((corresDiaDistancia[dia] -  \
                              corresDiaDistancia[ultimoDia]) * ',-')

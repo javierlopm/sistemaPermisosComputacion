@@ -38,14 +38,14 @@ class Ofertas( xml.sax.ContentHandler ):
    # Call when an elements ends
     def endElement(self, tag):
         if tag == "table:table-row":
-            print("table:table-row", self.filas, end='\n\n')
+            #print("table:table-row", self.filas, end='\n\n')
             self.tuplas.append(self.filas)
             self.filas = []
             #self.ultimoDia = ''
             self.celda = ""
 
         if tag == "table:table-cell":
-            print("table:table-cell", self.celda.encode('UTF-8','replace'))
+            #print("table:table-cell", self.celda.encode('UTF-8','replace'))
             searchMateria = re.search(self.patronMateria,self.celda, re.I)
             if searchMateria:
                 #print("Materia", searchMateria.group())
@@ -103,7 +103,7 @@ class Ofertas( xml.sax.ContentHandler ):
         return nuevoTxt
 
 def componerHorarioCSV(listaHorarios):
-   #corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
+   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
    ultimoDia = ''
    horarios = ""
    for (hora,dia) in listaHorarios:
@@ -129,7 +129,7 @@ def componerHorarioCSV(listaHorarios):
 # Función auxiliar para el ordenamiento de los horarios
 def ordenarDias(txt):
    # Accede a una variable no local
-   #corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
+   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
    return corresDiaDistancia[txt[1]]
 
 # Funcion auxiliar para dividir cadenas de caracteres por un delimitador
@@ -169,13 +169,10 @@ def procesarDOC(nombreArchivoEntrada,fdArchivoSalida):
     for fil in Handler.tuplas[1:]:
         #Eliminar Len si todos las filas deben tener horario
         if len(fil) > 1:
-            #print("Fila", fil, fil[1:])
             if isinstance(fil[1],tuple):
                 acum = fil[0] + ',A'
-                #print("Seleccion1", fil[1:])
                 horariosOrdenados = sorted(fil[1:], key=ordenarDias)
             else:
-                #print("Seleccion2", fil[2:])
                 acum = ",".join(fil[:2])
                 horariosOrdenados = sorted(fil[2:], key=ordenarDias)
             acum += componerHorarioCSV(horariosOrdenados)
