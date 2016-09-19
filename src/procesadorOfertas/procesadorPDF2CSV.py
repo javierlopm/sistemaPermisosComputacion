@@ -79,7 +79,6 @@ class Ofertas( xml.sax.ContentHandler ):
             self.posCaracteres = []
 
 
-
    # Call when a character is read
     def characters(self, content):
         pass
@@ -142,7 +141,7 @@ def procesarPDF(nombreArchivoEntrada, fdSalida):
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
-    # Variable para escribir las filas en el archivo destino
+   # Variable para escribir las filas en el archivo destino
     row = ""
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
