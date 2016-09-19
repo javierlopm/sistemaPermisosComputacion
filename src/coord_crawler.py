@@ -32,10 +32,10 @@ class StudentDownloader():
                 "   save_dir:" + save_dir)
 
     def format_id(self,student_id):
-        if   re.match(0,student_id):
+        if   re.match(pattern[0],student_id):
             return student_id
-        elif (re.match(1,student_id) or re.match(2,student_id)):
-            return student_id[0:2] + student_id[3:7]
+        elif (re.match(pattern[1],student_id) or re.match(pattern[2],student_id)):
+            return student_id[0:2] + student_id[3:8]
         else:
             print ("Error: formato de carnet invalido para " + student_id + 
                    " probar con 0000000 , 00-00000 o 00-00000@usb.ve" )
@@ -43,10 +43,10 @@ class StudentDownloader():
             return None
 
     def search_student(self,student_id):
-        student_id = format_id(student_id)
+        student_id = self.format_id(student_id)
 
         if student_id:
-            if not self.first_search:
+            if self.first_search:
                 self.first_search = False
             else:
                 self.browser.find_element_by_link_text("Nueva Consulta").click()
