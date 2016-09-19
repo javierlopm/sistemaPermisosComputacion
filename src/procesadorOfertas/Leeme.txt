@@ -1,0 +1,21 @@
+# Introducción
+El programa procesadorOfertas tiene por objetivo analizar y construir la ofertas
+trimestrales de horarios de la coordinación de computación de la Universidad
+Simón Bolívar . Las fuentes son archivos DOC, XLS y PDF cuyo contenido debe
+incluir códigos, bloque y horario. Opcionalmente podria incluir codigo de la carrera
+para discriminar las materias relevantes a la coordinación.
+
+
+# Ejecución
+$ python procesadorOferta.py [archivos DOC, PDF, XLSX y/o XLS]
+
+
+# Instalaciones requeridas
+* python >=3.4
+* Instalar los siguientes paquetes via pip o por $ python setup.py install
+    - MuPDF 1.9.2
+    - xlrd 1.0.0
+
+# Más información sobre la instalaciones
+http://www.python-excel.org/
+http://pythonhosted.org/PyMuPDF/installation.html
