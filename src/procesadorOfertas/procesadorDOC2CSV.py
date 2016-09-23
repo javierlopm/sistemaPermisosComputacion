@@ -40,7 +40,7 @@ class Ofertas( xml.sax.ContentHandler ):
     def endElement(self, tag):
         if tag == "table:table-row":
             if self.filas and self.filas[0] in self.listaMaterias:
-                print("table:table-row", self.filas, end='\n')
+                #print("table:table-row", self.filas, end='\n')
                 self.tuplas.append(self.filas)
             self.filas = []
             self.celda = ""
@@ -174,7 +174,7 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
     acum = ""
-    for fil in Handler.tuplas[1:]:
+    for fil in Handler.tuplas:
         #Eliminar Len si todos las filas deben tener horario
         if len(fil) > 1:
             if isinstance(fil[1],tuple):
@@ -185,7 +185,7 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
                 horariosOrdenados = sorted(fil[2:], key=ordenarDias)
             acum += componerHorarioCSV(horariosOrdenados)
         else:
-            acum = fil[0] + ',A'
+            acum = fil[0] + ',A,-,-,-,-,-,-'
 
         #fdSalida.write(acum + '\n') # Salida para archivo
         fdSalida.append(acum.split(','))
@@ -194,17 +194,15 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
 # Programa principal para pruebas
 if ( __name__ == "__main__"):
     corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
-
+    listaMateriasComputo = ["CO4411","CO5212", "CO5213", "CO5313", "CO5412",
+        "CO5413","CO5422", "CO5423","CO5511","CO5512","CO6315","CO6345",
+        "CO6412","CO6531","CO6532","CO6612"]
+    listaMateriasPB = ["PB5671" ,"PB5611"]
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
-    listaMateriasComputo = ["CO4411","CO5212", "CO5213", "CO5313", "CO5412",
-        "CO5413","CO5422", "CO5423","CO5511","CO5512","CO6315","CO6345",
-        "CO6412","CO6531","CO6532","CO6612"]
-
-    listaMateriasPB = ["PB5671" ,"PB5611"]
     # override the default ContextHandler
     Handler = Ofertas(listaMateriasComputo, corresDiaDistancia)
     parser.setContentHandler( Handler )

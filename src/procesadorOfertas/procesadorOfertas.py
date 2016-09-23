@@ -23,7 +23,7 @@ if __name__ == '__main__':
     listaMaterias = []
     for materia in open(nomArchivoMaterias, 'r'):
         listaMaterias.append(materia.rstrip(' \t\n\r'))
-    print(listaMaterias)
+    #print(listaMaterias)
 
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
@@ -53,6 +53,10 @@ if __name__ == '__main__':
     filaEncontrada = False
     # Realizar comparación entre listas del dpto y las listas de DACE
 
+    # imprimirResultados("ListaDace",listaDACE)
+    # imprimirResultados("ListaOfertas",listaOfertas)
+
+
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
             # Comprobar materia y bloque, salvo las materias CI
@@ -63,24 +67,31 @@ if __name__ == '__main__':
                 filaEncontrada = True
                 break
         # Caso 2:
-        if not filaEncontrada:
-            materiasDacePorBorrar.append(filaDace)
-            procesado.append(filaDace + ['-','0800','E'])
-            filaEncontrada = False
+        if not (filaEncontrada):
+            if not (filaDace[0][0] == 'C' and filaDace[0][1] == 'I'):
+                materiasDacePorBorrar.append(filaDace)
+                procesado.append(filaDace + ['-','0800','E'])
+            else:
+                procesado.append(filaDace + ['-','0800','-'])
+
+        filaEncontrada = False
 
     # Descartar las materias de la lista de DACE
     # que no se encuentren en la oferta de dptos
     for filaPorBorrar in materiasDacePorBorrar:
         listaDACE.remove(filaPorBorrar)
 
+    # imprimirResultados("ListaDace E",listaDACE)
+    # imprimirResultados("ListaOfertas E",listaOfertas)
+
     filaEncontrada = None
     materiasCompIncorporadas = False
     for filaOfertas in listaOfertas:
         for filaDace in listaDACE:
-            # Incorporar las materias de computación
-            if (not materiasCompIncorporadas) and filaDace[0][0] == 'C' \
-                and filaDace[0][1] == 'I':
-                procesado.append(filaDace + ['-','0800','-'])
+            # # Incorporar las materias de computación
+            # if (not materiasCompIncorporadas) and filaDace[0][0] == 'C' \
+            #     and filaDace[0][1] == 'I':
+            #     procesado.append(filaDace + ['-','0800','-'])
 
             if filaOfertas[0] == filaDace[0] \
                 and filaOfertas[1] == filaDace[1]:
@@ -109,7 +120,7 @@ if __name__ == '__main__':
     # Imprimir resultados al archivo de salida
     fdSalida = open(nomArchivoSalida, 'a')
     fdSalida.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES" + \
-                        ",MIERCOLES,JUEVES,VIERNES\n")
+                    ",MIERCOLES,JUEVES,VIERNES,OFERTA,COD_CARRERA,OPERACIÓN\n")
     for fila in procesado:
         fdSalida.write(','.join(fila) + '\n')
 
@@ -122,5 +133,5 @@ if __name__ == '__main__':
     #imprimirResultados("Materias que existen", procesado)
     #fdDace.close()
 
-# materiasRequeridas.txt OfertaMatematicas.xls OfertaComputo.xml OfertaID.xlsx OfertaCE.xls OfertaSIG.pdf 0800DACE.xls OfertaProcesadas.csv
-
+# materiasRequeridas.txt OfertaMatematicas.xls OfertaPB.xml OfertaComputo.xml OfertaID.xlsx OfertaCE.xls OfertaSIG.pdf 0800DACE.xls OfertaProcesadas.csv
+# materiasRequeridas.txt OfertaComputo.xml OfertaPB.xml 0800DACE.xls OfertaProcesadas.csv
