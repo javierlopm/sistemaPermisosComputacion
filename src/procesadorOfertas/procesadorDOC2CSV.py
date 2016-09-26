@@ -185,7 +185,7 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
                 horariosOrdenados = sorted(fil[2:], key=ordenarDias)
             acum += componerHorarioCSV(horariosOrdenados)
         else:
-            acum = fil[0] + ',A,-,-,-,-,-,-'
+            acum = fil[0] + ',A,-,-,-,-,-'
 
         #fdSalida.write(acum + '\n') # Salida para archivo
         fdSalida.append(acum.split(','))

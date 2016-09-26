@@ -41,7 +41,7 @@ def filtrarMateria(txt):
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
-def procesarXLS(nomArchivoEntrante,fdSalida):
+def procesarXLS(nomArchivoEntrante, listaMaterias, fdSalida):
     book = open_workbook(nomArchivoEntrante)
     sheet0 = book.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
@@ -53,13 +53,13 @@ def procesarXLS(nomArchivoEntrante,fdSalida):
              posCamposValidos, \
              existeCarrera, \
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
-            #print(sheet0.row_values(nroFila), cabeceraProcesada, "\n\n")
         else:
-            #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
-            #print("Nueva linea", entrada)
-            if existeCarrera and \
-                (not re.search("0800",str(entrada[campoCarrera]))):
+            # Comprueba si pertenece al pensum de computación
+            if  (existeCarrera and \
+                    (not re.search("0800",str(entrada[campoCarrera])))):
+                continue
+            elif (not entrada[0] in listaMaterias):
                 continue
 
             nuevaEntrada = ""
