@@ -41,7 +41,7 @@ def filtrarMateria(txt):
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
-def procesarXLS(nomArchivoEntrante, listaMaterias, fdSalida):
+def procesarXLS(nomArchivoEntrante, actListadoMat, listaMaterias, fdSalida):
     book = open_workbook(nomArchivoEntrante)
     sheet0 = book.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
@@ -56,10 +56,14 @@ def procesarXLS(nomArchivoEntrante, listaMaterias, fdSalida):
         else:
             entrada = sheet0.row_values(nroFila)
             # Comprueba si pertenece al pensum de computación
+            #print(entrada[0:2], re.search("0800",str(entrada[campoCarrera])))
             if  (existeCarrera and \
                     (not re.search("0800",str(entrada[campoCarrera])))):
+                #print("SI1")
                 continue
-            elif (not entrada[0] in listaMaterias):
+            elif ((not existeCarrera) and actListadoMat \
+                  and (not entrada[0] in listaMaterias)):
+                #print("SI2")
                 continue
 
             nuevaEntrada = ""
@@ -76,7 +80,9 @@ def procesarXLS(nomArchivoEntrante, listaMaterias, fdSalida):
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != '-' :
                 #fdSalida.write(nuevaEntrada + "\n") # Salida para archivo
+                #print(nuevaEntrada)
                 fdSalida.append(nuevaEntrada.split(','))
+
 
 
 if ( __name__ == "__main__"):

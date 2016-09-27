@@ -34,7 +34,8 @@ if __name__ == '__main__':
     procesado = []
     listaDACE = []
     # Necesarios para evitar eliminar materias especiales que no se incluyen en la ofertas
-    #iniMatAdicionales = ["CI",]
+    iniMatAdicionales = ["CI","CC", "EP", "CS"]
+    activarListado = True
 
     for archivo in sys.argv[1:]:
         # Selección de archivos para procesar
@@ -42,13 +43,16 @@ if __name__ == '__main__':
         if nomArchivoDace == archivo:
             temp = listaOfertas
             listaOfertas = listaDACE
+            # Esto permite cargar todas las materias de DACE
+            activarListado = False
 
         if  ext == ".xml":
             procesarDOC(archivo,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
             procesarPDF(archivo,listaOfertas)
         elif ext == ".xls" or ext == ".xlsx":
-            procesarXLS(archivo, listaMaterias, listaOfertas)
+            print(archivo)
+            procesarXLS(archivo, activarListado, listaMaterias, listaOfertas)
 
     listaOfertas = temp
     print("\nOfertas cargadas con éxito")
@@ -57,8 +61,8 @@ if __name__ == '__main__':
     filaEncontrada = False
     # Realizar comparación entre listas del dpto y las listas de DACE
 
-    # imprimirResultados("ListaDace",listaDACE)
-    # imprimirResultados("ListaOfertas",listaOfertas)
+    imprimirResultados("ListaDace",listaDACE)
+    imprimirResultados("ListaOfertas",listaOfertas)
 
 
     for filaDace in listaDACE:
@@ -66,12 +70,13 @@ if __name__ == '__main__':
             # Comprobar materia y bloque, salvo las materias CI
             if filaOfertas[0] == filaDace[0] \
                 and filaOfertas[1] == filaDace[1] \
-                and (not (filaDace[0][0] == 'C' and filaDace[0][1] == 'I')):
+                and (not filaDace[0][0:2] in iniMatAdicionales):
                 filaEncontrada = True
                 break
         # Caso 2:
         if not (filaEncontrada):
-            if (not (filaDace[0][0] == 'C' and filaDace[0][1] == 'I')):
+            #if (not (filaDace[0][0] == 'C' and filaDace[0][1] == 'I')):
+            if (not (filaDace[0][0:2] in iniMatAdicionales)):
                 materiasDacePorBorrar.append(filaDace)
                 procesado.append(filaDace + ['-','0800','E'])
             else:
