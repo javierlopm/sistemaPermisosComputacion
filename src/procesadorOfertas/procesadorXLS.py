@@ -41,8 +41,10 @@ def filtrarMateria(txt):
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
-def procesarXLS(nomArchivoEntrante, actListadoMat, listaMaterias, fdSalida):
+def procesarXLS(nomArchivoEntrante, activarListado, listaMaterias, fdSalida):
+    # Abrir el la hoja de cálculo en cuestión
     book = open_workbook(nomArchivoEntrante)
+    # Acceder a la primera hoja.
     sheet0 = book.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
@@ -56,29 +58,32 @@ def procesarXLS(nomArchivoEntrante, actListadoMat, listaMaterias, fdSalida):
         else:
             entrada = sheet0.row_values(nroFila)
             # Comprueba si pertenece al pensum de computación
-            #print(entrada[0:2], re.search("0800",str(entrada[campoCarrera])))
-            if  (existeCarrera and \
-                    (not re.search("0800",str(entrada[campoCarrera])))):
-                #print("SI1")
-                continue
-            elif ((not existeCarrera) and actListadoMat \
-                  and (not entrada[0] in listaMaterias)):
-                #print("SI2")
-                continue
+            if activarListado:
+                if (existeCarrera and \
+                        (not re.search("0800",str(entrada[campoCarrera])))):
+                    #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
+                    continue
+                elif (not entrada[posCamposValidos[0]] in listaMaterias):
+                    #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
+                    continue
 
+            # En caso que se requiera or exclusivo carrera o por lista de materias
+            # elif ((not existeCarrera) and actListadoMat \
+            #       and (not entrada[0] in listaMaterias)):
+            #     continue
             nuevaEntrada = ""
             for pos in posCamposValidos:
-                if entrada[pos] == '':
-                    entrada[pos] = '-'
+                if entrada[pos] == '-':
+                    entrada[pos] = ''
 
                 if re.search("^(\w\w-?\d\d\d\d|\w\w\w-?\d\d\d)$", entrada[pos]) \
                     or filtrarBloque(entrada[pos]) \
                     or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
-                    or entrada[pos] == '-':
+                    or entrada[pos] == '':
                     nuevaEntrada += ',' + entrada[pos]
 
             nuevaEntrada = nuevaEntrada[1:]
-            if nuevaEntrada and nuevaEntrada[0] != '-' :
+            if nuevaEntrada and nuevaEntrada[0] != ',' :
                 #fdSalida.write(nuevaEntrada + "\n") # Salida para archivo
                 #print(nuevaEntrada)
                 fdSalida.append(nuevaEntrada.split(','))
@@ -95,13 +100,6 @@ if ( __name__ == "__main__"):
     if isfile('OfertaXLS.csv'):
         remove('OfertaXLS.csv')
 
-    # print("bookID")
-    # analizarCabecera(bookID.sheet_by_index(0).row_values(0))
-    #print("bookCE")
-    #analizarCabecera(bookCE.sheet_by_index(0).row_values(3))
-    # print("bookMAT")
-    # analizarCabecera(bookMAT.sheet_by_index(0).row_values(4))
-
     #f = open('OfertaXLS.csv', 'a')
     #f.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES\n")
     cabeceraProcesada = False
@@ -116,23 +114,28 @@ if ( __name__ == "__main__"):
             #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
             #print("Nueva linea", entrada)
-            if existeCarrera and \
-                (not re.search("0800",str(entrada[campoCarrera]))):
+            # Comprueba si pertenece al pensum de computación
+            if (existeCarrera and \
+                    (not re.search("0800",str(entrada[campoCarrera])))):
+                #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
+                continue
+            elif (not entrada[posCamposValidos[0]] in listaMaterias):
+                #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
                 continue
 
             nuevaEntrada = ""
             for pos in posCamposValidos:
-                if entrada[pos] == '':
-                    entrada[pos] = '-'
+                if entrada[pos] == '-':
+                    entrada[pos] = ''
 
                 if filtrarMateria(entrada[pos]) \
                     or filtrarBloque(entrada[pos]) \
                     or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
-                    or entrada[pos] == '-':
+                    or entrada[pos] == '':
                     nuevaEntrada += ',' + entrada[pos]
 
             nuevaEntrada = nuevaEntrada[1:]
-            if nuevaEntrada and nuevaEntrada[0] != '-' :
+            if nuevaEntrada and nuevaEntrada[0] != ',' :
                 print("Nueva entrada", nuevaEntrada) # Para debugging
                 #f.write(','.join(entrada) + "\n")
     # f.close()
