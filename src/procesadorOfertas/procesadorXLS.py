@@ -41,7 +41,10 @@ def filtrarMateria(txt):
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
-def procesarXLS(nomArchivoEntrante, activarListado, listaMaterias, fdSalida):
+def verificarCerrar(txt):
+    return re.search("cerrar", txt, re.I)
+
+def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
     # Abrir el la hoja de cálculo en cuestión
     book = open_workbook(nomArchivoEntrante)
     # Acceder a la primera hoja.
@@ -58,7 +61,7 @@ def procesarXLS(nomArchivoEntrante, activarListado, listaMaterias, fdSalida):
         else:
             entrada = sheet0.row_values(nroFila)
             # Comprueba si pertenece al pensum de computación
-            if activarListado:
+            if activarFitrado:
                 if (existeCarrera and \
                         (not re.search("0800",str(entrada[campoCarrera])))):
                     #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
@@ -67,12 +70,16 @@ def procesarXLS(nomArchivoEntrante, activarListado, listaMaterias, fdSalida):
                     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
                     continue
 
-            # En caso que se requiera or exclusivo carrera o por lista de materias
-            # elif ((not existeCarrera) and actListadoMat \
-            #       and (not entrada[0] in listaMaterias)):
-            #     continue
+
+
             nuevaEntrada = ""
             for pos in posCamposValidos:
+                # Para verificar semántica de archivo del dpto ID
+                if verificarCerrar(entrada[pos]):
+                    nuevaEntrada = ""
+                    #print(entrada)
+                    break
+
                 if entrada[pos] == '-':
                     entrada[pos] = ''
 
@@ -94,11 +101,11 @@ if ( __name__ == "__main__"):
     bookCE = open_workbook('OfertaCE.xls')
     bookID = open_workbook('OfertaID.xlsx')
     bookMAT = open_workbook('OfertaMatematicas.xls')
-    sheet0 = bookMAT.sheet_by_index(0)
+    sheet0 = bookID.sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
-    if isfile('OfertaXLS.csv'):
-        remove('OfertaXLS.csv')
+    # if isfile('OfertaXLS.csv'):
+    #     remove('OfertaXLS.csv')
 
     #f = open('OfertaXLS.csv', 'a')
     #f.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES\n")
@@ -119,12 +126,18 @@ if ( __name__ == "__main__"):
                     (not re.search("0800",str(entrada[campoCarrera])))):
                 #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
                 continue
-            elif (not entrada[posCamposValidos[0]] in listaMaterias):
-                #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-                continue
+            # elif (not entrada[posCamposValidos[0]] in listaMaterias):
+            #     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
+            #     continue
 
             nuevaEntrada = ""
             for pos in posCamposValidos:
+                # Para verificar semantica de archivo de ID
+                if verificarCerrar(entrada[pos]):
+                    nuevaEntrada = ""
+                    #print("Tienen cerrar", ','.join(entrada))
+                    break
+
                 if entrada[pos] == '-':
                     entrada[pos] = ''
 

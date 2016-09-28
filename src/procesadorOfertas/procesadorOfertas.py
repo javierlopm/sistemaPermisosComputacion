@@ -5,11 +5,34 @@ import sys
 from os.path import splitext, isfile
 from os import remove
 
+# Función auxiliar para verificar resultados por pantalla
 def imprimirResultados(mensaje,listaOfertas):
     print(mensaje + ": ")
     for fila in listaOfertas:
         print(fila)
     print('\n')
+
+def obtArgs():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ho:v", ["help", "output="])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+    output = None
+    verbose = False
+    for o, a in opts:
+        if o == "-v":
+            verbose = True
+        elif o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif o in ("-o", "--output"):
+            output = a
+        else:
+            assert False, "unhandled option"
+
 
 
 if __name__ == '__main__':
@@ -22,9 +45,8 @@ if __name__ == '__main__':
     for materia in open(nomArchivoMaterias, 'r'):
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
-    # print(listaMaterias)
-    # exit()
 
+    # Borrar el contenido del archivo de salida si existe
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
@@ -34,6 +56,8 @@ if __name__ == '__main__':
     # Lista necesaria para evitar eliminar materias especiales que no se
     # incluyen en la ofertas
     iniMatEspeciales = ["CI","CC", "EP", "CS"]
+    # Deshabilita el filtrado en el procesador XLS.
+    # Sólo es neceario para el archivo DACE
     activarListado = True
 
     for archivo in sys.argv[1:]:
@@ -70,7 +94,6 @@ if __name__ == '__main__':
                 break
         # Caso 2:
         if not (filaEncontrada):
-            #if (not (filaDace[0][0] == 'C' and filaDace[0][1] == 'I')):
             if (not (filaDace[0][0:2] in iniMatEspeciales)):
                 materiasDacePorBorrar.append(filaDace)
                 procesado.append(filaDace + ['','0800','E'])
@@ -125,8 +148,3 @@ if __name__ == '__main__':
     fdSalida.close()
 
     print("Ofertas procesadas exitosamente")
-
-    # imprimirResultados("FilaOfertas", fdSalida)
-    # imprimirResultados("FilaDace", fdDace)
-    #imprimirResultados("Materias que existen", procesado)
-    #fdDace.close()

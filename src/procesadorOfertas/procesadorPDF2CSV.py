@@ -158,19 +158,17 @@ def procesarPDF(nombreArchivoEntrada, fdSalida):
                 hor, dia = txt
 
                 if ultimoDia == '':
-                    row += (corresDiaDistancia[dia] * ',-')
-                    row = row[:-1] + hor
+                    row += (corresDiaDistancia[dia] * ',') + hor
                 else:
                     row += ((corresDiaDistancia[dia] -  \
-                             corresDiaDistancia[ultimoDia]) * ',-')
-                    row = row[:-1] + hor
+                             corresDiaDistancia[ultimoDia]) * ',') + hor
                 ultimoDia = dia
                 continue
 
             row += ','+ txt
 
         if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-            row += ((5 - corresDiaDistancia[ultimoDia]) * ',-')
+            row += ((5 - corresDiaDistancia[ultimoDia]) * ',')
 
         row = row [1:]    #Remover la primera coma (,)
         #fdSalida.write(row + '\n') #Salida para archivo
