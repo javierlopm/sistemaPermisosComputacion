@@ -2,6 +2,7 @@
 #!/usr/bin/python
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+
 import pdb
 import codecs
 import re
@@ -17,7 +18,7 @@ class StudentDownloader():
         their academic info
     """
     def __init__(self,user,password,save_dir):
-        self.browser      = webdriver.Firefox()
+        self.browser      = webdriver.Chrome('./chromedriver')
         self.first_search = True
         self.save_dir     = save_dir
 
@@ -60,5 +61,4 @@ class StudentDownloader():
             file.close()
 
 
-
-        
+pdb.set_trace()
