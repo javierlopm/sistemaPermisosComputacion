@@ -5,16 +5,50 @@ Simón Bolívar . Las fuentes son archivos DOC, XLS y PDF cuyo contenido debe
 incluir códigos, bloque y horario. Opcionalmente podria incluir codigo de la carrera
 para discriminar las materias relevantes a la coordinación.
 
+Existe un caso especial para el manejo de las asignaturas del departamento ID.
+Si se encuentra el simbolo "Cerrar" se salta la fila y pasa a otra.
+
 
 # Ejecución
-$ python procesadorOferta.py [archivos DOC, PDF, XLSX y/o XLS]
+$ python procesadorOferta.py -f nombre_archivo_salida -d nombre_archivo_dace
+                    -m archivo_materias_requeridas [--dir-input=nomDir ]
+                    archivo1.pdf archivo2.xls ... archivoN
+$ python procesadorOferta.py [-h, --help]
 
+donde:
+    Requeridos
+    -f: camino del archivo de salida del programa. En este archivo se escribirán
+    los resultados.
+    -d: nombre del archivo DACE. Si los archivos a procesar se pasan como argumentos, este
+    se incluye como entrada automáticamente. Si se usa "--dir-input", el archivo
+    debe estar dentro de la carpeta.
+    -m: camino del archivo de reconocimiento de materias relevantes.
+
+    Opcionales:
+    --dir-input: camnino de la carpeta de archivos de ofertas a procesar. Dentro
+    esta, debe incluirse la oferta de DACE.
+    archivo.pdf archivo.xls ... : archivos de ofertas como argumentos.
+
+Se puede usar o --dir-input o argumentos de insumo pero no ambos.
 
 # Instalaciones requeridas
 * python >=3.4
 * Instalar los siguientes paquetes via pip o por $ python setup.py install
     - MuPDF 1.9.2
     - xlrd 1.0.0
+
+MuPDF 1.9.2
+    - Se descomprime el archivo pymupdf-1.9.2.0-pyXX-(x86|x64). El resultado será
+    una carpeta llamada "fitz".
+    - Acceder a la carpeta a través del terminal.
+    - En el terminal se ejecuta : python setup.py install. Posiblemente requiera
+    privilegios de root o sudo.
+
+xlrd 1.0.0
+    - Acceder a la carpeta donde se encuentra el archivo a través del terminal.
+    - Ejecutar el siguiente comandos: pythpn -m pip install xlrd 1.0.0.
+    Posiblemente requiera privilegios de root o sudo.
+
 
 # Más información sobre la instalaciones
 http://www.python-excel.org/

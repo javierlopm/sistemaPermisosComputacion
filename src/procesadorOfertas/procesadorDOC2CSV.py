@@ -117,20 +117,14 @@ def componerHorarioCSV(listaHorarios):
    for (hora,dia) in listaHorarios:
       if ultimoDia == '':
          ultimoDia = dia
-         horarios += (corresDiaDistancia[dia] * ',-')
-         #print("antes", horarios)
-         horarios = horarios[:-1] + hora
-         #print("despues", horarios)
+         horarios += (corresDiaDistancia[dia] * ',') + hora
       else:
          horarios += ((corresDiaDistancia[dia] -  \
-                    corresDiaDistancia[ultimoDia]) * ',-')
-         #print(horarios)
-         horarios = horarios[:-1] + hora
-         #print(horarios)
+                    corresDiaDistancia[ultimoDia]) * ',') + hora
          ultimoDia = dia
 
    if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',-')
+         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
 
    return horarios
 
@@ -185,7 +179,7 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
                 horariosOrdenados = sorted(fil[2:], key=ordenarDias)
             acum += componerHorarioCSV(horariosOrdenados)
         else:
-            acum = fil[0] + ',A,-,-,-,-,-'
+            acum = fil[0] + ',A,,,,,'
 
         #fdSalida.write(acum + '\n') # Salida para archivo
         fdSalida.append(acum.split(','))
