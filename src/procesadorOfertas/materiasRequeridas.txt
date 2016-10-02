@@ -96,6 +96,7 @@ CI6311
 # Materias obligatorias
 CO3121
 CO3321
+CO3411
 MA2115
 MA2112
 

@@ -41,6 +41,7 @@ def filtrarMateria(txt):
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
 
+<<<<<<< HEAD
 def verificarCerrar(txt):
     return re.search("cerrar", txt, re.I)
 
@@ -70,8 +71,6 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
                     continue
 
-
-
             nuevaEntrada = ""
             for pos in posCamposValidos:
                 # Para verificar semántica de archivo del dpto ID
@@ -79,7 +78,6 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                     nuevaEntrada = ""
                     #print(entrada)
                     break
-
                 if entrada[pos] == '-':
                     entrada[pos] = ''
 

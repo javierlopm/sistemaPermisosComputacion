@@ -69,7 +69,6 @@ if __name__ == '__main__':
     (nomArchivoSalida, nomArchivoMaterias, \
      nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs()
 
-
     # Obtener las materias requeridas
     listaMaterias = []
     for materia in open(nomArchivoMaterias, 'r'):
@@ -85,6 +84,7 @@ if __name__ == '__main__':
     # Lista necesaria para evitar eliminar materias especiales que no se
     # incluyen en la ofertas
     iniMatEspeciales = ["CI","CC", "EP", "CS"]
+<<<<<<< HEAD
     # Deshabilita el filtrado en el procesador XLS.
     # Sólo es neceario para el archivo DACE
     activarListado = True
@@ -117,6 +117,7 @@ if __name__ == '__main__':
 
     print("\nOfertas cargadas con éxito")
 
+<<<<<<< HEAD
     imprimirResultados("ListaDace",listaDACE)
     imprimirResultados("ListaOfertas",listaOfertas)
 
