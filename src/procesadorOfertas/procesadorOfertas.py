@@ -2,8 +2,9 @@ from procesadorXLS import procesarXLS
 from procesadorDOC2CSV import procesarDOC
 from procesadorPDF2CSV import procesarPDF
 import sys
-from os.path import splitext, isfile
-from os import remove
+import getopt
+from os.path import splitext, isfile, join
+from os import remove, listdir
 
 # Función auxiliar para verificar resultados por pantalla
 def imprimirResultados(mensaje,listaOfertas):
@@ -12,33 +13,60 @@ def imprimirResultados(mensaje,listaOfertas):
         print(fila)
     print('\n')
 
+def usoAyuda():
+    print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
+                    -m archivo_materias_requeridas [--dir-input=nomDir ]
+                    archivo1.pdf archivo2.xls ... archivoN
+    prog [-h, --help] """)
+
 def obtArgs():
+    nomArchivoDace = ""
+    nomArchivoSalida = ""
+    nomArchivoMaterias = ""
+    nomDirectorio = ""
+    opcionDir = False
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ho:v", ["help", "output="])
+        opts, args = getopt.getopt(sys.argv[1:], "d:f:m:h", ["help","dir-input="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err) # will print something like "option -a not recognized"
-        usage()
+        usoAyuda()
         sys.exit(2)
-    output = None
-    verbose = False
+
+    if  len(opts) == 2 or (len(opts) == 1 and (not opts[0][0] in ["-h", "--help"])):
+        assert False, "Número incorrecto de parámetros"
+        usoAyuda()
+
+
     for o, a in opts:
-        if o == "-v":
-            verbose = True
+        if o == "-f":
+            nomArchivoSalida = a
+        elif o == "-d":
+            nomArchivoDace = a
+        elif o == "-m":
+            nomArchivoMaterias = a
+        elif o == "--dir-input":
+            nomDirectorio = a
+            opcionDir = True
         elif o in ("-h", "--help"):
-            usage()
+            usoAyuda()
             sys.exit()
-        elif o in ("-o", "--output"):
-            output = a
         else:
             assert False, "unhandled option"
 
-
+# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls -m materiasRequeridas.txt OfertaPB.xml OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
+# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
+    if opcionDir:
+        return (nomArchivoSalida, nomArchivoMaterias, \
+                nomArchivoDace, opcionDir, listdir(nomDirectorio), nomDirectorio)
+    else:
+        args.append(nomArchivoDace)
+        return (nomArchivoSalida, nomArchivoMaterias, \
+                nomArchivoDace, opcionDir, args , "")
 
 if __name__ == '__main__':
-    nomArchivoDace = sys.argv[-2]
-    nomArchivoSalida = sys.argv[-1]
-    nomArchivoMaterias = sys.argv[1]
+    (nomArchivoSalida, nomArchivoMaterias, \
+     nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs()
 
     # Obtener las materias requeridas
     listaMaterias = []
@@ -51,7 +79,6 @@ if __name__ == '__main__':
         remove(nomArchivoSalida)
 
     listaOfertas = []
-    procesado = []
     listaDACE = []
     # Lista necesaria para evitar eliminar materias especiales que no se
     # incluyen en la ofertas
@@ -60,28 +87,39 @@ if __name__ == '__main__':
     # Sólo es neceario para el archivo DACE
     activarListado = True
 
-    for archivo in sys.argv[1:]:
-        # Selección de archivos para procesar
+    for archivo in args:
+        # Selección de archivos para procesar. Se extrae su extensión para
+        # elegir el procesador adecuado
         ext = splitext(archivo)[1]
-        if nomArchivoDace == archivo:
-            temp = listaOfertas
-            listaOfertas = listaDACE
-            activarListado = False
+
+        # Constuir el camino para procesar los archivos.
+        if opcionDir:
+            camino = join(nomDirectorio,archivo)
+
+        if  nomArchivoDace == archivo:
+            #Excepcion para cuando no se encuentre 0800
+            if  ext == ".xml":
+                procesarDOC(camino,listaMaterias ,listaDACE)
+            elif ext == ".pdf":
+                procesarPDF(camino,listaDACE)
+            elif ext == ".xls" or ext == ".xlsx":
+                procesarXLS(camino, activarListado, listaMaterias, listaDACE)
+            continue
 
         if  ext == ".xml":
-            procesarDOC(archivo,listaMaterias ,listaOfertas)
+            procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
-            procesarPDF(archivo,listaOfertas)
+            procesarPDF(camino,listaOfertas)
         elif ext == ".xls" or ext == ".xlsx":
-            procesarXLS(archivo, activarListado, listaMaterias, listaOfertas)
+            procesarXLS(camino, activarListado, listaMaterias, listaOfertas)
 
-    listaOfertas = temp
     print("\nOfertas cargadas con éxito")
 
-    # imprimirResultados("ListaDace",listaDACE)
-    # imprimirResultados("ListaOfertas",listaOfertas)
+    imprimirResultados("ListaDace",listaDACE)
+    imprimirResultados("ListaOfertas",listaOfertas)
 
     materiasDacePorBorrar = []
+    procesado = []
     filaEncontrada = False
     # Realizar comparación entre listas del dpto y las listas de DACE
     for filaDace in listaDACE:
@@ -146,5 +184,5 @@ if __name__ == '__main__':
         fdSalida.write(','.join(fila) + '\n')
 
     fdSalida.close()
-
     print("Ofertas procesadas exitosamente")
+

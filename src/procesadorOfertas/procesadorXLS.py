@@ -70,8 +70,6 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
                     continue
 
-
-
             nuevaEntrada = ""
             for pos in posCamposValidos:
                 # Para verificar semántica de archivo del dpto ID
