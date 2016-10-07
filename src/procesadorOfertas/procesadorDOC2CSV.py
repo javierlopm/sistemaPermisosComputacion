@@ -12,9 +12,10 @@
 
 import xml.sax
 import re
-import subprocess
 from os.path import isfile
 from os import remove
+import sys
+import getopt
 
 # Clase usada por xml.sax para procesar el archivo.xml
 class Ofertas( xml.sax.ContentHandler ):
@@ -185,33 +186,73 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
         fdSalida.append(acum.split(','))
         acum = ""
 
+def usoAyuda():
+    print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
+                    -m archivo_materias_requeridas [--dir-input=nomDir ]
+                    archivo1.pdf archivo2.xls ... archivoN
+    prog [-h, --help] """)
+
+def obtArgs(entrada):
+    nomArchivoSalida = ""
+    nomArchivoMaterias = ""
+    try:
+        opts, args = getopt.getopt(entrada, "f:m:h", ["help","dir-input="])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err) # will print something like "option -a not recognized"
+        usoAyuda()
+        sys.exit(2)
+
+    for o, a in opts:
+        if o == "-f":
+            nomArchivoSalida = a
+        elif o == "-m":
+            nomArchivoMaterias = a
+        elif o in ("-h", "--help"):
+            usoAyuda()
+            sys.exit()
+        else:
+            assert False, "unhandled option"
+
+    if  not nomArchivoMaterias:
+      print("Se requiere el parametro -m")
+      sys.exit(2)
+
+    return (nomArchivoSalida, nomArchivoMaterias, args)
+
 # Programa principal para pruebas
 if ( __name__ == "__main__"):
     corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
-    listaMateriasComputo = ["CO4411","CO5212", "CO5213", "CO5313", "CO5412",
-        "CO5413","CO5422", "CO5423","CO5511","CO5512","CO6315","CO6345",
-        "CO6412","CO6531","CO6532","CO6612"]
-    listaMateriasPB = ["PB5671" ,"PB5611"]
+
+    (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
+
+    listaMaterias = []
+    for materia in open(nomArchivoMaterias, 'r'):
+        if (not materia.isspace()) and materia[0] != '#':
+            listaMaterias.append(materia.rstrip(' \t\n\r'))
+
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
     # override the default ContextHandler
-    Handler = Ofertas(listaMateriasComputo, corresDiaDistancia)
+    Handler = Ofertas(listaMaterias, corresDiaDistancia)
     parser.setContentHandler( Handler )
-    parser.parse("OfertaComputo.xml")
+    parser.parse(args[0])
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,HORARIO)
-    if isfile('OfertaDOC.csv'):
-        remove('OfertaDOC.csv')
+    if isfile(nomArchivoSalida):
+        remove(nomArchivoSalida)
 
-    f = open('OfertaDOC.csv', 'a')
+    if nomArchivoSalida:
+      f = open('OfertaDOC.csv', 'a')
+      f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+    else:
+      print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
-    f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
     acum = ""
-    #print("Filas", Handler.tuplas[1:])
     for fil in Handler.tuplas:
       #Eliminar Len si todos las filas deben tener horario
       if len(fil) > 1:
@@ -227,10 +268,15 @@ if ( __name__ == "__main__"):
          acum += componerHorarioCSV(horariosOrdenados)
       else:
          acum = fil[0] + ',A'
-      print("Al escribir", acum)
-      f.write(acum + '\n')
+
+      if nomArchivoSalida:
+        f.write(acum + '\n')
+      else:
+        print(acum)
       acum = ""
-    f.close()
+
+    if nomArchivoSalida:
+      f.close()
 
 # Pruebas sobre dividirStr
    # print(dividirStr("Mar -Jue  5-6   "))
@@ -247,3 +293,4 @@ if ( __name__ == "__main__"):
    #print(Handler.normalizarHorario(['Lun-Mier 5-6', 'Vie', '9-10']))
 
    # "c:\Program Files (x86)\LibreOffice 5\program\soffice.exe"  -convert-to xml OfertaPB.doc
+   # "D:\Archivos de programa\LibreOffice 4\program\soffice.exe" -convert-to xml doc1.doc --headless

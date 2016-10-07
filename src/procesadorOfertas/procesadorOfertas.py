@@ -13,20 +13,58 @@ def imprimirResultados(mensaje,listaOfertas):
         print(fila)
     print('\n')
 
+def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
+    listaOfertas = []
+    listaDACE = []
+     # Lista necesaria para evitar eliminar materias especiales que no se
+    # incluyen en la ofertas
+    iniMatEspeciales = ["CI","CC", "EP", "CS"]
+    # Deshabilita el filtrado en el procesador XLS.
+    # Sólo es neceario para el archivo DACE
+    activarListado = True
+
+    for archivo in listaArchivos:
+        # Selección de archivos para procesar. Se extrae su extensión para
+        # elegir el procesador adecuado
+        ext = splitext(archivo)[1]
+
+        # Constuir el camino para procesar los archivos.
+        if opcionDir:
+            camino = join(nomDirectorio,archivo)
+
+        if  nomArchivoDace == archivo:
+            #Excepcion para cuando no se encuentre 0800
+            if  ext == ".xml":
+                procesarDOC(camino,listaMaterias ,listaDACE)
+            elif ext == ".pdf":
+                procesarPDF(camino, listaMaterias, listaDACE)
+            elif ext == ".xls" or ext == ".xlsx":
+                procesarXLS(camino, activarListado, listaMaterias, listaDACE)
+            continue
+
+        if  ext == ".xml":
+            procesarDOC(camino,listaMaterias ,listaOfertas)
+        elif ext == ".pdf":
+            procesarPDF(camino,listaOfertas)
+        elif ext == ".xls" or ext == ".xlsx":
+            procesarXLS(camino, activarListado, listaMaterias, listaOfertas)
+
+    return (listaOfertas, listaDACE)
+
 def usoAyuda():
     print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
                     -m archivo_materias_requeridas [--dir-input=nomDir ]
                     archivo1.pdf archivo2.xls ... archivoN
     prog [-h, --help] """)
 
-def obtArgs():
+def obtArgs(entrada):
     nomArchivoDace = ""
     nomArchivoSalida = ""
     nomArchivoMaterias = ""
     nomDirectorio = ""
     opcionDir = False
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "d:f:m:h", ["help","dir-input="])
+        opts, args = getopt.getopt(entrada, "d:f:m:h", ["help","dir-input="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err) # will print something like "option -a not recognized"
@@ -66,7 +104,7 @@ def obtArgs():
 
 if __name__ == '__main__':
     (nomArchivoSalida, nomArchivoMaterias, \
-     nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs()
+     nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs(sys.argv[1:])
 
     # Obtener las materias requeridas
     listaMaterias = []
@@ -78,45 +116,12 @@ if __name__ == '__main__':
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
-    listaOfertas = []
-    listaDACE = []
-    # Lista necesaria para evitar eliminar materias especiales que no se
-    # incluyen en la ofertas
-    iniMatEspeciales = ["CI","CC", "EP", "CS"]
-    # Deshabilita el filtrado en el procesador XLS.
-    # Sólo es neceario para el archivo DACE
-    activarListado = True
-
-    for archivo in args:
-        # Selección de archivos para procesar. Se extrae su extensión para
-        # elegir el procesador adecuado
-        ext = splitext(archivo)[1]
-
-        # Constuir el camino para procesar los archivos.
-        if opcionDir:
-            camino = join(nomDirectorio,archivo)
-
-        if  nomArchivoDace == archivo:
-            #Excepcion para cuando no se encuentre 0800
-            if  ext == ".xml":
-                procesarDOC(camino,listaMaterias ,listaDACE)
-            elif ext == ".pdf":
-                procesarPDF(camino,listaDACE)
-            elif ext == ".xls" or ext == ".xlsx":
-                procesarXLS(camino, activarListado, listaMaterias, listaDACE)
-            continue
-
-        if  ext == ".xml":
-            procesarDOC(camino,listaMaterias ,listaOfertas)
-        elif ext == ".pdf":
-            procesarPDF(camino,listaOfertas)
-        elif ext == ".xls" or ext == ".xlsx":
-            procesarXLS(camino, activarListado, listaMaterias, listaOfertas)
+    (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio, opcionDir)
 
     print("\nOfertas cargadas con éxito")
 
-    imprimirResultados("ListaDace",listaDACE)
-    imprimirResultados("ListaOfertas",listaOfertas)
+    # imprimirResultados("ListaDace",listaDACE)
+    # imprimirResultados("ListaOfertas",listaOfertas)
 
     materiasDacePorBorrar = []
     procesado = []
