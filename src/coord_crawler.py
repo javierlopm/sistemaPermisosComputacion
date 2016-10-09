@@ -55,7 +55,7 @@ class StudentDownloader():
             self.browser.find_element_by_tag_name("form").submit()
             self.browser.find_element_by_link_text("Informe Académico").click()
 
-            file = codecs.open( "./" + self.save_dir + "/" + c + ".html", "w",encoding="iso-8859-1")
+            file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[3:] + ".html", "w",encoding="iso-8859-1")
             file.write(self.browser.page_source)
             file.close()
 
