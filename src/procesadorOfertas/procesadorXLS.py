@@ -2,6 +2,8 @@ from mmap import mmap,ACCESS_READ
 from xlrd import open_workbook,cellname
 from os.path import isfile
 from os import remove
+import sys
+import getopt
 import re
 
 def analizarCabecera(cabecera):
@@ -12,6 +14,7 @@ def analizarCabecera(cabecera):
     patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
         "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
     patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
+
 
     for celda in cabecera:
         searchCodMateria = re.search("C[oó]d(_Asignatura|igo)", celda, re.I)
@@ -26,7 +29,7 @@ def analizarCabecera(cabecera):
                 campoCarrera = nroCampo
         nroCampo += 1
 
-    #print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
+    print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
     #print("posCamposInvalidos: ",posCamposInvalidos)
     if len(posCamposValidos) == 7:
         return (True,posCamposValidos, existeCarrera, campoCarrera)
@@ -93,20 +96,62 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                 #print(nuevaEntrada)
                 fdSalida.append(nuevaEntrada.split(','))
 
+def usoAyuda():
+    print("""Uso: prog -f nombre_archivo_salida -m archivo_materias_requeridas
+                    archivo1.pdf archivo2.xls ... archivoN
+    prog [-h, --help] """)
 
+def obtArgs(entrada):
+    nomArchivoSalida = ""
+    nomArchivoMaterias = ""
+    try:
+        opts, args = getopt.getopt(entrada, "f:m:h", ["help"])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err) # will print something like "option -a not recognized"
+        usoAyuda()
+        sys.exit(2)
+
+    for o, a in opts:
+        if o == "-f":
+            nomArchivoSalida = a
+        elif o == "-m":
+            nomArchivoMaterias = a
+        elif o in ("-h", "--help"):
+            usoAyuda()
+            sys.exit()
+        else:
+            assert False, "unhandled option"
+
+    if not nomArchivoMaterias:
+      print("Se requiere el parametro -m")
+      sys.exit(2)
+
+    return (nomArchivoSalida, nomArchivoMaterias, args)
 
 if ( __name__ == "__main__"):
-    bookCE = open_workbook('OfertaCE.xls')
-    bookID = open_workbook('OfertaID.xlsx')
-    bookMAT = open_workbook('OfertaMatematicas.xls')
-    sheet0 = bookID.sheet_by_index(0)
+    (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
+
+    listaMaterias = []
+    for materia in open(nomArchivoMaterias, 'r'):
+        if (not materia.isspace()) and materia[0] != '#':
+            listaMaterias.append(materia.rstrip(' \t\n\r'))
+
+    # bookCE = open_workbook('OfertaCE.xls')
+    # bookID = open_workbook('OfertaID.xlsx')
+    # bookMAT = open_workbook('OfertaMatematicas.xls')
+    sheet0 = open_workbook(args[0]).sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
-    # if isfile('OfertaXLS.csv'):
-    #     remove('OfertaXLS.csv')
+    if isfile(nomArchivoSalida):
+        remove(nomArchivoSalida)
 
-    #f = open('OfertaXLS.csv', 'a')
-    #f.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES\n")
+    if nomArchivoSalida:
+        f = open(nomArchivoSalida, 'a')
+        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+    else:
+        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
+
     cabeceraProcesada = False
     for nroFila in range(sheet0.nrows):
         if not cabeceraProcesada:
@@ -114,7 +159,7 @@ if ( __name__ == "__main__"):
              posCamposValidos, \
              existeCarrera, \
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
-            #print(sheet0.row_values(nroFila), cabeceraProcesada, "\n\n")
+            print(sheet0.row_values(nroFila), cabeceraProcesada, "||", posCamposValidos, "\n\n")
         else:
             #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
@@ -146,7 +191,10 @@ if ( __name__ == "__main__"):
                     nuevaEntrada += ',' + entrada[pos]
 
             nuevaEntrada = nuevaEntrada[1:]
-            if nuevaEntrada and nuevaEntrada[0] != ',' :
-                print("Nueva entrada", nuevaEntrada) # Para debugging
-                #f.write(','.join(entrada) + "\n")
-    # f.close()
+            if nomArchivoSalida:
+                f.write(','.join(entrada) + "\n")
+            elif nuevaEntrada and nuevaEntrada[0] != ',' :
+                print(nuevaEntrada) # Para debugging
+
+    if nomArchivoSalida:
+        f.close()
