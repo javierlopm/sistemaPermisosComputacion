@@ -287,7 +287,7 @@ if ( __name__ == "__main__"):
             horariosOrdenados = sorted(fil[2:], key=ordenarDias)
          acum += componerHorarioCSV(horariosOrdenados)
       else:
-         acum = fil[0] + ',A'
+         acum = fil[0] + ',A,,,,,'
 
       if nomArchivoSalida:
         f.write(acum + '\n')

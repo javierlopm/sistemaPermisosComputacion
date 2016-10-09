@@ -17,7 +17,7 @@ Pruebas/. Salidas correctas:
 procedimientos de insumos.
 - doc1.xml
     COD_ASIGNATURA,BLOQUE,L,M,MI,J,V
-    PB5611,A
+    PB5611,A,,,,,
     PB5671,A,7-8,,7-8,2-3,
 
 - doc2.xml

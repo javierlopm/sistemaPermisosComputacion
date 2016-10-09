@@ -6,15 +6,17 @@ import sys
 import getopt
 import re
 
+
+patronMateria = "^(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)$"
+patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
+    "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
+patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
+
 def analizarCabecera(cabecera):
     nroCampo = 0
     posCamposValidos = []
     existeCarrera = False
     campoCarrera = -1
-    patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
-        "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
-    patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
-
 
     for celda in cabecera:
         searchCodMateria = re.search("C[oó]d(_Asignatura|igo)", celda, re.I)
@@ -29,7 +31,7 @@ def analizarCabecera(cabecera):
                 campoCarrera = nroCampo
         nroCampo += 1
 
-    print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
+    #print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
     #print("posCamposInvalidos: ",posCamposInvalidos)
     if len(posCamposValidos) == 7:
         return (True,posCamposValidos, existeCarrera, campoCarrera)
@@ -43,6 +45,13 @@ def filtrarMateria(txt):
     #print("TXT", txt)
     return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
             and txt[2].isdigit()
+
+def normalizarMateria(txt):
+    mat = ""
+    for char in txt:
+        if char != ' ' and char != '-':
+            mat += char
+    return mat
 
 def verificarCerrar(txt):
     return re.search("cerrar", txt, re.I)
@@ -84,7 +93,7 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                 if entrada[pos] == '-':
                     entrada[pos] = ''
 
-                if re.search("^(\w\w-?\d\d\d\d|\w\w\w-?\d\d\d)$", entrada[pos]) \
+                if re.search(patronMateria, entrada[pos]) \
                     or filtrarBloque(entrada[pos]) \
                     or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
                     or entrada[pos] == '':
@@ -137,9 +146,8 @@ if ( __name__ == "__main__"):
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-    # bookCE = open_workbook('OfertaCE.xls')
-    # bookID = open_workbook('OfertaID.xlsx')
-    # bookMAT = open_workbook('OfertaMatematicas.xls')
+    #print(listaMaterias)
+
     sheet0 = open_workbook(args[0]).sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
@@ -159,38 +167,55 @@ if ( __name__ == "__main__"):
              posCamposValidos, \
              existeCarrera, \
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
-            print(sheet0.row_values(nroFila), cabeceraProcesada, "||", posCamposValidos, "\n\n")
+            #print(sheet0.row_values(nroFila), cabeceraProcesada, "||", posCamposValidos, "\n\n")
         else:
             #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
-            #print("Nueva linea", entrada)
+            #print(entrada)
             # Comprueba si pertenece al pensum de computación
             if (existeCarrera and \
                     (not re.search("0800",str(entrada[campoCarrera])))):
                 #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
                 continue
+
+            #print("Antes Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
+            if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
+                #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
+                continue
             # elif (not entrada[posCamposValidos[0]] in listaMaterias):
             #     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
             #     continue
-
+            #print(entrada)
             nuevaEntrada = ""
             for pos in posCamposValidos:
                 # Para verificar semantica de archivo de ID
-                if verificarCerrar(entrada[pos]):
+                if entrada[pos] != '':
+                    txt = str(entrada[pos]).strip()
+                elif isinstance(entrada[pos],float):
+                    print("float", entrada[pos])
+                    txt = str(int(entrada[pos]))
+                else:
+                    txt = entrada[pos]
+                if txt == '-':
+                    entrada[pos] = ''
+                    txt = ''
+
+                print(txt)
+                if verificarCerrar(txt):
                     nuevaEntrada = ""
                     #print("Tienen cerrar", ','.join(entrada))
                     break
 
-                if entrada[pos] == '-':
-                    entrada[pos] = ''
-
-                if filtrarMateria(entrada[pos]) \
-                    or filtrarBloque(entrada[pos]) \
-                    or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
-                    or entrada[pos] == '':
-                    nuevaEntrada += ',' + entrada[pos]
+                if re.search(patronMateria,txt, re.I):
+                    nuevaEntrada += ',' + normalizarMateria(txt)
+                elif filtrarBloque(txt) \
+                    or re.search("^\d{1,2}(-\d{1,2})?$", txt) \
+                    or txt == '':
+                    #print("pasa el filtro", txt)
+                    nuevaEntrada += ',' + txt
 
             nuevaEntrada = nuevaEntrada[1:]
+            #print(nuevaEntrada)
             if nomArchivoSalida:
                 f.write(','.join(entrada) + "\n")
             elif nuevaEntrada and nuevaEntrada[0] != ',' :
