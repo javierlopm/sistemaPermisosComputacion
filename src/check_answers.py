@@ -4,8 +4,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 from coord_crawler import *
+import getpass
 
-usuario = raw_input("Usuario:")
+usuario = input("Usuario:")
 clave   = getpass.getpass("Clave  :")
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
