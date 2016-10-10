@@ -26,13 +26,14 @@ class Ofertas( xml.sax.ContentHandler ):
         self.listaMaterias = listaMaterias
         self.corresDiaDistancia = corresDiaDistancia
         self.ultimoDia = ''
-        self.patronDia = "(L[Uu][Nn](es)?|M[Aa][Rr](tes)?|M[Ii][Eeé]([Rr]|rcoles)?|" \
-            + "[Jj][Uu][Ee](ves)?|V[Ii][Ee]([Rr]|nes)?)"
-        self.patronHoras = "\d{1,2}-\d{1,2}"
+        self.patronDia = "(L;?[Uu];?[Nn];?(es)?|M;?[Aa];?[Rr];?(tes)?|M;?[Ii];?[Eeé];?([Rr];?|rcoles)?|" \
+            + "[Jj];?[Uu];?[Ee];?(ves)?|V;?[Ii];?[Ee];?([Rr];?|nes)?)"
+        self.patronDiasFrac = self.patronDia + "(\s*-\s*" + self.patronDia + ")?"
+        self.patronHoras = "\d{1,2}(-\d{1,2})?"
         self.patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
-        self.patronHorario = "(" + self.patronDia + "(\s*-\s*" + self.patronDia + ")?" \
+        self.patronHorario = "(" + self.patronDia + "((\s*|;*)-(\s*|;*)" + self.patronDia + ")?" \
          + "(\s+|;)" + self.patronHoras + "(\s+|;)?){1,2}"
-        self.patronBloque = "[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+\D"
+        self.patronBloque = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+\D\)?"
    # Call when an element starts
     def startElement(self, tag, attributes):
         pass
@@ -40,6 +41,7 @@ class Ofertas( xml.sax.ContentHandler ):
    # Call when an elements ends
     def endElement(self, tag):
         if tag == "table:table-row":
+            #print("termina agregar", self.filas, "\n\n")
             if self.filas and self.filas[0] in self.listaMaterias:
                 #print("table:table-row", self.filas, end='\n')
                 self.tuplas.append(self.filas)
@@ -55,12 +57,14 @@ class Ofertas( xml.sax.ContentHandler ):
 
             searchBloque = re.search(self.patronBloque,self.celda, re.I)
             if searchBloque:
-                self.filas.append(self.filtrarBloque(self.celda))
+                #print( "BLoque", searchBloque.group(), "||", self.celda)
+                self.filas.append(self.filtrarBloque(searchBloque.group()))
 
             searchHor = re.search(self.patronHorario, self.celda, re.I)
-
+            #print("\n\nfila", self.celda , "||", searchHor)
             if searchHor:
-                #print("listaHorarios", self.celda , dividirStr(searchHor.group(), ';'))
+                #print("\n\nlistaHorarios", self.celda , "||", searchHor.group() , "||", dividirStr(searchHor.group(), ';'), "||",self.normalizarHorario(dividirStr(searchHor.group(), ';')))
+                #print("inicia horario", self.filas, self.normalizarHorario(dividirStr(searchHor.group(), ';')))
                 for hor in self.normalizarHorario( \
                                 dividirStr(searchHor.group(), ';')):
                     #print("hor", hor)
@@ -74,13 +78,14 @@ class Ofertas( xml.sax.ContentHandler ):
                        self.filas.append((txt,dias[1][0:2].upper()))
                     else:
                        self.filas.append((txt,dias[0][0:2].upper()))
+                #print("termina horario", self.filas)
             self.celda = ""
 
    # Call when a character is read
     def characters(self, content):
         if not (content.isspace()) and content.isprintable():
             #print (content.strip(' \t\n\r'))
-            self.celda += ";" + content.strip(' \t\n\r.-*()')
+            self.celda += ";" + content.strip(' \t\n\r.*()')
         #print("characters", content)
 
     def filtrarBloque(self,txt):
@@ -91,17 +96,33 @@ class Ofertas( xml.sax.ContentHandler ):
         nuevoTxt = []
         fragmentado = False
         for item in txt:
-            if re.search(self.patronHorario, item, re.I):
-                nuevoTxt.append(item)
-                continue
-            elif re.search(self.patronDia + "(\s*-\s*" + self.patronDia + ")?",\
-                           item, re.I):
+            if re.search('^\s*' + self.patronHoras + '\s*$', item):
+                hor += ' ' + item.strip()
+            else:
                 hor += item
-                fragmentado = True
-            elif fragmentado and re.search(self.patronHoras, item):
-                nuevoTxt.append(hor + ' ' + item)
-                fragmentado = False
+            #print(hor, "||", item)
+            # Reconocer horarios completos
+            if re.search(self.patronHorario, hor, re.I):
+                #print("frag completo")
+                nuevoTxt.append(hor)
+                hor = ""
+            #elif re.search(self.patronDia + "\s*-?\s*", hor, re.I):
+            # Parte de dias fraccionado.
+            elif re.search(self.patronDiasFrac, hor, re.I):
+                #print("frag")
+                hor = "".join(dividirStr(hor))
+            # Unir dias fraccionados con horas
+            # elif fragmentado and re.search(self.patronHoras, item):
 
+            #     #nuevoTxt.append(hor + ' ' + item)
+            #     nuevoTxt.append(hor)
+            #     fragmentado = False
+            #     hor = ""
+            # elif re.search(self.patronDiasFrac, hor, re.I)  \
+            #     and re.search(self.patronHoras, item):
+            #     print("frag completo hor")
+
+        #print("Salida horario", nuevoTxt)
         return nuevoTxt
 
     def normalizarMateria(self,txt):
@@ -187,8 +208,7 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
         acum = ""
 
 def usoAyuda():
-    print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
-                    -m archivo_materias_requeridas [--dir-input=nomDir ]
+    print("""Uso: prog -f nombre_archivo_salida -m archivo_materias_requeridas
                     archivo1.pdf archivo2.xls ... archivoN
     prog [-h, --help] """)
 
@@ -196,7 +216,7 @@ def obtArgs(entrada):
     nomArchivoSalida = ""
     nomArchivoMaterias = ""
     try:
-        opts, args = getopt.getopt(entrada, "f:m:h", ["help","dir-input="])
+        opts, args = getopt.getopt(entrada, "f:m:h", ["help"])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err) # will print something like "option -a not recognized"
@@ -214,7 +234,7 @@ def obtArgs(entrada):
         else:
             assert False, "unhandled option"
 
-    if  not nomArchivoMaterias:
+    if not nomArchivoMaterias:
       print("Se requiere el parametro -m")
       sys.exit(2)
 
@@ -246,10 +266,10 @@ if ( __name__ == "__main__"):
         remove(nomArchivoSalida)
 
     if nomArchivoSalida:
-      f = open('OfertaDOC.csv', 'a')
-      f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        f = open(nomArchivoSalida, 'a')
+        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
     else:
-      print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
+        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
     acum = ""
@@ -267,7 +287,7 @@ if ( __name__ == "__main__"):
             horariosOrdenados = sorted(fil[2:], key=ordenarDias)
          acum += componerHorarioCSV(horariosOrdenados)
       else:
-         acum = fil[0] + ',A'
+         acum = fil[0] + ',A,,,,,'
 
       if nomArchivoSalida:
         f.write(acum + '\n')
@@ -292,5 +312,5 @@ if ( __name__ == "__main__"):
 
    #print(Handler.normalizarHorario(['Lun-Mier 5-6', 'Vie', '9-10']))
 
-   # "c:\Program Files (x86)\LibreOffice 5\program\soffice.exe"  -convert-to xml OfertaPB.doc
+   # "c:\Program Files (x86)\LibreOffice 5\program\soffice.exe"  -convert-to xml doc4.doc --headless
    # "D:\Archivos de programa\LibreOffice 4\program\soffice.exe" -convert-to xml doc1.doc --headless
