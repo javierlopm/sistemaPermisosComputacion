@@ -13,14 +13,15 @@ EJECUCIONES DE PRUEBAS:
 - Materias provenientes de PDF
 > python procesadorOfertas.py materiasRequeridas.txt OfertaSIG.pdf 0800DACE.xls OfertaProcesadas.csv
 
-Pruebas/. Salidas correctas:
-procedimientos de insumos.
-- doc1.xml
+Pruebas/
+Salidas correctas:
+Procesamiento de insumos.
+- doc1
     COD_ASIGNATURA,BLOQUE,L,M,MI,J,V
     PB5611,A,,,,,
     PB5671,A,7-8,,7-8,2-3,
 
-- doc2.xml
+- doc2
     COD_ASIGNATURA,BLOQUE,L,M,MI,J,V
     PB5611,A,,,,5-7,
     PB5611,B,,3-4,,3-4,
@@ -28,7 +29,7 @@ procedimientos de insumos.
     PB5671,A,7-8,,7-8,2-3,
     CO5212,A,3-4,,3-4,,
     CO5212,D,,4,,,
-- doc3.xml
+- doc3
     COD_ASIGNATURA,BLOQUE,L,M,MI,J,V
     CO3211,C,,3-4,3-4,3-4,
     CO3211,F,3-4,5-6,3-4,,
@@ -42,7 +43,7 @@ procedimientos de insumos.
     CO5412,A,3-4,,3-4,,
     CO6531,A,,3-4,,3-4,
     CO6612,A,,5-6,,5-6,
-- doc4.xml
+- doc4
     COD_ASIGNATURA,BLOQUE,L,M,MI,J,V
     CO3211,C,,3-4,3-4,3-4,
     CO3211,F,3-4,5-6,3-4,,

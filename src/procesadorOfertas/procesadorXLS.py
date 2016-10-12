@@ -11,6 +11,7 @@ patronMateria = "^(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)$"
 patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
     "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
 patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
+patronHorario = "^(\d{1,2}(-\d{1,2})?)$"
 
 def analizarCabecera(cabecera):
     nroCampo = 0
@@ -75,29 +76,36 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
             # Comprueba si pertenece al pensum de computación
             if activarFitrado:
                 if (existeCarrera and \
-                        (not re.search("0800",str(entrada[campoCarrera])))):
-                    #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
-                    continue
-                elif (not entrada[posCamposValidos[0]] in listaMaterias):
-                    #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-                    continue
+                    (not re.search("0800",str(entrada[campoCarrera])))) \
+                    and (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
+                #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
+                continue
 
             nuevaEntrada = ""
             for pos in posCamposValidos:
+                if isinstance(entrada[pos],float):
+                    txt = str(round(entrada[pos]))
+                elif entrada[pos] != '':
+                    txt = str(entrada[pos]).strip()
+                else:
+                    txt = entrada[pos]
+
+                if txt == '-':
+                    entrada[pos] = ''
+                    txt = ''
+
                 # Para verificar semántica de archivo del dpto ID
-                if verificarCerrar(entrada[pos]):
+                if verificarCerrar(txt):
                     nuevaEntrada = ""
-                    #print(entrada)
+                    #print("Tienen cerrar", ','.join(entrada))
                     break
 
-                if entrada[pos] == '-':
-                    entrada[pos] = ''
-
-                if re.search(patronMateria, entrada[pos]) \
-                    or filtrarBloque(entrada[pos]) \
-                    or re.search("^\d{1,2}(-\d{1,2})?$",entrada[pos]) \
-                    or entrada[pos] == '':
-                    nuevaEntrada += ',' + entrada[pos]
+                if re.search(patronMateria,txt, re.I):
+                    nuevaEntrada += ',' + normalizarMateria(txt)
+                elif filtrarBloque(txt) \
+                    or txt == '' or re.search(patronHorario, txt):
+                    #print("pasa el filtro", txt)
+                    nuevaEntrada += ',' + txt
 
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != ',' :
@@ -169,38 +177,37 @@ if ( __name__ == "__main__"):
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
             #print(sheet0.row_values(nroFila), cabeceraProcesada, "||", posCamposValidos, "\n\n")
         else:
-            #print("Listo para procesar entradas")
             entrada = sheet0.row_values(nroFila)
             #print(entrada)
             # Comprueba si pertenece al pensum de computación
             if (existeCarrera and \
-                    (not re.search("0800",str(entrada[campoCarrera])))):
+                    (not re.search("0800",str(entrada[campoCarrera])))) \
+                and (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
                 #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
                 continue
 
             #print("Antes Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-            if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
-                #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-                continue
-            # elif (not entrada[posCamposValidos[0]] in listaMaterias):
+            # if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
             #     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
             #     continue
+
             #print(entrada)
             nuevaEntrada = ""
             for pos in posCamposValidos:
-                # Para verificar semantica de archivo de ID
-                if entrada[pos] != '':
+                if isinstance(entrada[pos],float):
+                    #print("float", entrada[pos])
+                    txt = str(round(entrada[pos]))
+                elif entrada[pos] != '':
                     txt = str(entrada[pos]).strip()
-                elif isinstance(entrada[pos],float):
-                    print("float", entrada[pos])
-                    txt = str(int(entrada[pos]))
                 else:
                     txt = entrada[pos]
+
                 if txt == '-':
                     entrada[pos] = ''
                     txt = ''
 
-                print(txt)
+                #print(txt, type(txt))
+                # Para verificar semantica de archivo de ID
                 if verificarCerrar(txt):
                     nuevaEntrada = ""
                     #print("Tienen cerrar", ','.join(entrada))
@@ -208,8 +215,9 @@ if ( __name__ == "__main__"):
 
                 if re.search(patronMateria,txt, re.I):
                     nuevaEntrada += ',' + normalizarMateria(txt)
+                elif re.search(patronHorario, txt):
+                    nuevaEntrada += ',' + txt
                 elif filtrarBloque(txt) \
-                    or re.search("^\d{1,2}(-\d{1,2})?$", txt) \
                     or txt == '':
                     #print("pasa el filtro", txt)
                     nuevaEntrada += ',' + txt
