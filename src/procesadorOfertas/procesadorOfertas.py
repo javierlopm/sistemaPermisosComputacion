@@ -1,6 +1,6 @@
 from procesadorXLS import procesarXLS
-from procesadorDOC2CSV import procesarDOC
-from procesadorPDF2CSV import procesarPDF
+from procesadorDOC import procesarDOC
+from procesadorPDF import procesarPDF
 import sys
 import getopt
 from os.path import splitext, isfile, join
@@ -16,12 +16,8 @@ def imprimirResultados(mensaje,listaOfertas):
 def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
     listaOfertas = []
     listaDACE = []
-     # Lista necesaria para evitar eliminar materias especiales que no se
-    # incluyen en la ofertas
-    iniMatEspeciales = ["CI","CC", "EP", "CS"]
     # Deshabilita el filtrado en el procesador XLS.
     # Sólo es neceario para el archivo DACE
-    activarListado = True
 
     for archivo in listaArchivos:
         # Selección de archivos para procesar. Se extrae su extensión para
@@ -39,15 +35,15 @@ def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
             elif ext == ".pdf":
                 procesarPDF(camino, listaMaterias, listaDACE)
             elif ext == ".xls" or ext == ".xlsx":
-                procesarXLS(camino, activarListado, listaMaterias, listaDACE)
+                procesarXLS(camino, False, listaMaterias, listaDACE)
             continue
 
         if  ext == ".xml":
             procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
-            procesarPDF(camino,listaOfertas)
+            procesarPDF(camino,listaMaterias, listaOfertas)
         elif ext == ".xls" or ext == ".xlsx":
-            procesarXLS(camino, activarListado, listaMaterias, listaOfertas)
+            procesarXLS(camino, True, listaMaterias, listaOfertas)
 
     return (listaOfertas, listaDACE)
 
@@ -64,7 +60,7 @@ def obtArgs(entrada):
     nomDirectorio = ""
     opcionDir = False
     try:
-        opts, args = getopt.getopt(entrada, "d:f:m:h", ["help","dir-input="])
+        opts, args = getopt.getopt(entrada, "d:f:m:h", ["help","input-dir="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err) # will print something like "option -a not recognized"
@@ -75,7 +71,6 @@ def obtArgs(entrada):
         assert False, "Número incorrecto de parámetros"
         usoAyuda()
 
-
     for o, a in opts:
         if o == "-f":
             nomArchivoSalida = a
@@ -83,7 +78,7 @@ def obtArgs(entrada):
             nomArchivoDace = a
         elif o == "-m":
             nomArchivoMaterias = a
-        elif o == "--dir-input":
+        elif o == "--input-dir":
             nomDirectorio = a
             opcionDir = True
         elif o in ("-h", "--help"):
@@ -120,9 +115,13 @@ if __name__ == '__main__':
 
     print("\nOfertas cargadas con éxito")
 
-    # imprimirResultados("ListaDace",listaDACE)
-    # imprimirResultados("ListaOfertas",listaOfertas)
+    imprimirResultados("ListaDace",listaDACE)
+    imprimirResultados("ListaOfertas",listaOfertas)
 
+
+    # Lista necesaria para evitar eliminar materias especiales que no se
+    # incluyen en la ofertas
+    iniMatEspeciales = ["CI","CC", "EP", "CS"]
     materiasDacePorBorrar = []
     procesado = []
     filaEncontrada = False

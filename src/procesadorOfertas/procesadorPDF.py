@@ -15,46 +15,33 @@ import re
 from decimal import Decimal
 from os.path import isfile
 from os import remove
+import sys
+import getopt
 
 class Ofertas( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
         self.tuplas = []
         self.fila = []
-        self.filaAnt = []
         self.posCaracteres = []
         self.cabeceraDias = []
         self.celda = ""
         self.listaMaterias = listaMaterias
         self.cabeceraLista = False
         self.existeCarrera = False
-        self.patronHoras = "^\d{1,2}-\d{1,2}$"
+        self.patronHoras = "^\d{1,2}(-\d{1,2})?$"
         self.patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
         "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
-        self.patronMateria = "^\w\w-?\d\d\d\d$"
+        self.patronMateria = "\w\w\s*-?\s*\d\d\d\d"
         self.patronBloque = "^\(?(A|B|C|D)\)?$"
         self.patronCarrera = "0?800"
-        self.longFila = 0
 
    # Call when an element starts
     def startElement(self, tag, attributes):
         if tag == "char":
-            if attributes['c'] == ' ':
-                if not self.cabeceraLista:
-                    self.cabeceraLista = \
-                        self.filtroCabecera(self.celda, self.posCaracteres)
-
-                if re.search("Carreras?", self.celda, re.I):
-                    #print("existeCarrera Start")
-                    self.existeCarrera = True
-
-                self.filtrarTexto(self.celda)
-                self.celda = ""
-                self.posCaracteres = []
-            else:
-                self.celda += attributes["c"]
-                self.posCaracteres.append(
-                    (attributes['bbox'].split(" ")[0], \
-                     attributes['bbox'].split(" ")[2]))
+            self.celda += attributes["c"]
+            self.posCaracteres.append(
+                (attributes['bbox'].split(" ")[0], \
+                 attributes['bbox'].split(" ")[2]))
 
    # Call when an elements ends
     def endElement(self, tag):
@@ -68,8 +55,8 @@ class Ofertas( xml.sax.ContentHandler ):
                     #print("existeCarrera END")
                     self.existeCarrera = True
 
-                print("Celda", self.celda)
-                self.filtrarTexto(self.celda)
+                #print("Celda", self.celda)
+                self.filtrarTexto(self.celda.strip())
 
             self.celda = ""
             self.posCaracteres = []
@@ -80,13 +67,14 @@ class Ofertas( xml.sax.ContentHandler ):
             #     print("Aceptada" , self.fila)
             #     self.tuplas.append(self.fila)
 
-            if self.fila and self.fila[0] in self.listaMaterias:
-                print("Aceptada" , self.fila)
-                self.tuplas.append(self.fila)
+            if self.fila:
+                #print(self.fila)
+                if  self.fila[0] in self.listaMaterias:
+                    #print("Aceptada" , self.fila)
+                    self.tuplas.append(self.fila)
             self.fila = []
             self.celda = ""
             self.posCaracteres = []
-            self.longFila = 0
 
 
    # Call when a character is read
@@ -95,10 +83,11 @@ class Ofertas( xml.sax.ContentHandler ):
 
     # Encuentra los dias de semana y guarda sus posiciones en la página.
     def filtroCabecera(self,txt, posCaracteres):
-        if re.search(self.patronDias, txt, re.I):
+        searchDias = re.search(self.patronDias, txt, re.I)
+        if searchDias:
             longPalabra = len(txt)
-            #print("posCaracteres", txt , posCaracteres)
-            self.cabeceraDias.append((txt[0:2],Decimal(posCaracteres[0][0]),\
+            # print("posCaracteres", txt , posCaracteres)
+            self.cabeceraDias.append((searchDias.group()[0:2],Decimal(posCaracteres[0][0]),\
                                       Decimal(posCaracteres[longPalabra-1][1])))
 
         # if len(self.cabeceraDias) == 5:
@@ -106,20 +95,24 @@ class Ofertas( xml.sax.ContentHandler ):
         return len(self.cabeceraDias) == 5
 
     def filtrarTexto(self,txt):
-
-        if (re.search(self.patronMateria, txt, re.I)
-            or re.search(self.patronBloque, txt, re.I)):
+        searchMat = re.search(self.patronMateria, txt, re.I)
+        if searchMat:
+            #print(searchMat)
+            self.fila.append(self.normalizarMateria(searchMat.group()))
+        elif re.search(self.patronBloque, txt, re.I):
+            #print(re.search(self.patronBloque, txt, re.I))
             self.fila.append(txt)
-            self.longFila += 1
 
         elif re.search(self.patronHoras, txt):
+            #print(re.search(self.patronHoras, txt))
+            #print(self.fila[0])
             for (dia,limInf,limSup) in self.cabeceraDias:
+                # print(limInf, "posIniTxt <=", dia, "posIniDia ", Decimal(self.posCaracteres[0][0]), \
+                #       "posFinTxt", Decimal(self.posCaracteres[-1][0]),"<= posFinDia", limSup )
                 if (limInf - 3) <= Decimal(self.posCaracteres[0][0]) \
                     and Decimal(self.posCaracteres[-1][1]) <= (limSup + 3):
-                    # print("dia", dia, "posIniDia", limInf, "posIniTxt", Decimal(self.posCaracteres[0][0]), \
-                    #       "posFinTxt", Decimal(self.posCaracteres[long-1][0]),"posFinDia", limSup )
                     self.fila.append((txt,dia))
-                    self.longFila += 1
+                    #print((txt,dia))
                     break
 
         # elif self.existeCarrera and re.search(self.patronCarrera, txt):
@@ -127,14 +120,38 @@ class Ofertas( xml.sax.ContentHandler ):
         #     self.tuplas.append(self.fila)
         #     self.fila = []
 
+    def normalizarMateria(self,txt):
+        mat = ""
+        for char in txt:
+            if char != ' ' and char != '-':
+                mat += char
+        return mat
+
+def componerHorarioCSV(listaHorarios):
+   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
+   ultimoDia = ''
+   horarios = ""
+   for (hora,dia) in listaHorarios:
+      if ultimoDia == '':
+         ultimoDia = dia
+         horarios += (corresDiaDistancia[dia] * ',') + hora
+      else:
+         horarios += ((corresDiaDistancia[dia] -  \
+                    corresDiaDistancia[ultimoDia]) * ',') + hora
+         ultimoDia = dia
+
+   if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
+         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
+
+   return horarios
+
 def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
-    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
     doc = fitz.open(nombreArchivoEntrada)
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas()
+    Handler = Ofertas(listaMaterias)
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
@@ -158,121 +175,96 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
     nroCampo = 0
-    for fil in Handler.tuplas[1:]:    #Eliminar residuos de la cabecera
-        for txt in fil:
-            nroCampo += 1
-            #Comprobar que haya un bloque. Sino se agrega, por defecto, el bloque A
-            if nroCampo == 2 and (not txt.isalpha()):
-                row += ',A'
-                continue
-
-            if isinstance(txt, tuple):
-                hor, dia = txt
-
-                if ultimoDia == '':
-                    row += (corresDiaDistancia[dia] * ',') + hor
+    for fil in Handler.tuplas:    #Eliminar residuos de la cabecera
+        if fil:
+            #print(fil)
+            if len(fil) > 2:
+                #print("Fila", fil, fil[1:])
+                if isinstance(fil[1],tuple):
+                    acum = fil[0] + ',A'
+                    #print("Seleccion1", fil[1:])
+                    horariosOrdenados = fil[1:]
                 else:
-                    row += ((corresDiaDistancia[dia] -  \
-                             corresDiaDistancia[ultimoDia]) * ',') + hor
-                ultimoDia = dia
-                continue
+                    #print("Seleccion2", fil[2:])
+                    acum = ",".join(fil[:2])
+                    horariosOrdenados = fil[2:]
+                acum += componerHorarioCSV(horariosOrdenados)
+            else:
+                acum = fil[0] + ',A,,,,,'
 
-            row += ','+ txt
+            fdSalida.append(acum.split(','))
+            acum = ""
 
-        if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-            row += ((5 - corresDiaDistancia[ultimoDia]) * ',')
 
-        row = row [1:]    #Remover la primera coma (,)
-        #fdSalida.write(row + '\n') #Salida para archivo
-        fdSalida.append(row.split(','))
-        row = ""
-        ultimoDia = ''
-        nroCampo = 0
+def usoAyuda():
+    print("""Uso: prog -f nombre_archivo_salida -m archivo_materias_requeridas
+                    archivo1.pdf archivo2.xls ... archivoN
+    prog [-h, --help] """)
+
+def obtArgs(entrada):
+    nomArchivoSalida = ""
+    nomArchivoMaterias = ""
+    try:
+        opts, args = getopt.getopt(entrada, "f:m:h", ["help"])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err) # will print something like "option -a not recognized"
+        usoAyuda()
+        sys.exit(2)
+
+    for o, a in opts:
+        if o == "-f":
+            nomArchivoSalida = a
+        elif o == "-m":
+            nomArchivoMaterias = a
+        elif o in ("-h", "--help"):
+            usoAyuda()
+            sys.exit()
+        else:
+            assert False, "unhandled option"
+
+    if not nomArchivoMaterias:
+      print("Se requiere el parametro -m")
+      sys.exit(2)
+
+    return (nomArchivoSalida, nomArchivoMaterias, args)
+
 
 if ( __name__ == "__main__"):
+    (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
     nomArchivoEntrada = 'Oferta_Pregrado_1.pdf'
-    #Diccionario para distancias entre comas
-    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
 
-    # Obtener las materias requeridas
-    nomArchivoMaterias = "materiasRequeridas.txt"
     listaMaterias = []
     for materia in open(nomArchivoMaterias, 'r'):
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-    doc = fitz.open(nomArchivoEntrada)
-    # create an XMLReader
-    parser = xml.sax.make_parser()
-    # turn off namepsaces
-    parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas(listaMaterias)
-    # override the default ContextHandler
-    parser.setContentHandler( Handler )
+    fdSalida = []
+    procesarPDF(args[0],listaMaterias,fdSalida)
 
-    if isfile(nomArchivoEntrada + '.csv'):
-        remove(nomArchivoEntrada + '.csv')
+    if isfile(nomArchivoSalida):
+        remove(nomArchivoSalida)
 
-    page = doc.loadPage(52)
-    xmlText = page.getText(output = "xml")
-    f = open('textPDFXML0.xml', 'w')
-    f.write(xmlText)
-    # Procesar el archivo XML
-    parser.parse("textPDFXML0.xml")
-    f.close()
+    if nomArchivoSalida:
+        f = open(nomArchivoSalida, 'a')
+        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+    else:
+        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
-    # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
-    # Concatenar en un solo string e imprimir filas en formato CSV.
 
-    # Variable para escribir las filas en el archivo destino
-    row = ""
-    # Variable para marcar el ultimo dia procesado para el horario
-    ultimoDia = ''
-    nroCampo = 0
-    salida = open(nomArchivoEntrada + '.csv', 'a')
-    salida.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
-    print(Handler.tuplas)
+    for fila in fdSalida:
+        if nomArchivoSalida:
+            f.write(','.join(fila) + "\n")
+        else:
+            print(','.join(fila))
 
-    for fil in Handler.tuplas:    #Eliminar residuos de la cabecera
-        for txt in fil:
-            nroCampo += 1
-            #Comprobar que haya un bloque. Sino se agrega, por defecto, el bloque A
-            if nroCampo == 2 and (not txt.isalpha()):
-                row += ',A'
-                continue
+    if nomArchivoSalida:
+        f.close()
 
-            if isinstance(txt, tuple):
-                hor, dia = txt
-
-                if ultimoDia == '':
-                    row += (corresDiaDistancia[dia] * ',') + hor
-                else:
-                    row += ((corresDiaDistancia[dia] - \
-                             corresDiaDistancia[ultimoDia]) * ',') + hor
-                    # row1 = row[:-1]
-                    # print("row", row,"|||||", row1)
-                ultimoDia = dia
-                continue
-
-            row += ','+ txt
-
-        if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-            row += ((5 - corresDiaDistancia[ultimoDia]) * ',')
-
-        row = row [1:]    #Remover la primera coma (,)
-        if row:
-            salida.write(row + '\n')
-            print("salida", row) #para debugging
-        row = ""
-        ultimoDia = ''
-        nroCampo = 0
-
-    salida.close()
-
-    # doc = fitz.open('OfertaSIG.pdf')
+    # doc = fitz.open('pruebas/doc2.pdf')
     # page = doc.loadPage(0)
-    # xmlText = page.getText(output = "json")
-    # f = open('jsonPDF.txt', 'w')
+    # xmlText = page.getText(output = "xml")
+    # f = open('xmlPDF.txt', 'w')
     # f.write(xmlText)
     # f.close()
 

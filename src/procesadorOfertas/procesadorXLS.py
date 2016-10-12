@@ -76,10 +76,12 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
             # Comprueba si pertenece al pensum de computación
             if activarFitrado:
                 if (existeCarrera and \
-                    (not re.search("0800",str(entrada[campoCarrera])))) \
-                    and (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
-                #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
-                continue
+                    (not re.search("0800",str(entrada[campoCarrera])))):
+                    continue
+
+                if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
+                    #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
+                    continue
 
             nuevaEntrada = ""
             for pos in posCamposValidos:
@@ -154,8 +156,7 @@ if ( __name__ == "__main__"):
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-    #print(listaMaterias)
-
+    fdSalida = []
     sheet0 = open_workbook(args[0]).sheet_by_index(0)
     # Concatenar en un solo string e imprimir filas y
     # escribir filas en un archivo estilo csv.
@@ -168,66 +169,13 @@ if ( __name__ == "__main__"):
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
-    cabeceraProcesada = False
-    for nroFila in range(sheet0.nrows):
-        if not cabeceraProcesada:
-            (cabeceraProcesada, \
-             posCamposValidos, \
-             existeCarrera, \
-             campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
-            #print(sheet0.row_values(nroFila), cabeceraProcesada, "||", posCamposValidos, "\n\n")
+    procesarXLS(args[0],True,listaMaterias,fdSalida)
+
+    for fila in fdSalida:
+        if nomArchivoSalida:
+            f.write(','.join(fila) + "\n")
         else:
-            entrada = sheet0.row_values(nroFila)
-            #print(entrada)
-            # Comprueba si pertenece al pensum de computación
-            if (existeCarrera and \
-                    (not re.search("0800",str(entrada[campoCarrera])))) \
-                and (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
-                #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
-                continue
-
-            #print("Antes Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-            # if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
-            #     #print("Ignorar Materia", entrada[posCamposValidos[0]], re.search("0800",str(entrada[campoCarrera])), existeCarrera)
-            #     continue
-
-            #print(entrada)
-            nuevaEntrada = ""
-            for pos in posCamposValidos:
-                if isinstance(entrada[pos],float):
-                    #print("float", entrada[pos])
-                    txt = str(round(entrada[pos]))
-                elif entrada[pos] != '':
-                    txt = str(entrada[pos]).strip()
-                else:
-                    txt = entrada[pos]
-
-                if txt == '-':
-                    entrada[pos] = ''
-                    txt = ''
-
-                #print(txt, type(txt))
-                # Para verificar semantica de archivo de ID
-                if verificarCerrar(txt):
-                    nuevaEntrada = ""
-                    #print("Tienen cerrar", ','.join(entrada))
-                    break
-
-                if re.search(patronMateria,txt, re.I):
-                    nuevaEntrada += ',' + normalizarMateria(txt)
-                elif re.search(patronHorario, txt):
-                    nuevaEntrada += ',' + txt
-                elif filtrarBloque(txt) \
-                    or txt == '':
-                    #print("pasa el filtro", txt)
-                    nuevaEntrada += ',' + txt
-
-            nuevaEntrada = nuevaEntrada[1:]
-            #print(nuevaEntrada)
-            if nomArchivoSalida:
-                f.write(','.join(entrada) + "\n")
-            elif nuevaEntrada and nuevaEntrada[0] != ',' :
-                print(nuevaEntrada) # Para debugging
+            print(','.join(fila))
 
     if nomArchivoSalida:
         f.close()
