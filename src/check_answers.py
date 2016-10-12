@@ -5,15 +5,20 @@ from oauth2client.service_account import ServiceAccountCredentials
 import os
 import getpass
 
-from csv_creator   import *
+# from csv_creator   import *
 from coord_crawler import *
 
 usuario = input("Usuario:")
 clave   = getpass.getpass("Clave  :")
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
-aranita = StudentDownloader(usuario,clave,"HTML")
-        # = CsvCreator(perm_files,)
+# perm_file = "perm.csv"
+# gen_file  = "gen.csv"
+# trim      = 3
+# year      = 16
+
+aranita  = StudentDownloader(usuario,clave,"HTML")
+# dace_csv = CsvCreator(gen_file,perm_files,trim,year)
 
 SCOPE = ["https://spreadsheets.google.com/feeds"]
 SECRETS_FILE = "client_secret.json"
@@ -64,9 +69,11 @@ for sheet in gc.openall():
 	    if i>0:
 	        user_id = line[29 ][:8]
 
-	        
+	        new_file   = open("estudiantes/pendientes/"+user_id+".txt","w")
+            credit_num = ""
+            asig_codes = ""
 
-	        new_file = open("estudiantes/pendientes/"+user_id+".txt","w")
+
 	        for i in range(1,27):
 	        	if (i==4): new_line = user_id
 	        	elif (i==2): new_line="Pasantia"
@@ -83,7 +90,8 @@ for sheet in gc.openall():
 	        		else:
 	        			num = int(line[permisos_dict[i]])
 	        			if (num < 8 and i == 15) or (num > 16 and i == 16):
-	        				new_line = str(num)
+	        				new_line   = str(num)
+                            credit_num = new_line
 	        			else:
 	        				new_line = "no"
 	        	elif (i==14):
@@ -110,6 +118,11 @@ for sheet in gc.openall():
 	        			new_line = line[permisos_dict[i]]
 	        	if (new_line == ""): new_line = "no"
 	        	new_file.write(str(new_line)+"\n")
+            # Store user grades
 	        aranita.search_student(user_id)
+            #Create rows in csv with permissons
+            # dace_csv.write_perm(code,user_id,credit_num)
 	        new_file.close()
-    print("\n\n")        
+    # 1
+    print("\n\n")
+
