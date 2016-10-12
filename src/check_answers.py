@@ -3,45 +3,48 @@ from __future__ import print_function
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
-from coord_crawler import *
 import getpass
+
+from csv_creator   import *
+from coord_crawler import *
 
 usuario = input("Usuario:")
 clave   = getpass.getpass("Clave  :")
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
 aranita = StudentDownloader(usuario,clave,"HTML")
+        # = CsvCreator(perm_files,)
 
 SCOPE = ["https://spreadsheets.google.com/feeds"]
 SECRETS_FILE = "client_secret.json"
 
 permisos_dict = {
-	1 : 5,  #Trimestre a inscribir
-	2 : -1,   #Tipo de grafo-
-	3 : -1,   #Nº permisos -
-	4 : 29,   #Carnet-
-	5 : 1,   #nombre
-	6 : -1,   #indice-
-	7 : 30,   #telefono
-	8 : 4,   #creditos aprobados
-	9 : 0,   #fecha
-	10 : -1,  #trimestre ultimo blabla- 
-	11 : 13,  #dos generales
-	12 : 33,  #extraplan y general
-	13 : 23,#extraplan
-	14 : 15,#electiva de area
-	15 : 12,#Minimo credito-
-	16 : 12,#maximo credito-
-	17 : 15 , #electivas libres-
-	18 : 8, #Pasantia corta-
-	19 : 8, #Pasantia larga-
-	20 : 8, #primera etapa proyecto de grado mas topico-
-	21 : 8, #etapa de proyecto
-	22 : 34, #general adicional
-	23 : 25,#asignatura sin requisito
-	24 : 0, #materias permisos
-	25 : 0, #permiso proyecto a dedicacione xclusiva
-	26 : 28  #observaciones jaja
+	1  :  5, # Trimestre a inscribir
+	2  : -1, # Tipo de grafo-
+	3  : -1, # Nº permisos -
+	4  : 29, # Carnet-
+	5  :  1, # nombre
+	6  : -1, # indice-
+	7  : 30, # telefono
+	8  :  4, # creditos aprobados
+	9  :  0, # fecha
+	10 : -1, # trimestre ultimo blabla- 
+	11 : 13, # dos generales
+	12 : 33, # extraplan y general
+	13 : 23, # extraplan
+	14 : 15, # electiva de area
+	15 : 12, # Minimo credito-
+	16 : 12, # maximo credito-
+	17 : 15, # electivas libres-
+	18 :  8, # Pasantia corta-
+	19 :  8, # Pasantia larga-
+	20 :  8, # primera etapa proyecto de grado mas topico-
+	21 :  8, # etapa de proyecto
+	22 : 34, # general adicional
+	23 : 25, # asignatura sin requisito
+	24 :  0, # materias permisos
+	25 :  0, # permiso proyecto a dedicacione xclusiva
+	26 : 28  # observaciones jaja
 }
 
 
