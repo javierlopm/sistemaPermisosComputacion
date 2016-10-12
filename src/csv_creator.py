@@ -44,11 +44,13 @@ class CsvCreator():
         self.perm_writer.writerow(PERM_HEADER)
         self.gen_writer.writerow(GEN_HEADER)
 
-        # Pick trimester E-M, A-J, S-D
+        # Pick trimester E-M, A-J, verano(J-S) S-D
         if trim == 0:
             self.trim = (1,3)
         elif trim == 1:
             self.trim = (4,7)
+        elif trim == 2:
+            self.trim = (7,9)
         else:
             self.trim = (9,12)
 
