@@ -13,7 +13,8 @@ def imprimirResultados(mensaje,listaOfertas):
         print(fila)
     print('\n')
 
-def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
+def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
+                  opcionDir, nomArchivoDace):
     listaOfertas = []
     listaDACE = []
     # Deshabilita el filtrado en el procesador XLS.
@@ -27,6 +28,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
         # Constuir el camino para procesar los archivos.
         if opcionDir:
             camino = join(nomDirectorio,archivo)
+            #print(camino)
 
         if  nomArchivoDace == archivo:
             #Excepcion para cuando no se encuentre 0800
@@ -46,6 +48,68 @@ def cargarOfertas(listaArchivos, nomDirectorio, opcionDir):
             procesarXLS(camino, True, listaMaterias, listaOfertas)
 
     return (listaOfertas, listaDACE)
+
+def generarOferta(listaOfertas,listaDACE):
+    # Lista necesaria para evitar eliminar materias especiales que no se
+    # incluyen en la ofertas
+    iniMatEspeciales = ["CI","CC", "EP", "CS"]
+    materiasDacePorBorrar = []
+    procesado = []
+    filaEncontrada = False
+    # Realizar comparación entre listas del dpto y las listas de DACE
+    for filaDace in listaDACE:
+        for filaOfertas in listaOfertas:
+            # Comprobar materia y bloque, salvo las materias CI
+            if filaOfertas[0] == filaDace[0] \
+                and filaOfertas[1] == filaDace[1] \
+                and (not filaDace[0][0:2] in iniMatEspeciales):
+                filaEncontrada = True
+                break
+        # Caso 2:
+        if not (filaEncontrada):
+            if (not (filaDace[0][0:2] in iniMatEspeciales)):
+                materiasDacePorBorrar.append(filaDace)
+                procesado.append(filaDace + ['','0800','E'])
+            else:
+                procesado.append(filaDace + ['','0800',''])
+
+        filaEncontrada = False
+
+    # Descartar las materias de la lista de DACE
+    # que no se encuentren en la oferta de dptos
+    for filaPorBorrar in materiasDacePorBorrar:
+        listaDACE.remove(filaPorBorrar)
+
+    # imprimirResultados("ListaDace E",listaDACE)
+    # imprimirResultados("ListaOfertas E",listaOfertas)
+
+    filaEncontrada = None
+    for filaOfertas in listaOfertas:
+        for filaDace in listaDACE:
+            if filaOfertas[0] == filaDace[0] \
+                and filaOfertas[1] == filaDace[1]:
+
+                filaEncontrada = filaDace
+                break
+        # Caso 1:
+        if filaEncontrada:
+            for (itemOferta,itemDace) in zip(filaOfertas,filaDace):
+                match = itemOferta == itemDace
+                if match:
+                    continue
+                else:
+                    break
+            if match:
+                procesado.append(filaOfertas + ['','0800',''])
+            else:
+                procesado.append(filaOfertas + ['','0800','M'])
+        else:
+        # Caso 3:
+            procesado.append(filaOfertas + ['','0800','I'])
+
+        filaEncontrada = None
+
+    return procesado
 
 def usoAyuda():
     print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
@@ -111,74 +175,15 @@ if __name__ == '__main__':
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
-    (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio, opcionDir)
+    (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio,listaMaterias,\
+                                             opcionDir,nomArchivoDace)
 
     print("\nOfertas cargadas con éxito")
 
-    imprimirResultados("ListaDace",listaDACE)
-    imprimirResultados("ListaOfertas",listaOfertas)
+    # imprimirResultados("ListaDace",listaDACE)
+    # imprimirResultados("ListaOfertas",listaOfertas)
 
-
-    # Lista necesaria para evitar eliminar materias especiales que no se
-    # incluyen en la ofertas
-    iniMatEspeciales = ["CI","CC", "EP", "CS"]
-    materiasDacePorBorrar = []
-    procesado = []
-    filaEncontrada = False
-    # Realizar comparación entre listas del dpto y las listas de DACE
-    for filaDace in listaDACE:
-        for filaOfertas in listaOfertas:
-            # Comprobar materia y bloque, salvo las materias CI
-            if filaOfertas[0] == filaDace[0] \
-                and filaOfertas[1] == filaDace[1] \
-                and (not filaDace[0][0:2] in iniMatEspeciales):
-                filaEncontrada = True
-                break
-        # Caso 2:
-        if not (filaEncontrada):
-            if (not (filaDace[0][0:2] in iniMatEspeciales)):
-                materiasDacePorBorrar.append(filaDace)
-                procesado.append(filaDace + ['','0800','E'])
-            else:
-                procesado.append(filaDace + ['','0800',''])
-
-        filaEncontrada = False
-
-    # Descartar las materias de la lista de DACE
-    # que no se encuentren en la oferta de dptos
-    for filaPorBorrar in materiasDacePorBorrar:
-        listaDACE.remove(filaPorBorrar)
-
-    # imprimirResultados("ListaDace E",listaDACE)
-    # imprimirResultados("ListaOfertas E",listaOfertas)
-
-    filaEncontrada = None
-    materiasCompIncorporadas = False
-    for filaOfertas in listaOfertas:
-        for filaDace in listaDACE:
-            if filaOfertas[0] == filaDace[0] \
-                and filaOfertas[1] == filaDace[1]:
-
-                filaEncontrada = filaDace
-                break
-        # Caso 1:
-        if filaEncontrada:
-            for (itemOferta,itemDace) in zip(filaOfertas,filaDace):
-                match = itemOferta == itemDace
-                if match:
-                    continue
-                else:
-                    break
-            if match:
-                procesado.append(filaOfertas + ['','0800',''])
-            else:
-                procesado.append(filaOfertas + ['','0800','M'])
-        else:
-        # Caso 3:
-            procesado.append(filaOfertas + ['','0800','I'])
-
-        materiasCompIncorporadas = True
-        filaEncontrada = None
+    procesado = generarOferta(listaOfertas,listaDACE)
 
     # Imprimir resultados al archivo de salida
     fdSalida = open(nomArchivoSalida, 'a')
