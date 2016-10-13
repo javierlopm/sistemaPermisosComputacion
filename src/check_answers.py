@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from easygui import *
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
@@ -8,8 +9,10 @@ import getpass
 from csv_creator   import *
 from coord_crawler import *
 
-usuario = input("Usuario:")
-clave   = getpass.getpass("Clave  :")
+usuario = enterbox("Ingrese su nombre de usuario","Sistema de permisos")
+if usuario is None: exit()
+clave   = passwordbox("Ingrese la contraseña","Sistema de permisos")
+if clave is None: exit()
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
 aranita = StudentDownloader(usuario,clave,"HTML")
@@ -91,17 +94,33 @@ for sheet in gc.openall():
 	        			new_line="no"
 	        		else:
 	        			new_line=line[permisos_dict[i]]
-	        	elif (i==18 or i==19 or i==20):
-	        		aux = line[permisos_dict[i]]
-	        		if aux == "":
+	        	elif (i==13):
+	        		if line[23] == "" and line[21] == "":
 	        			new_line = "no"
 	        		else:
-	        			if ("corta" in aux and i==18) or ("larga" in aux and i==19) or ("Primera" in aux and i==20):
-	        				new_line = "si"
-	        			elif "Segunda" in aux and i==20:
-	        				new_line = "EP-2308, EP-5856"
-	        			elif "Tercera" in aux and i==20:
-	        				new_line = "EP-3308"
+	        			new_line = "si"
+	        	elif (i == 18):
+	        		if "larga" in line[permisos_dict[i]]:
+	        			new_line = "si"
+	        		else:
+	        			new_line = "no"
+	        	elif (i == 19):
+	        		if "corta" in line[permisos_dict[i]]:
+	        			new_line = "si"
+	        		else:
+	        			new_line = "no"
+	        	elif (i == 20):
+	        		if "Primera" in line[permisos_dict[i]]:
+	        			new_line = "si"
+	        		else:
+	        			new_line = "no"
+	        	elif (i == 21):
+	        		if "Segunda" in line[permisos_dict[i]]:
+	        			new_line = "EP-2308, EP-5856"
+	        		elif "Tercera" in line[permisos_dict[i]]:
+	        			new_line = "EP-3308"
+	        		else:
+	        			new_line = "no"
 	        	elif (i==3 or i==17 or i==24 or i==25): new_line = "no"
 	        	else:
 	        		if (line[permisos_dict[i]]==""):
