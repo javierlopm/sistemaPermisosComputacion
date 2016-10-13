@@ -15,3 +15,4 @@ cleanup: buildform
 
 clean:
 	rm -f coord_downloader.tar.gz check_answers.tar.gz
+	rm -f *\.csv
