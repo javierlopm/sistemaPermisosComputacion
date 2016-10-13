@@ -59,10 +59,3 @@ class StudentDownloader():
             file.write(self.browser.page_source)
             file.close()
 
-
-perm_file = "perm.csv"
-gen_file  = "gen.csv"
-trim      = 3
-year      = 16
-
-dace_csv = CsvCreator(perm_files,gen_file,trim,year)
