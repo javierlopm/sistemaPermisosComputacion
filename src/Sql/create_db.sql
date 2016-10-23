@@ -12,14 +12,13 @@ CREATE TABLE IF NOT EXISTS estudiante (
     Tabla para superclase de permisos
  */
 CREATE TABLE IF NOT EXISTS permiso (
-    id_permiso INTEGER PRIMARY KEY AUTO INCREMENT,
+    id_permiso INTEGER PRIMARY KEY AUTOINCREMENT,
     fk_carnet  INTEGER NOT NULL,
-    materia    TEXT    NOT NULL,
     tipo       CHAR(1) NOT NULL, -- No hay soporte para ENUMS
     aprobado   CHAR(1),          -- No hay soporte para bool
     trimestre  CHAR(1),          -- No hay soporte para ENUMS
     anio       INTEGER,
-    FOREIGN KEY (fk_carnet) REFERENCES estudiante(carnet),
+    FOREIGN KEY (fk_carnet) REFERENCES estudiante(carnet)
 );
 
 /*
