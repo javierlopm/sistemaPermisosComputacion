@@ -18,7 +18,7 @@ from os import remove
 import sys
 import getopt
 
-class Ofertas( xml.sax.ContentHandler ):
+class OfertasGeneral( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
         self.tuplas = []
         self.fila = []
@@ -98,7 +98,7 @@ class Ofertas( xml.sax.ContentHandler ):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
             #print(searchMat)
-            self.fila.append(self.normalizarMateria(searchMat.group()))
+            self.fila.append(normalizarMateria(searchMat.group()))
         elif re.search(self.patronBloque, txt, re.I):
             #print(re.search(self.patronBloque, txt, re.I))
             self.fila.append(txt)

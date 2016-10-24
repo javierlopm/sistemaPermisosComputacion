@@ -151,8 +151,6 @@ def obtArgs(entrada):
         else:
             assert False, "unhandled option"
 
-# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls -m materiasRequeridas.txt OfertaPB.xml OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
-# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
     if opcionDir:
         return (nomArchivoSalida, nomArchivoMaterias, \
                 nomArchivoDace, opcionDir, listdir(nomDirectorio), nomDirectorio)
@@ -162,6 +160,14 @@ def obtArgs(entrada):
                 nomArchivoDace, opcionDir, args , "")
 
 if __name__ == '__main__':
+
+# python procesadorOfertas.py -f OfertasProcesadas.csv
+#-d 0800.xls -m materiasRequeridas.txt OfertaPB.xml
+# OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
+
+# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls
+# -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
+
     (nomArchivoSalida, nomArchivoMaterias, \
      nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs(sys.argv[1:])
 
