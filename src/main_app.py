@@ -2,12 +2,8 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-culo = 0
 
-
-
-
-class MyWindow(Gtk.Window):
+class MainWindow(Gtk.Window):
 
     def __init__(self):
         Gtk.Window.__init__(self, title="Hello World")
@@ -51,15 +47,13 @@ class MyWindow(Gtk.Window):
 
     def on_button1_clicked(self, widget):
         self.hide()
-        global culo
-        new_win = MyWindow()
-        culo += 1
+        new_win = SearchWindow(self,"carnet")
         response = new_win.show_all()
 
     def on_button2_clicked(self, widget):
         print("Goodbye")
 
-win = MyWindow()
+win = MainWindow()
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()
