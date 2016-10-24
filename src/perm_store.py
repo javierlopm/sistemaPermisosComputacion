@@ -51,7 +51,7 @@ std_perms_qry = """
     LEFT JOIN permiso_materia  pm ON p.id_permiso == pm.id_permiso
     LEFT JOIN estudiante       e  ON p.fk_carnet  == e.carnet 
         WHERE e.carnet    == (?) AND
-              p.trimestre == (?) AND
+              p.trimestre == (?) AND0   
               p.anio      == (?) """
 
 
