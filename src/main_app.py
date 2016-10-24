@@ -5,6 +5,8 @@ from gi.repository import Gtk
 class SearchWindow(Gtk.Window):
 
     def __init__(self,old_window,name):
+        self.old_window = old_window
+        self.name       = name
         Gtk.Window.__init__(self, title="Hello World")
 
         self.connect("delete-event", Gtk.main_quit)
@@ -12,6 +14,7 @@ class SearchWindow(Gtk.Window):
         self.set_title("Permisos coordinación")
         self.set_default_size(320,200)
 
+        # Grid
         grid = Gtk.Grid()
         self.grid = grid
         self.add(grid)
@@ -19,22 +22,34 @@ class SearchWindow(Gtk.Window):
 
         grid.insert_row(0)
         grid.insert_row(1)
+        grid.insert_row(2)
         grid.insert_column(0)
         grid.insert_column(1)
         grid.insert_column(2)
-        button1 = Gtk.Button(label="Buscar por carnet")
-        button2 = Gtk.Button(label="Regresar")
+        grid.insert_column(3)
+        grid.insert_column(4)
 
+        grid.set_row_spacing(10)
+        grid.set_column_spacing(30)
+
+        # Widgets
+        button1 = Gtk.Button(label="Buscar por carnet")
+        button2 = Gtk.Button(label="←")
 
         label = Gtk.Label()
         label.set_text("Vista de búsqueda")
         label.set_justify(Gtk.Justification.LEFT)
 
+        inv_box = Gtk.Box(spacing=20)
 
-
-        grid.attach(label  ,1,0,2,2)
-        grid.attach(button1,1,20,2,2)
-        grid.attach(button2,1,25,2,2)
+        # attach (child, left, top, width, height)
+        # grid.attach(label  ,2,0,2,2)
+        # grid.attach(button1,2,3,2,2)
+        # grid.attach(button2,0,0,1,1)
+        grid.attach(label  ,2,0,1,1)
+        grid.attach(button1,2,1,1,1)
+        grid.attach(button2,0,0,1,1)
+        grid.attach(inv_box,4,2,2,2)
 
 
         button1.connect("clicked", self.on_button1_clicked)
@@ -42,15 +57,14 @@ class SearchWindow(Gtk.Window):
 
 
 
+
     def on_button1_clicked(self, widget):
-        self.hide()
-        new_win = SearchWindow(self,"carnet")
-        response = new_win.show_all()
+        pa
 
     def on_button2_clicked(self, widget):
+        # self.hide()
         self.old_window.show()
-        new_win = SearchWindow(self,"carnet")
-        response = new_win.show_all()
+        self.destroy()
 
 
 class MainWindow(Gtk.Window):
