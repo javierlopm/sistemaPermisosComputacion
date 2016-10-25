@@ -18,7 +18,7 @@ from os import remove
 import sys
 import getopt
 
-class Ofertas( xml.sax.ContentHandler ):
+class OfertasGeneral( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
         self.tuplas = []
         self.fila = []
@@ -151,7 +151,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas(listaMaterias)
+    Handler = OfertasGeneral(listaMaterias)
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
