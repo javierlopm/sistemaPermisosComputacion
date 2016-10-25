@@ -59,12 +59,84 @@ class SearchWindow(Gtk.Window):
 
 
     def on_button1_clicked(self, widget):
-        pa
+        pass
 
     def on_button2_clicked(self, widget):
         # self.hide()
         self.old_window.show()
         self.destroy()
+
+class InitWindow(Gtk.Window):
+    def __init__(self):
+        Gtk.Window.__init__(self, title="Permisos coordinacion")
+        self.set_default_size(320,200)
+
+        grid = Gtk.Grid()
+        self.grid = grid
+        self.add(grid)
+        grid.props.halign = Gtk.Align.CENTER
+
+        grid.insert_column(0)
+
+        grid.insert_row(0)
+        grid.insert_row(1)
+        grid.insert_row(2)
+        grid.set_row_spacing(10)
+        grid.set_column_spacing(30)
+        label = Gtk.Label()
+        label.set_text("Bienvenidos al sistema de permisos.\nSeleccione una opcion")
+        label.set_justify(Gtk.Justification.CENTER)
+
+        button1 = Gtk.Button(label="Descargar permisos")
+        button2 = Gtk.Button(label="Iniciar programa de permisos")
+
+        grid.attach(label,0,0,2,2)
+        grid.attach(button1,0,5,2,2)
+        grid.attach(button2,0,25,2,2)
+
+        button1.connect("clicked", self.on_button1_clicked)
+        button2.connect("clicked", self.on_button2_clicked)
+
+    def on_button1_clicked(self, widget):
+        #new_win = SearchWindow(self,"carnet")
+        #response = new_win.show_all()
+        pass
+
+    def on_button2_clicked(self, widget):
+        self.hide()
+        new_win = MainWindow()
+        response = new_win.show_all()
+
+class LoginWindow(Gtk.Window):
+
+    def __init__(self):
+        Gtk.Window.__init__(self, title="Permisos coordinación")
+        self.set_default_size(320,200)
+        grid = Gtk.Grid()
+        self.grid = grid
+        self.add(grid)
+        grid.props.halign = Gtk.Align.CENTER
+
+        grid.insert_column(0)
+
+        grid.insert_row(0)
+        grid.insert_row(1)
+        grid.insert_row(2)
+        
+        grid.set_row_spacing(10)
+        grid.set_column_spacing(30)
+
+        label = Gtk.Label()
+        label.set_text("Ingrese sus credenciales para acceder al sistema de expendientes.")
+        label.set_justify(Gtk.Justification.CENTER)
+
+        username_entry = Gtk.entry()
+        password_entry = Gtk.entry()
+
+        grid.attach(label,0,0,2,2)
+        grid.attach(username_entry,0,5,2,2)
+        grid.attach(password_entry,0,25,2,2)
+
 
 
 class MainWindow(Gtk.Window):
@@ -115,7 +187,7 @@ class MainWindow(Gtk.Window):
         response = new_win.show_all()
 
 
-win = MainWindow()
+win = InitWindow()
 win.connect("delete-event", Gtk.main_quit)
 win.show_all()
 Gtk.main()
