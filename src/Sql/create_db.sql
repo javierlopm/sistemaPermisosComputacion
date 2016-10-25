@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS estudiante (
 CREATE TABLE IF NOT EXISTS permiso (
     id_permiso   INTEGER PRIMARY KEY AUTOINCREMENT,
     fk_carnet    INTEGER NOT NULL,
-    tipo         CHAR(1) NOT NULL, -- No hay soporte para ENUMS
-    aprobado     CHAR(1),          -- No hay soporte para bool
-    trimestre    CHAR(1),          -- No hay soporte para ENUMS
+    tipo         CHAR(1) NOT NULL, 
+    aprobado     CHAR(1) NOT NULL DEFAULT 'p',
+    trimestre    CHAR(1),          
     anio         INTEGER,
     string_extra CHAR(16),
     int_extra    INTEGER,
