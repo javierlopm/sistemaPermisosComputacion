@@ -3,20 +3,17 @@ from enum import Enum
 
 # Enums para tipos de permisos
 class TipoPermiso(Enum):
-    pp              = 0
-    dos_generales   = 1
-    limite_creditos = 2
-    permiso_materia = 3
-    # extra_plan_id      = 3
-    # extra_plan_general = 3
-    # otro_extraplan     = 3
+    pp              = 'p'
+    dos_generales   = 'g'
+    limite_creditos = 'l'
+    permiso_materia = 'm'
 
 # Enums para trimestres
 class Trimestre(Enum):
-    eneroMarzo  = 0
-    abrilJulio  = 1
-    julioAgosto = 2
-    septiembreDiciembre = 3
+    eneroMarzo          = 'e'
+    abrilJulio          = 'a'
+    julioAgosto         = 'j'
+    septiembreDiciembre = 's'
 
 # Strings auxiliares para insertar en la base de datos
 std_insert = """INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo) 
@@ -34,15 +31,17 @@ mat_qry    = """SELECT *
                       p.trimestre == (?) AND
                       p.anio      == (?)"""
 
-num_cred_qry = """SELECT *
-                  FROM permiso p 
-                  CROSS JOIN permiso_creditos pc"""
+type_qry = """SELECT *
+              FROM permiso
+              WHERE tipo      == (?) AND 
+                    trimestre == (?) AND
+                    anio      == (?)"""
 
 pending_qry= """SELECT * 
                 FROM permiso 
-                WHERE aprobado IS NULL"""
-
-perm_type_qry = """s"""
+                WHERE aprobado IS NULL AND 
+                      trimestre == (?) AND
+                      anio      == (?) """
 
 std_perms_qry = """ 
     SELECT *
@@ -89,18 +88,16 @@ class PermStore():
         self.conn.commit()
         c.close()
 
+    def get_type_perm(self,type_,trimestre,anio):
+        # Procedimiento que obtiene todo los permisos de un tipo dado
+        return _run_with_args(type_qry,(type_,trimestre.value,anio))
 
 
-    def get_cred_perm(self):
-        # Procedimiento que obtiene todo los permisos de extra/infra creditos
-        return _run_simple_query(num_cred)
+    def get_missign_perms(self,trimestre,anio):
+        # Procedimiento que obtiene los permisos por aprobar
+        return _run_with_args(pending_qry,(trimestre.value,anio))
 
-
-    def get_missign_perms(self):
-        # Procedimiento que obtiene los permisos faltantes
-        return _run_simple_query(pending_qry)
-
-    def get_course_perms(self,materia):
+    def get_course_perms(self,materia,trimestre,anio):
         return _run_with_args(mat_qry,(materia,trimestre.value,anio))
 
     def get_student_perms(self,carnet,trimestre,anio):
