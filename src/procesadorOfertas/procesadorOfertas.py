@@ -214,7 +214,6 @@ def obtArgs(entrada):
         else:
             assert False, "unhandled option"
 
-
     if reanalisis:
         return (nomArchivoSalida, "", reanalisis, nomArchivoDace , opcionDir, args, "")
     elif opcionDir:

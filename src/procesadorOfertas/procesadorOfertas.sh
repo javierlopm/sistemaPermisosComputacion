@@ -9,6 +9,7 @@ function usoAyuda(){
     return
 }
 
+<<<<<<< HEAD
 function pasajeParametros() {
     while getopts ":f:d:m:e:h" opt; do
       case $opt in
@@ -44,9 +45,7 @@ function pasajeParametros() {
         echo "-d -m -f son parametros obligatorios" >&2
         exit 1
     fi
-
     # Comprobar que los nombres proporcionados en los flags esten en el directorio
-
     # Acceder a los operandos
     shift $((OPTIND-1))
     return
@@ -54,7 +53,6 @@ function pasajeParametros() {
 
 #Procesar la entrada estandar
 pasajeParametros $@
-
 # Preprocesar los DOCS para Flat XML de libreoffice
 existe=$(exec ps -U $(whoami) | awk '/soffice/ {print $4}' | wc -l)
 python_bin=$(whereis python3 | grep -oE '/usr\/bin\/python3[[:space:]]')
@@ -65,6 +63,8 @@ if [[ $existe -eq 1 ]]; then
   exit 1
 else
     listaInsumos=$(ls $caminoDirArchs | grep .doc)
+    # Para debugging
+    #echo $listaInsumos
     office=$(whereis soffice | awk '{print $2}')
     for arch in $listaInsumos; do
         $office --convert-to fodt "$caminoDirArchs$arch" --outdir "$caminoDirArchs" --headless 1> /dev/null
