@@ -92,6 +92,8 @@ class StudentWindow(Gtk.Window):
         grid.insert_row(0)
         grid.insert_row(1)
         grid.insert_row(2)
+        grid.insert_row(3)
+        grid.insert_row(4)
         grid.insert_column(0)
         grid.insert_column(1)
         grid.insert_column(2)
@@ -104,17 +106,34 @@ class StudentWindow(Gtk.Window):
         # Widgets
         button_ret = Gtk.Button(label="←")
 
-        print("=============")
-        print(std_data)
         label = Gtk.Label()
         label.set_text("Estudiante " + str(std_data['carnet']))
         label.set_justify(Gtk.Justification.LEFT)
+
+        # Inicio de lista de datos
+        liststore = Gtk.ListStore(str, str)
+        for elem in std_data.items():
+            liststore.append([ elem[0],str(elem[1]) ] )
+        treeview = Gtk.TreeView(model=liststore)
+
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn("Dato", renderer_text, text=0)
+        treeview.append_column(column_text)
+
+        renderer_spin = Gtk.CellRendererSpin()
+        renderer_spin.set_property("editable", False)
+
+        column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
+        treeview.append_column(column_spin)
+        #Fin de lista de datos
+
 
         inv_box = Gtk.Box(spacing=20)
  
         grid.attach(label     ,2,0,1,1)
         grid.attach(button_ret,0,0,1,1)
         grid.attach(inv_box   ,4,2,2,2)
+        grid.attach(treeview  ,2,3,2,2)
 
 
         button_ret.connect("clicked", self.go_back)
