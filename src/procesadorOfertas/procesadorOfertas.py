@@ -1,6 +1,7 @@
 from procesadorXLS import procesarXLS
-from procesadorDOC import procesarDOC
+from procesadorDOC import procesarDOC,dividirStr
 from procesadorPDF import procesarPDF
+from procesadorDACE import procesarDACE
 import sys
 import getopt
 from os.path import splitext, isfile, join
@@ -28,7 +29,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
         # Constuir el camino para procesar los archivos.
         if opcionDir:
             camino = join(nomDirectorio,archivo)
-            #print(camino)
+            print(camino)
 
         if  nomArchivoDace == archivo:
             #Excepcion para cuando no se encuentre 0800
@@ -111,6 +112,66 @@ def generarOferta(listaOfertas,listaDACE):
 
     return procesado
 
+
+def reanalizarOferta(listaOfertas,listaDACE):
+    # Lista necesaria para evitar eliminar materias especiales que no se
+    # incluyen en la ofertas
+    materiasDacePorBorrar = []
+    procesado = []
+    filaEncontrada = False
+    # Realizar comparación entre listas del dpto y las listas de DACE
+    for filaDace in listaDACE:
+        for filaOfertas in listaOfertas:
+            # Comprobar materia y bloque, salvo las materias CI
+            if filaOfertas[0] == filaDace[0] \
+                and filaOfertas[1] == filaDace[1]:
+                filaEncontrada = True
+                break
+        # Caso 2:
+        if not (filaEncontrada):
+            materiasDacePorBorrar.append(filaDace)
+            procesado.append(filaDace + ['','0800','E'])
+
+        filaEncontrada = False
+
+    # Descartar las materias de la lista de DACE
+    # que no se encuentren en la oferta de dptos
+    for filaPorBorrar in materiasDacePorBorrar:
+        listaDACE.remove(filaPorBorrar)
+
+    filaEncontrada = None
+    for filaOfertas in listaOfertas:
+        if filaOfertas[9] != 'E':
+            for filaDace in listaDACE:
+                if filaOfertas[0] == filaDace[0] \
+                    and filaOfertas[1] == filaDace[1]:
+                    filaEncontrada = filaDace
+                    break
+            # Caso 1:
+            if filaEncontrada:
+                #print("Comparar", filaEncontrada, filaOfertas)
+                for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
+                    match = itemOferta == itemDace
+                    if match:
+                        continue
+                    else:
+                        break
+                if match:
+                    procesado.append(filaEncontrada + ['','0800',''])
+                else:
+                    # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
+                    # print((itemOferta,itemDace))
+                    procesado.append(filaOfertas)
+            else:
+            # Caso 3:
+                procesado.append(filaOfertas[0:7] + ['','0800','I'])
+        else:
+            procesado.append(filaOfertas)
+
+        filaEncontrada = None
+
+    return procesado
+
 def usoAyuda():
     print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
                     -m archivo_materias_requeridas [--dir-input=nomDir ]
@@ -123,21 +184,23 @@ def obtArgs(entrada):
     nomArchivoMaterias = ""
     nomDirectorio = ""
     opcionDir = False
+    reanalisis = False
     try:
-        opts, args = getopt.getopt(entrada, "d:f:m:h", ["help","input-dir="])
+        opts, args = getopt.getopt(entrada, "d:f:m:hr", ["help","input-dir="])
     except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err) # will print something like "option -a not recognized"
+        print(err)
         usoAyuda()
         sys.exit(2)
 
-    if  len(opts) == 2 or (len(opts) == 1 and (not opts[0][0] in ["-h", "--help"])):
-        assert False, "Número incorrecto de parámetros"
-        usoAyuda()
+    # if  len(opts) == 2 or (len(opts) == 1 and (not opts[0][0] in ["-h", "--help"])):
+    #     assert False, "Número incorrecto de parámetros"
+    #     usoAyuda()
 
     for o, a in opts:
         if o == "-f":
             nomArchivoSalida = a
+        elif o == "-r":
+            reanalisis = True
         elif o == "-d":
             nomArchivoDace = a
         elif o == "-m":
@@ -151,45 +214,55 @@ def obtArgs(entrada):
         else:
             assert False, "unhandled option"
 
-    if opcionDir:
-        return (nomArchivoSalida, nomArchivoMaterias, \
+    if reanalisis:
+        return (nomArchivoSalida, "", reanalisis, nomArchivoDace , opcionDir, args, "")
+    elif opcionDir:
+        # Comprobar que los nombres a los flags estan aqui
+        print("Directorio")
+        return (nomArchivoSalida, nomArchivoMaterias, reanalisis,
                 nomArchivoDace, opcionDir, listdir(nomDirectorio), nomDirectorio)
     else:
         args.append(nomArchivoDace)
-        return (nomArchivoSalida, nomArchivoMaterias, \
+        return (nomArchivoSalida, nomArchivoMaterias, reanalisis,
                 nomArchivoDace, opcionDir, args , "")
 
 if __name__ == '__main__':
-
-# python procesadorOfertas.py -f OfertasProcesadas.csv
-#-d 0800.xls -m materiasRequeridas.txt OfertaPB.xml
-# OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
-
-# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls
-# -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
-
-    (nomArchivoSalida, nomArchivoMaterias, \
+    (nomArchivoSalida, nomArchivoMaterias, reanalisis,
      nomArchivoDace, opcionDir, args, nomDirectorio) = obtArgs(sys.argv[1:])
-
-    # Obtener las materias requeridas
-    listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
 
     # Borrar el contenido del archivo de salida si existe
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
+    # Obtener las materias requeridas
+    if not reanalisis:
+        listaMaterias = []
+        for materia in open(nomArchivoMaterias, 'r'):
+            if (not materia.isspace()) and materia[0] != '#':
+                listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-    (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio,listaMaterias,\
-                                             opcionDir,nomArchivoDace)
 
-    print("\nOfertas cargadas con éxito")
+        (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio,listaMaterias,\
+                                                 opcionDir,nomArchivoDace)
 
-    # imprimirResultados("ListaDace",listaDACE)
-    # imprimirResultados("ListaOfertas",listaOfertas)
+        print("\nOfertas cargadas con éxito")
+        # imprimirResultados("ListaDace",listaDACE)
+        # imprimirResultados("ListaOfertas",listaOfertas)
+        procesado = generarOferta(listaOfertas,listaDACE)
+    else:
+        print("\nReanalizando Ofertas ")
+        listaOfertas = []
+        sinCabecera = False
+        for fila in open(args[0], 'r'):
+            if sinCabecera:
+                temp = fila.split(',')
+                listaOfertas.append(temp[0:9] + [temp[9].split('\n')[0]])
+                #print(temp[0:9] + [temp[9].split('\n')[0]])
+            else:
+                sinCabecera = True
 
-    procesado = generarOferta(listaOfertas,listaDACE)
+        listaDACE = []
+        procesarDACE("0800",nomArchivoDace,listaDACE)
+        procesado = reanalizarOferta(listaOfertas,listaDACE)
 
     # Imprimir resultados al archivo de salida
     fdSalida = open(nomArchivoSalida, 'a')
@@ -200,4 +273,12 @@ if __name__ == '__main__':
 
     fdSalida.close()
     print("Ofertas procesadas exitosamente")
+
+
+    # python procesadorOfertas.py -f OfertasProcesadas.csv
+#-d 0800.xls -m materiasRequeridas.txt OfertaPB.xml
+# OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
+
+# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls
+# -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
 

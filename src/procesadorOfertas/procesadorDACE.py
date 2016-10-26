@@ -23,8 +23,7 @@ class OfertasDace( OfertasGeneral ):
     def __init__(self):
         # Se omite pasar la lista de materias requeridas dado que en el
         #documento se conoce cuales son las de carrera por su código
-        self.listaMat = []
-        OfertasGeneral.__init__(self,self.listaMat)
+        OfertasGeneral.__init__(self,None)
         self.listaHorarios = []
         self.listaBloque = []
         self.listaMaterias = []
@@ -96,77 +95,69 @@ class OfertasDace( OfertasGeneral ):
                     #print((txt,dia.upper(),Decimal(posCaracteres[1]),Decimal(posCaracteres[3])))
                     break
 
-    def procesarPDF(self,codigoCarr,nombreArchivoEntrada, fdSalida):
-        doc = fitz.open(nombreArchivoEntrada)
-        # create an XMLReader
-        parser = xml.sax.make_parser()
-        # turn off namepsaces
-        parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-        # override the default ContextHandler
-        parser.setContentHandler( self )
+def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
+    doc = fitz.open(nombreArchivoEntrada)
+    # create an XMLReader
+    parser = xml.sax.make_parser()
+    # turn off namepsaces
+    parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
-        # Procesar las páginas del PDF. Se examina por
-        # codigo de carrera cada página. Al encontrar el encontrarlo,
-        # se extrae el texto del documento en archivo XML; luego se procesa.
-        for num in range(doc.pageCount):
-            page = doc.loadPage(num)
-            if page.searchFor(codigoCarr):
-                xmlText = page.getText(output = "xml")
-                f = open('textPDFXML.xml', 'w')
-                f.write(xmlText)
-                f.close()
-                # Procesar el archivo XML
-                parser.parse('textPDFXML.xml')
+    # Procesar las páginas del PDF. Se examina por
+    # codigo de carrera cada página. Al encontrar el encontrarlo,
+    # se extrae el texto del documento en archivo XML; luego se procesa.
+    for num in range(doc.pageCount):
+        page = doc.loadPage(num)
+        if page.searchFor(codigoCarr):
+            #print("pag.", num + 1)
+            f = open('textPDFXML.xml', 'w')
+            f.write(page.getText(output = "xml"))
+            contenedor = OfertasDace()
+            # override the default ContextHandler
+            parser.setContentHandler( contenedor )
+            f.close()
+            # Procesar el archivo XML
+            parser.parse('textPDFXML.xml')
 
+            tuplas = []
+            for ((mat,mtechoAlto,mtechoBajo),(bloq,btechoAlto,btechoBajo)) \
+                in zip(contenedor.listaMaterias,contenedor.listaBloque):
+                #print(([mat,bloq],btechoAlto,btechoBajo))
+                tuplas.append(([mat,bloq],btechoAlto,btechoBajo))
 
-        remove('textPDFXML.xml')
+            for (fila,ftechoAlto,ftechoBajo) in tuplas:
+                listaHoras = []
+                listaHorasBorrar = []
+                for (horas,dia,htechoAlto, htechoBajo) in contenedor.listaHorarios:
+                    # print(horas,dia,ftechoAlto,htechoAlto - Decimal(0.3),
+                    #     htechoBajo + Decimal(0.3), ftechoBajo)
+                    #print("Itera", horas,dia, ftechoAlto,htechoAlto - Decimal(0.3), htechoBajo + Decimal(0.3), ftechoBajo)
+                    if  (htechoBajo + Decimal(0.3)) >= (ftechoBajo) \
+                        and ftechoAlto >= (htechoAlto - Decimal(0.3) ):
+                        listaHoras.append((horas,dia))
+                        listaHorasBorrar.append((horas,dia,htechoAlto, htechoBajo))
 
-        tuplas = []
-        for ((mat,mtechoAlto,mtechoBajo),(bloq,btechoAlto,btechoBajo)) \
-            in zip(self.listaMaterias,self.listaBloque):
-            #print(([mat,bloq],btechoAlto,btechoBajo))
-            tuplas.append(([mat,bloq],btechoAlto,btechoBajo))
+                # Eliminar horarios agregados
+                for i in listaHorasBorrar:
+                    #print("Eliminar", i)
+                    contenedor.listaHorarios.remove(i)
 
+                if listaHoras:
+                    #print(componerHorarioCSV(listaHoras)[1:])
+                    fila += componerHorarioCSV(listaHoras)[1:].split(',')
+                else:
+                    fila += ['','','','','']
+                    #print(fila, listaHoras)
 
-        for (fila,ftechoAlto,ftechoBajo) in tuplas:
-            listaHoras = []
-            listaHorasBorrar = []
-            for (horas,dia,htechoAlto, htechoBajo) in self.listaHorarios:
-                # print(horas,dia,ftechoAlto,htechoAlto - Decimal(0.3),
-                #     htechoBajo + Decimal(0.3), ftechoBajo)
-                #print("Itera", horas,dia, ftechoAlto,htechoAlto - Decimal(0.3), htechoBajo + Decimal(0.3), ftechoBajo)
-                if  (htechoBajo + Decimal(0.3)) >= (ftechoBajo) \
-                    and ftechoAlto >= (htechoAlto - Decimal(0.3) ):
-                    listaHoras.append((horas,dia))
-                    listaHorasBorrar.append((horas,dia,htechoAlto, htechoBajo))
+                fdSalida.append(fila)
 
-            # Eliminar horarios agregados
-            for i in listaHorasBorrar:
-                #print("Eliminar", i)
-                self.listaHorarios.remove(i)
-
-            if listaHoras:
-                #print(componerHorarioCSV(listaHoras)[1:])
-                fila += componerHorarioCSV(listaHoras)[1:].split(',')
-            else:
-                fila += ",,,,"
-
-            #print(fila, listaHoras)
-            fdSalida.append(fila)
-
+    remove('textPDFXML.xml')
 
 
 if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
-    listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
-
     fdSalida = []
-    manejador = OfertasDace()
-    manejador.procesarPDF("0800",args[0],fdSalida)
+    procesarDACE("0800",args[0],fdSalida)
 
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)

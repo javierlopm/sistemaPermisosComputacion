@@ -151,7 +151,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas(listaMaterias)
+    Handler = OfertasGeneral(listaMaterias)
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
