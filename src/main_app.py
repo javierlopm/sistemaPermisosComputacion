@@ -2,11 +2,12 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-from coord_crawler import format_id,StudentDownloader
+from coord_crawler import format_id,show_carnet,StudentDownloader
 from easygui       import msgbox
 import csv_creator
-import perm_store
+from perm_store import *
 
+db = PermStore()
 
 class SearchWindow(Gtk.Window):
 
@@ -39,7 +40,6 @@ class SearchWindow(Gtk.Window):
         grid.set_column_spacing(30)
 
         # Widgets
-        button1 = Gtk.Button(label="Buscar por carnet")
         button2 = Gtk.Button(label="←")
 
         label = Gtk.Label()
@@ -53,7 +53,6 @@ class SearchWindow(Gtk.Window):
         # grid.attach(button1,2,3,2,2)
         # grid.attach(button2,0,0,1,1)
         grid.attach(label  ,2,0,1,1)
-        grid.attach(button1,2,1,1,1)
         grid.attach(button2,0,0,1,1)
         grid.attach(inv_box,4,2,2,2)
 
@@ -71,6 +70,66 @@ class SearchWindow(Gtk.Window):
         # self.hide()
         self.old_window.show()
         self.destroy()
+
+class StudentWindow(Gtk.Window):
+    """
+        Ventana para ver un estudiante
+    """
+    def __init__(self,old_window,std_data,std_perms):
+        self.old_window = old_window
+        Gtk.Window.__init__(self, title="Permisos coordinación")
+
+        self.connect("delete-event", Gtk.main_quit)
+
+        self.set_default_size(320,200)
+
+        # Grid
+        grid = Gtk.Grid()
+        self.grid = grid
+        self.add(grid)
+        grid.props.halign = Gtk.Align.CENTER
+
+        grid.insert_row(0)
+        grid.insert_row(1)
+        grid.insert_row(2)
+        grid.insert_column(0)
+        grid.insert_column(1)
+        grid.insert_column(2)
+        grid.insert_column(3)
+        grid.insert_column(4)
+
+        grid.set_row_spacing(10)
+        grid.set_column_spacing(30)
+
+        # Widgets
+        button_ret = Gtk.Button(label="←")
+
+        print("=============")
+        print(std_data)
+        label = Gtk.Label()
+        label.set_text("Estudiante " + str(std_data['carnet']))
+        label.set_justify(Gtk.Justification.LEFT)
+
+        inv_box = Gtk.Box(spacing=20)
+ 
+        grid.attach(label     ,2,0,1,1)
+        grid.attach(button_ret,0,0,1,1)
+        grid.attach(inv_box   ,4,2,2,2)
+
+
+        button_ret.connect("clicked", self.go_back)
+
+
+
+
+    def on_button1_clicked(self, widget):
+        pass
+
+    def go_back(self, widget):
+        self.old_window.show()
+        self.destroy()
+
+
 
 class InitWindow(Gtk.Window):
     def __init__(self):
@@ -181,15 +240,11 @@ class MainWindow(Gtk.Window):
         button4 = Gtk.Button(label="Permisos de extra creditos")
         button5 = Gtk.Button(label="Permisos de PP")
         self.student_entry = Gtk.Entry()
-        self.student_entry = Gtk.Entry()
-        # self.student_entry.set_text("Hello World")
-        # self.student_entry.set_text("Hello World")
 
         inv_box = Gtk.Box(spacing=4)
 
-        inv_box.pack_start(self.student_entry,True,True,2)
-        inv_box.pack_start(self.student_entry,True,True,2)
         inv_box.pack_start(button1,True,True,0)
+        inv_box.pack_end(self.student_entry,True,True,2)
 
         # grid.attach(inv_box,1,5,1,1)
 
@@ -220,8 +275,22 @@ class MainWindow(Gtk.Window):
         formated_carnet = format_id(self.student_entry.get_text())
 
         if formated_carnet:
+            formated_carnet = int(formated_carnet)
+            student_data    = db.get_student(formated_carnet)
+            student_perms   = db.get_student_perms(formated_carnet,Trimestre.septiembreDiciembre,2016)
+            print(student_data )
+            print(student_perms)
+
+            if (not student_data):
+                msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la bd")
+                return
+
+            if (not student_perms):
+                msgbox("El estudiante " + show_carnet(formated_carnet) + " no ha solicitado permisos")
+                return
+
             self.hide()
-            new_win = StudentWindow(self,formated_carnet)
+            new_win = StudentWindow(self,student_data[0],student_perms)
             # new_win = SearchWindow(self,"carnet")
             response = new_win.show_all()
         else:

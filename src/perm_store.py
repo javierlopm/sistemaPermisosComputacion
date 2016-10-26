@@ -57,14 +57,29 @@ std_perms_qry = """
               trimestre = (?) AND
               anio      = (?) """
 
+std_all_perms_qry = """ 
+    SELECT *
+    FROM permiso p
+        WHERE fk_carnet = (?)"""
+
+std_qry = """SELECT *
+             FROM estudiante
+             WHERE carnet = (?)"""
+
 del_all_perm = "DELETE FROM estudiante"
 del_all_std  = "DELETE FROM permiso"
 
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
 
 class PermStore():
     """Wrapper de la base de datos de estudiantes y permisos"""
     def __init__(self):
         conn    = sqlite3.connect('permisos.db')
+        conn.row_factory = dict_factory
         init_db = open('Sql/create_db.sql', 'r').read()
         c = conn.cursor()
         c.executescript(init_db)
@@ -112,10 +127,16 @@ class PermStore():
                                             ,trimestre.value
                                             ,anio,materia))
 
-    def get_student_perms(self,carnet,trimestre,anio):
+    def get_student(self,carnet):
+        return self._run_with_args(std_qry,(carnet,))
+
+    def get_student_perms(self,carnet,trimestre=None,anio=None):
         # Procedimiento que obtiene todos los permisos de un estudiante dado su
         # carnet y trimestre
-        return self._run_with_args(std_perms_qry,(carnet,trimestre.value,anio))
+        if trimestre:
+            return self._run_with_args(std_perms_qry,(carnet,trimestre.value,anio))
+        else:
+            return self._run_with_args(std_all_perms_qry,(carnet))
 
     def test(self):
         self.insert_student(1110552
@@ -164,7 +185,7 @@ class PermStore():
         print(self.get_course_perms("CI4722",Trimestre.septiembreDiciembre,2016))
         print("Permisos pendietes")
         print(self.get_missign_perms(Trimestre.septiembreDiciembre,2016))
-        self.delete_all()
+        # self.delete_all()
         print("DONE")
 
 
