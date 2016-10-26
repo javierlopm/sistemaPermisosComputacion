@@ -103,8 +103,8 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
     # Procesar las páginas del PDF. Se examina por
-    # codigo de carrera cada página. Al encontrar el encontrarlo,
-    # se extrae el texto del documento en archivo XML; luego se procesa.
+    # codigo de carrera cada página. Al encontrar ,se extrae el texto del
+    # documento en archivo XML; luego se procesa.
     for num in range(doc.pageCount):
         page = doc.loadPage(num)
         if page.searchFor(codigoCarr):
@@ -118,12 +118,15 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
             # Procesar el archivo XML
             parser.parse('textPDFXML.xml')
 
+            # Juntar listas de materias con lista de bloques. se conserva
+            # las posiciones para comparación de los horarios.
             tuplas = []
             for ((mat,mtechoAlto,mtechoBajo),(bloq,btechoAlto,btechoBajo)) \
                 in zip(contenedor.listaMaterias,contenedor.listaBloque):
                 #print(([mat,bloq],btechoAlto,btechoBajo))
                 tuplas.append(([mat,bloq],btechoAlto,btechoBajo))
 
+            # Acoplar los horarios junto a las materias y los bloques.
             for (fila,ftechoAlto,ftechoBajo) in tuplas:
                 listaHoras = []
                 listaHorasBorrar = []
@@ -131,6 +134,10 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
                     # print(horas,dia,ftechoAlto,htechoAlto - Decimal(0.3),
                     #     htechoBajo + Decimal(0.3), ftechoBajo)
                     #print("Itera", horas,dia, ftechoAlto,htechoAlto - Decimal(0.3), htechoBajo + Decimal(0.3), ftechoBajo)
+
+                    # Se compara las posiciones verticales de los horarios y los
+                    # bloques y se agregan en una lista para borrarlas de la
+                    # lista original.
                     if  (htechoBajo + Decimal(0.3)) >= (ftechoBajo) \
                         and ftechoAlto >= (htechoAlto - Decimal(0.3) ):
                         listaHoras.append((horas,dia))
@@ -141,6 +148,7 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
                     #print("Eliminar", i)
                     contenedor.listaHorarios.remove(i)
 
+                # Procesar los horarios en formato CSV
                 if listaHoras:
                     #print(componerHorarioCSV(listaHoras)[1:])
                     fila += componerHorarioCSV(listaHoras)[1:].split(',')

@@ -1,5 +1,5 @@
 from procesadorXLS import procesarXLS
-from procesadorDOC import procesarDOC,dividirStr
+from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
 import sys
@@ -33,7 +33,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
 
         if  nomArchivoDace == archivo:
             #Excepcion para cuando no se encuentre 0800
-            if  ext == ".xml":
+            if  ext == ".fodt":
                 procesarDOC(camino,listaMaterias ,listaDACE)
             elif ext == ".pdf":
                 procesarPDF(camino, listaMaterias, listaDACE)
@@ -41,7 +41,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
                 procesarXLS(camino, False, listaMaterias, listaDACE)
             continue
 
-        if  ext == ".xml":
+        if  ext == ".fodt":
             procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
             procesarPDF(camino,listaMaterias, listaOfertas)
@@ -192,10 +192,6 @@ def obtArgs(entrada):
         usoAyuda()
         sys.exit(2)
 
-    # if  len(opts) == 2 or (len(opts) == 1 and (not opts[0][0] in ["-h", "--help"])):
-    #     assert False, "Número incorrecto de parámetros"
-    #     usoAyuda()
-
     for o, a in opts:
         if o == "-f":
             nomArchivoSalida = a
@@ -217,8 +213,6 @@ def obtArgs(entrada):
     if reanalisis:
         return (nomArchivoSalida, "", reanalisis, nomArchivoDace , opcionDir, args, "")
     elif opcionDir:
-        # Comprobar que los nombres a los flags estan aqui
-        print("Directorio")
         return (nomArchivoSalida, nomArchivoMaterias, reanalisis,
                 nomArchivoDace, opcionDir, listdir(nomDirectorio), nomDirectorio)
     else:
