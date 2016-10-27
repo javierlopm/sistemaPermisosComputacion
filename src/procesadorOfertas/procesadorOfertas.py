@@ -1,5 +1,17 @@
+#!/usr/bin/python3.x
+
+# Nombre: Daniel Leones
+# Carné: 09-10977
+# Fecha: 26/10/2016
+# Descripción: Programa principal. Este program realiza las siguientes funciones:
+#   - Generar ofertas a partir de documentos de los departamentos y una
+#     lista de DACE.
+#   - Reanalizar ofertas realizadas con nuevas listas de DACE. Esto se realiza
+#     mediante la opción -r.
+# En ambos casos, la salida es un archivo en formato CSV
+
 from procesadorXLS import procesarXLS
-from procesadorDOC import procesarDOC,dividirStr
+from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
 import sys
@@ -18,8 +30,6 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
                   opcionDir, nomArchivoDace):
     listaOfertas = []
     listaDACE = []
-    # Deshabilita el filtrado en el procesador XLS.
-    # Sólo es neceario para el archivo DACE
 
     for archivo in listaArchivos:
         # Selección de archivos para procesar. Se extrae su extensión para
@@ -32,8 +42,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
             print(camino)
 
         if  nomArchivoDace == archivo:
-            #Excepcion para cuando no se encuentre 0800
-            if  ext == ".xml":
+            if  ext == ".fodt":
                 procesarDOC(camino,listaMaterias ,listaDACE)
             elif ext == ".pdf":
                 procesarPDF(camino, listaMaterias, listaDACE)
@@ -41,7 +50,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
                 procesarXLS(camino, False, listaMaterias, listaDACE)
             continue
 
-        if  ext == ".xml":
+        if  ext == ".fodt":
             procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
             procesarPDF(camino,listaMaterias, listaOfertas)
@@ -57,10 +66,13 @@ def generarOferta(listaOfertas,listaDACE):
     materiasDacePorBorrar = []
     procesado = []
     filaEncontrada = False
-    # Realizar comparación entre listas del dpto y las listas de DACE
+
+    # Realizar comparación entre listas del dpto y las listas de DACE.
+    # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
+    # de E e inclusión de materias que existen sólo en DACE.
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
-            # Comprobar materia y bloque, salvo las materias CI
+            # Comprobar materia y bloque, salvo las materias especiales
             if filaOfertas[0] == filaDace[0] \
                 and filaOfertas[1] == filaDace[1] \
                 and (not filaDace[0][0:2] in iniMatEspeciales):
@@ -84,6 +96,7 @@ def generarOferta(listaOfertas,listaDACE):
     # imprimirResultados("ListaDace E",listaDACE)
     # imprimirResultados("ListaOfertas E",listaOfertas)
 
+    # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas
     filaEncontrada = None
     for filaOfertas in listaOfertas:
         for filaDace in listaDACE:
@@ -114,15 +127,15 @@ def generarOferta(listaOfertas,listaDACE):
 
 
 def reanalizarOferta(listaOfertas,listaDACE):
-    # Lista necesaria para evitar eliminar materias especiales que no se
-    # incluyen en la ofertas
     materiasDacePorBorrar = []
     procesado = []
     filaEncontrada = False
-    # Realizar comparación entre listas del dpto y las listas de DACE
+
+    # Realizar comparación entre listas del dpto y las listas de DACE.
+    # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
+    # de E e inclusión de materias que existen sólo en DACE.
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
-            # Comprobar materia y bloque, salvo las materias CI
             if filaOfertas[0] == filaDace[0] \
                 and filaOfertas[1] == filaDace[1]:
                 filaEncontrada = True
@@ -139,6 +152,8 @@ def reanalizarOferta(listaOfertas,listaDACE):
     for filaPorBorrar in materiasDacePorBorrar:
         listaDACE.remove(filaPorBorrar)
 
+    # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
+    # Se agregan las filas con operación E. Se analizan otras.
     filaEncontrada = None
     for filaOfertas in listaOfertas:
         if filaOfertas[9] != 'E':
@@ -192,10 +207,6 @@ def obtArgs(entrada):
         usoAyuda()
         sys.exit(2)
 
-    # if  len(opts) == 2 or (len(opts) == 1 and (not opts[0][0] in ["-h", "--help"])):
-    #     assert False, "Número incorrecto de parámetros"
-    #     usoAyuda()
-
     for o, a in opts:
         if o == "-f":
             nomArchivoSalida = a
@@ -214,13 +225,19 @@ def obtArgs(entrada):
         else:
             assert False, "unhandled option"
 
+    # Argumentos para la función de reanalisis
     if reanalisis:
         return (nomArchivoSalida, "", reanalisis, nomArchivoDace , opcionDir, args, "")
     elif opcionDir:
-        # Comprobar que los nombres a los flags estan aqui
-        print("Directorio")
+        # Argumentos generar ofertas. Los archivos están en un directorio
+        try:
+            direcContenido = listdir(nomDirectorio)
+        except NotADirectoryError:
+            print(nomDirectorio, "no es un directorio")
+            sys.exit(2)
+
         return (nomArchivoSalida, nomArchivoMaterias, reanalisis,
-                nomArchivoDace, opcionDir, listdir(nomDirectorio), nomDirectorio)
+                nomArchivoDace, opcionDir, direcContenido, nomDirectorio)
     else:
         args.append(nomArchivoDace)
         return (nomArchivoSalida, nomArchivoMaterias, reanalisis,
@@ -233,13 +250,22 @@ if __name__ == '__main__':
     # Borrar el contenido del archivo de salida si existe
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
+
     # Obtener las materias requeridas
     if not reanalisis:
         listaMaterias = []
-        for materia in open(nomArchivoMaterias, 'r'):
-            if (not materia.isspace()) and materia[0] != '#':
-                listaMaterias.append(materia.rstrip(' \t\n\r'))
-
+        try:
+            matArch = open(nomArchivoMaterias, 'r')
+        except FileNotFoundError:
+            print("El archivo no encontrado", nomArchivoMaterias)
+            sys.exit(2)
+        except IsADirectoryError:
+            print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+            sys.exit(2)
+        else:
+            for materia in matArch:
+                if (not materia.isspace()) and materia[0] != '#':
+                    listaMaterias.append(materia.rstrip(' \t\n\r'))
 
         (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio,listaMaterias,\
                                                  opcionDir,nomArchivoDace)
@@ -252,7 +278,16 @@ if __name__ == '__main__':
         print("\nReanalizando Ofertas ")
         listaOfertas = []
         sinCabecera = False
-        for fila in open(args[0], 'r'):
+        try:
+            fdOfertas = open(args[0], 'r')
+        except FileNotFoundError:
+            print("El archivo no encontrado", args[0])
+            sys.exit(2)
+        except IsADirectoryError:
+            print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+            sys.exit(2)
+
+        for fila in fdOfertas:
             if sinCabecera:
                 temp = fila.split(',')
                 listaOfertas.append(temp[0:9] + [temp[9].split('\n')[0]])
@@ -265,13 +300,19 @@ if __name__ == '__main__':
         procesado = reanalizarOferta(listaOfertas,listaDACE)
 
     # Imprimir resultados al archivo de salida
-    fdSalida = open(nomArchivoSalida, 'a')
-    fdSalida.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES" + \
-                    ",MIERCOLES,JUEVES,VIERNES,OFERTA,COD_CARRERA,OPERACIÓN\n")
-    for fila in procesado:
-        fdSalida.write(','.join(fila) + '\n')
-
-    fdSalida.close()
+    try:
+        fdSalida = open(nomArchivoSalida, 'a')
+        fdSalida.write("COD_ASIGNATURA,BLOQUE,LUNES,MARTES" + \
+                        ",MIERCOLES,JUEVES,VIERNES,OFERTA,COD_CARRERA,OPERACIÓN\n")
+        for fila in procesado:
+            fdSalida.write(','.join(fila) + '\n')
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Eliga un nombre distinto")
+        nomArchivoSalida = raw_input("Introduzca el nombre del archivo de salida: ")
+    except OSError as ose:
+        print("Error de E/S: ", ose)
+    finally:
+        fdSalida.close()
     print("Ofertas procesadas exitosamente")
 
 
