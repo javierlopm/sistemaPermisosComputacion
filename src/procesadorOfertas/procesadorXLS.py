@@ -7,7 +7,7 @@ import getopt
 import re
 
 
-patronMateria = "^(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)$"
+patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
 patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
     "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
 patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
@@ -42,15 +42,10 @@ def analizarCabecera(cabecera):
 def filtrarBloque(txt):
     return len(txt) == 1 and txt[0].isalpha()
 
-def filtrarMateria(txt):
-    #print("TXT", txt)
-    return len(txt) == 6 and txt[0].isalpha() and txt[1].isalpha() \
-            and txt[2].isdigit()
-
 def normalizarMateria(txt):
     mat = ""
     for char in txt:
-        if char != ' ' and char != '-':
+        if char != ' ' and char != '-' and char != '\n':
             mat += char
     return mat
 
@@ -73,14 +68,18 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
              campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
         else:
             entrada = sheet0.row_values(nroFila)
+            #print(entrada)
             # Comprueba si pertenece al pensum de computación
             if activarFitrado:
                 if (existeCarrera and \
                     (not re.search("0800",str(entrada[campoCarrera])))):
+                    #print("Eliminar por Carrera", entrada)
                     continue
 
                 if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
                     #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
+                    # print("Eliminar por lista materias ",
+                    #       normalizarMateria(entrada[posCamposValidos[0]]), entrada, "\n")
                     continue
 
             nuevaEntrada = ""
@@ -102,8 +101,9 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                     #print("Tienen cerrar", ','.join(entrada))
                     break
 
-                if re.search(patronMateria,txt, re.I):
-                    nuevaEntrada += ',' + normalizarMateria(txt)
+                searchMat = re.search(patronMateria,txt, re.I)
+                if searchMat:
+                    nuevaEntrada += ',' + normalizarMateria(searchMat.group())
                 elif filtrarBloque(txt) \
                     or txt == '' or re.search(patronHorario, txt):
                     #print("pasa el filtro", txt)

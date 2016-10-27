@@ -3,11 +3,19 @@
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 18/09/2016
+# Fecha: 26/10/2016
 # Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
-# Se apoya en las etiquetas "span", "char".
-# La salida es un archivo.csv conforme al siguiente formato :
-# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES)
+# Se apoya en las etiquetas "<span>" y "<char>". Este procesador es específico
+# al formato PDF de lista de materias de DACE.
+# En caso que se haya un archivo de salida, su formato será CSV conforme al
+# siguiente formato :
+# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES
+# En otro caso, se devuelve una [fila1,fila2,..., filaN] al estilo CSV de acuerdo
+# al formato anterior.
+
+# Notas:
+# Se aprovecha las variables y funciones definidas en procesadorPDF.
+# Se redefinen los métodos de OfertasGeneral.
 
 import fitz # Usando MuPDf 1.9.2
 import xml.sax
@@ -32,9 +40,12 @@ class OfertasDace( OfertasGeneral ):
 
    # Call when an element starts
     def startElement(self, tag, attributes):
+        # Acumulan las caracteres
         if tag == "char":
             self.celda += attributes["c"]
 
+        # Guardar las posiciones para comparaciones. Esta etiqueta anida <char>
+        # directamente.
         if tag == "span":
             self.posCaracteres = \
                 (attributes['bbox'].split(" ")[0],
@@ -44,7 +55,8 @@ class OfertasDace( OfertasGeneral ):
 
    # Call when an elements ends
     def endElement(self, tag):
-        #Se omite las lineas de contorno del documento
+        # Se procesa el texto acumulado en self.celda.
+        # Se omite las lineas separadoras del documento.
         if tag == "span" and self.celda[0] != '-':
             #print("Celda", self.celda)
             if not self.cabeceraLista:
@@ -55,12 +67,11 @@ class OfertasDace( OfertasGeneral ):
             self.celda = ""
             self.posCaracteres = []
 
-    # Encuentra los dias de semana en la página y guarda sus posiciones.
+    # Procesa la cabecera de los dias de semana en la página y guarda sus posiciones.
     def filtroCabecera(self,txt, posCaracteres):
         searchDias = re.search(self.patronDias, txt, re.I)
         if searchDias:
             #print(searchDias)
-            longPalabra = len(txt)
             #print("posCaracteres", txt , posCaracteres)
             self.cabeceraDias.append((searchDias.group()[0:2],
                                       Decimal(posCaracteres[0]),
@@ -70,6 +81,7 @@ class OfertasDace( OfertasGeneral ):
         #     print("Cabecera Lista: ", self.cabeceraDias)
         return len(self.cabeceraDias) == 5
 
+    # Procesa cadenas encontradas por materias, bloque u horarios.
     def filtrarTexto(self,txt, posCaracteres):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
@@ -118,7 +130,7 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
             # Procesar el archivo XML
             parser.parse('textPDFXML.xml')
 
-            # Juntar listas de materias con lista de bloques. se conserva
+            # Juntar listas de materias con lista de bloques. Se conserva
             # las posiciones para comparación de los horarios.
             tuplas = []
             for ((mat,mtechoAlto,mtechoBajo),(bloq,btechoAlto,btechoBajo)) \

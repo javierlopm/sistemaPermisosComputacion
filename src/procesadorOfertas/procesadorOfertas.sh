@@ -1,4 +1,13 @@
 #!/bin/bash
+# Nombre: Daniel Leones
+# Carné: 09-10977
+# Fecha: 26/10/2016
+# Descripción: Interfaz que abstrae el entorno de ejecución procesadorOfertas y
+# procesa los argumentos para dicho programa.
+# Funciones:
+#   - Preprocesa los archivos DOC a FODT. Paso previo a esto es que Libreoffice
+#     no esté ejecutandose.
+#   - Ejecuta el procesadorOfertas con los argumentos recibidos
 
 function usoAyuda(){
     echo "Instrucciones de uso: "
