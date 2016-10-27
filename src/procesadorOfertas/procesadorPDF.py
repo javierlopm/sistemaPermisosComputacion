@@ -3,11 +3,14 @@
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 18/09/2016
+# Fecha: 26/10/2016
 # Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
-# Se apoya en las etiquetas "table:table-cell" y "table:table-row".
-# La salida es un archivo.csv conforme al siguiente formato :
-# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES)
+# Se apoya en las etiquetas "<span>" y "<char>".
+# En caso que se haya un archivo de salida, su formato será CSV conforme al
+# siguiente formato :
+# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES
+# En otro caso, se devuelve una [fila1,fila2,..., filaN] al estilo CSV de acuerdo
+# al formato anterior.
 
 import fitz # Usando MuPDf 1.9.2
 import xml.sax
@@ -98,7 +101,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
             #print(searchMat)
-            self.fila.append(normalizarMateria(searchMat.group()))
+            self.fila.append(self.normalizarMateria(searchMat.group()))
         elif re.search(self.patronBloque, txt, re.I):
             #print(re.search(self.patronBloque, txt, re.I))
             self.fila.append(txt)
@@ -123,27 +126,27 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def normalizarMateria(self,txt):
         mat = ""
         for char in txt:
-            if char != ' ' and char != '-':
+            if char != ' ' and char != '-' and char != '\n':
                 mat += char
         return mat
 
 def componerHorarioCSV(listaHorarios):
-   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
-   ultimoDia = ''
-   horarios = ""
-   for (hora,dia) in listaHorarios:
-      if ultimoDia == '':
-         ultimoDia = dia
-         horarios += (corresDiaDistancia[dia] * ',') + hora
-      else:
-         horarios += ((corresDiaDistancia[dia] -  \
+    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
+    ultimoDia = ''
+    horarios = ""
+    for (hora,dia) in listaHorarios:
+        if ultimoDia == '':
+            ultimoDia = dia
+            horarios += (corresDiaDistancia[dia] * ',') + hora
+        else:
+            horarios += ((corresDiaDistancia[dia] -  \
                     corresDiaDistancia[ultimoDia]) * ',') + hora
-         ultimoDia = dia
+            ultimoDia = dia
 
-   if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
+    if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
+        horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
 
-   return horarios
+    return horarios
 
 def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     doc = fitz.open(nombreArchivoEntrada)
@@ -151,7 +154,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas(listaMaterias)
+    Handler = OfertasGeneral(listaMaterias)
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
@@ -160,6 +163,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
         # archivo XML.
         page = doc.loadPage(num)
         xmlText = page.getText(output = "xml")
+        # Crear un archivo temporal
         f = open('textPDFXML.xml', 'w')
         f.write(xmlText)
         # Procesar el archivo XML
@@ -170,7 +174,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
-   # Variable para escribir las filas en el archivo destino
+    # Variable para escribir las filas en el archivo destino
     row = ""
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
@@ -232,12 +236,20 @@ def obtArgs(entrada):
 
 if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
-    nomArchivoEntrada = 'Oferta_Pregrado_1.pdf'
 
     listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
+    try:
+        matArch = open(nomArchivoMaterias, 'r')
+    except FileNotFoundError:
+        print("El archivo no encontrado", nomArchivoDace)
+        sys.exit(2)
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+        sys.exit(2)
+    else:
+        for materia in matArch:
+            if (not materia.isspace()) and materia[0] != '#':
+                listaMaterias.append(materia.rstrip(' \t\n\r'))
 
     fdSalida = []
     procesarPDF(args[0],listaMaterias,fdSalida)

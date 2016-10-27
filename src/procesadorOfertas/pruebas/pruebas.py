@@ -11,6 +11,11 @@ def imprimirResultados(mensaje,listaOfertas):
         print(fila)
     print('\n')
 
+
+
+#
+# Pruebas de procesamiento. Se prueba cada procesador
+#
 class Contexto(unittest.TestCase):
     def setUp (self):
         self.listaMaterias = []
@@ -19,7 +24,8 @@ class Contexto(unittest.TestCase):
                 self.listaMaterias.append(materia.rstrip(' \t\n\r'))
 
         self.fdSalida = []
-        # Respuesta correcta
+        self.carpetaBase = "pruebas_procesamiento/"
+        # Respuestas correctas
         self.Correcta_doc1 = \
             [   ["PB5611","A",'','','','',''], \
                 ["PB5671",'A',"7-8","","7-8","2-3",""]
@@ -67,41 +73,83 @@ class Contexto(unittest.TestCase):
 class ProcesarDOC1_XML (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre Doc1.xml"""
-        procesarDOC("doc1.xml",self.listaMaterias, self.fdSalida)
+        procesarDOC(self.carpetaBase + "doc1.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento DOC. Archivo doc1.xml")
 
 class ProcesarDOC2_XML (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre Doc2.xml """
         #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
-        procesarDOC("doc2.xml",self.listaMaterias, self.fdSalida)
+        procesarDOC(self.carpetaBase + "doc2.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc2, "Falla de procesamiento DOC. Archivo doc2.xml")
 
-#
+class ProcesarDOC3_XML (Contexto):
+    def runTest (self):
+        """ Prueba de procesamiento sobre Doc2.xml """
+        #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
+        procesarDOC(self.carpetaBase + "doc3.xml",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento DOC. Archivo doc3.xml")
+
+class ProcesarDOC4_XML (Contexto):
+    def runTest (self):
+        """ Prueba de procesamiento sobre Doc2.xml """
+        #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
+        procesarDOC(self.carpetaBase + "doc4.xml",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento DOC. Archivo doc4.xml")
 
 class ProcesarDOC1_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc2.pdf """
-        procesarPDF("doc1.pdf",self.listaMaterias, self.fdSalida)
+        procesarPDF(self.carpetaBase + "doc1.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento PDF. Archivo doc1.pdf")
 
 class ProcesarDOC2_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc2.pdf """
-        procesarPDF("doc2.pdf",self.listaMaterias, self.fdSalida)
+        procesarPDF(self.carpetaBase +  "doc2.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc2, "Falla de procesamiento PDF. Archivo doc2.pdf")
 
 class ProcesarDOC3_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc3.pdf """
-        procesarPDF("doc3.pdf",self.listaMaterias, self.fdSalida)
+        procesarPDF(self.carpetaBase + "doc3.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento PDF. Archivo doc3.pdf")
 
 class ProcesarDOC4_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc3.pdf """
-        procesarPDF("doc4.pdf",self.listaMaterias, self.fdSalida)
+        procesarPDF(self.carpetaBase + "doc4.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento PDF. Archivo doc4.pdf")
+
+
+class ProcesarDOC1_XLS (Contexto):
+    def runTest(self):
+        """ Prueba de procesamiento sobre doc1.xls """
+        procesarXLS(self.carpetaBase + "doc1.xls", True, self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento XLS. Archivo doc1.xls")
+
+class ProcesarDOC2_XLS (Contexto):
+    def runTest (self):
+        """ Prueba de procesamiento sobre doc2.xls """
+        procesarXLS(self.carpetaBase +  "doc2.xls", True, self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc2, "Falla de procesamiento XLS. Archivo doc2.xls")
+
+class ProcesarDOC3_XLS (Contexto):
+    def runTest(self):
+        """ Prueba de procesamiento sobre doc3.xls """
+        procesarXLS(self.carpetaBase + "doc3.xls", True, self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento XLS. Archivo doc3.xls")
+
+class ProcesarDOC4_XLS (Contexto):
+    def runTest (self):
+        """ Prueba de procesamiento sobre doc4.xls """
+        procesarXLS(self.carpetaBase +  "doc4.xls", True, self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento XLS. Archivo doc4.xls")
+
+
+#
+# Pruebas integrales
+#
 
 class ContextoIntegral(unittest.TestCase):
     def setUp(self):
@@ -151,10 +199,20 @@ class ProcesarOfertasPequeña(ContextoIntegral):
         self.assertEqual(self.fdSalida, self.Correcta1, "Falla integral. Archivo 0800_prueba1.xls")
 
 
-def suite():
+def suiteXLS():
+    suite = unittest.TestSuite()
+    suite.addTest (ProcesarDOC1_XLS())
+    suite.addTest (ProcesarDOC2_XLS())
+    suite.addTest (ProcesarDOC3_XLS())
+    suite.addTest (ProcesarDOC4_XLS())
+    return suite
+
+def suiteDOC():
     suite = unittest.TestSuite()
     suite.addTest (ProcesarDOC1_XML())
     suite.addTest (ProcesarDOC2_XML())
+    suite.addTest (ProcesarDOC3_XML())
+    suite.addTest (ProcesarDOC4_XML())
     return suite
 
 def suitePDF():
@@ -172,5 +230,6 @@ def suiteIntegral():
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
-    test_suite = suiteIntegral()
-    runner.run (test_suite)
+    runner.run (suiteDOC())
+    runner.run (suiteXLS())
+    runner.run (suitePDF())
