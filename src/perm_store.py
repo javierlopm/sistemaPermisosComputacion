@@ -107,7 +107,7 @@ class PermStore():
         self.conn.commit()
         c.close()
 
-    def update_perm_state(self,perm_id,new_state=None):
+    def update_perm_state(self,perm_id,new_state='p'):
         c = self.conn.cursor()
         c.execute(updt_perm,(new_state.value,perm_id))
         self.conn.commit()
@@ -136,7 +136,7 @@ class PermStore():
         if trimestre:
             return self._run_with_args(std_perms_qry,(carnet,trimestre.value,anio))
         else:
-            return self._run_with_args(std_all_perms_qry,(carnet))
+            return self._run_with_args(std_all_perms_qry,(carnet,))
 
     def test(self):
         self.insert_student(1110552

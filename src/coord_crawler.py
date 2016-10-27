@@ -25,7 +25,7 @@ def format_id(student_id):
 
 def show_carnet(int_carnet):
     std_str = str(int_carnet)
-    return std_str[0:2] + "-" + std_str[3:8]
+    return std_str[0:2] + "-" + std_str[2:8]
 
 class StudentDownloader():
     """Class for web crawler that search for students id and downloads

@@ -1,13 +1,15 @@
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader
 from easygui       import msgbox
+import os.path
 import csv_creator
 from perm_store import *
 
 db = PermStore()
+RATIO = 0.75
 
 class SearchWindow(Gtk.Window):
 
@@ -75,19 +77,25 @@ class StudentWindow(Gtk.Window):
     """
         Ventana para ver un estudiante
     """
-    def __init__(self,old_window,std_data,std_perms):
+    def __init__(self,old_window,std_data):
         self.old_window = old_window
         Gtk.Window.__init__(self, title="Permisos coordinación")
 
         self.connect("delete-event", Gtk.main_quit)
 
-        self.set_default_size(320,200)
+        self.set_default_size(640,200)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.wrapper_grid = Gtk.Grid()
+        self.outter_grid  = Gtk.Grid()
+        grid = Gtk.Grid()
+        grid.props.halign = Gtk.Align.CENTER
+
+        self.add(self.wrapper_grid)
 
         # Grid
-        grid = Gtk.Grid()
-        self.grid = grid
-        self.add(grid)
-        grid.props.halign = Gtk.Align.CENTER
+        # self.grid = grid
+        
 
         grid.insert_row(0)
         grid.insert_row(1)
@@ -102,13 +110,15 @@ class StudentWindow(Gtk.Window):
 
         grid.set_row_spacing(10)
         grid.set_column_spacing(30)
+        self.wrapper_grid.set_row_spacing(10)
 
         # Widgets
         button_ret = Gtk.Button(label="←")
 
         label = Gtk.Label()
-        label.set_text("Estudiante " + str(std_data['carnet']))
+        label.set_text("Estudiante " + show_carnet(std_data['carnet']) )
         label.set_justify(Gtk.Justification.LEFT)
+
 
         # Inicio de lista de datos
         liststore = Gtk.ListStore(str, str)
@@ -127,18 +137,49 @@ class StudentWindow(Gtk.Window):
         treeview.append_column(column_spin)
         #Fin de lista de datos
 
+        # Inicio de carga de permisos solicitados
+        liststore = Gtk.ListStore(str, str)
+        for elem in std_data.items():
+            liststore.append([ elem[0],str(elem[1]) ] )
+        treeview = Gtk.TreeView(model=liststore)
+
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn("Dato", renderer_text, text=0)
+        treeview.append_column(column_text)
+
+        renderer_spin = Gtk.CellRendererSpin()
+        renderer_spin.set_property("editable", False)
+
+        column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
+        treeview.append_column(column_spin)
+        # Inicio de carga de permisos solicitados
+
+        # Carga de grafo
+        str_image = 'images/'+show_carnet(std_data['carnet'])+".png"
+        str_image = str_image if os.path.isfile(str_image) else "images/noFile.png"
+
+        img = Gtk.Image()
+        pixbuf    = GdkPixbuf.Pixbuf.new_from_file(str_image)
+        scaled_buff =pixbuf.scale_simple(1132*RATIO,291*RATIO,GdkPixbuf.InterpType.BILINEAR)
+
+        img.set_from_pixbuf(scaled_buff)
+        # Fin de grafo
+
 
         inv_box = Gtk.Box(spacing=20)
- 
+        
+        self.outter_grid.attach(grid,0,0,1,1)
+
         grid.attach(label     ,2,0,1,1)
         grid.attach(button_ret,0,0,1,1)
         grid.attach(inv_box   ,4,2,2,2)
         grid.attach(treeview  ,2,3,2,2)
 
+        self.outter_grid.attach(img,1,0,1,1)
+
+        self.wrapper_grid.attach(self.outter_grid,0,0,1,1)
 
         button_ret.connect("clicked", self.go_back)
-
-
 
 
     def on_button1_clicked(self, widget):
@@ -148,17 +189,101 @@ class StudentWindow(Gtk.Window):
         self.old_window.show()
         self.destroy()
 
+class StudentAllPerms(StudentWindow):
+    """docstring for StudentAllPerms"""
+    def __init__(self,old_window,std_data,std_perms):
+        StudentWindow.__init__(self,old_window,std_data)
+
+        self.std_perms = std_perms
+        # All type of enums
+        # trims      = dir(Trimestre)[4:]
+        # perm_types = dir(TipoPermiso)[4:]
+
+        status     = dir(EstadoPermiso)[4:]
+
+        liststore_status = Gtk.ListStore(str)
+
+        for item in status:
+            liststore_status.append([item])
+
+        # Inicio de lista de datos
+        # tipo, trim, anio, extra_field, aprobado
+        liststore = Gtk.ListStore(str,int,str,str,str,int)
+        self.liststore = liststore
+
+        print(std_perms)
+
+        for i,elem in enumerate(std_perms):
+            typ = TipoPermiso(elem['tipo'])
+            extra_field = ""
+
+            if  (typ == TipoPermiso.permiso_materia):
+                extra_field = elem['string_extra']
+            elif (typ == TipoPermiso.limite_creditos):
+                extra_field = str(elem['int_extra'])
+
+            liststore.append([Trimestre(elem['trimestre']).name
+                             ,elem['anio']
+                             ,typ.name
+                             ,extra_field
+                             ,EstadoPermiso(elem['aprobado']).name
+                             ,i])
+
+        treeview = Gtk.TreeView(model=liststore)
+
+        renderer_text = Gtk.CellRendererText()
+
+        column_text1 = Gtk.TreeViewColumn("Trimestre", renderer_text, text=0)
+        column_text2 = Gtk.TreeViewColumn("Año"      , renderer_text, text=1)
+        column_text  = Gtk.TreeViewColumn("Tipo"     , renderer_text, text=2)
+        column_text3 = Gtk.TreeViewColumn("Valor"    , renderer_text, text=3)
+
+        renderer_combo = Gtk.CellRendererCombo()
+        renderer_combo.set_property("editable", True)
+        renderer_combo.set_property("model", liststore_status)
+        renderer_combo.set_property("text-column", 0)
+        renderer_combo.set_property("has-entry", False)
+        renderer_combo.connect("edited", self.on_combo_changed)
+
+        column_combo = Gtk.TreeViewColumn("Aprobado", renderer_combo, text=4)
+
+        treeview.append_column(column_text)
+        treeview.append_column(column_text1)
+        treeview.append_column(column_text2)
+        treeview.append_column(column_text3)
+        treeview.append_column(column_combo)
+        # Fin de la tabla
+
+
+        # renderer_spin = Gtk.CellRendererSpin()
+        # renderer_spin.set_property("editable", False)
+
+        # column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
+        # treeview.append_column(column_spin)
+        #Fin de lista de datos
+
+        self.wrapper_grid.attach(treeview,0,1,1,1)
+    # def go_back(self, widget):
+    #     self.old_window.show()
+    #     self.destroy()      
+
+    def on_combo_changed(self, widget, path, text):
+        i = self.liststore[path][5]
+        db.update_perm_state(self.std_perms[i]['id_permiso'], EstadoPermiso(text[0]))
+        self.liststore[path][4] = text   
 
 
 class InitWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title="Permisos coordinacion")
-        self.set_default_size(320,200)
+        self.set_default_size(320,140)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
 
         grid = Gtk.Grid()
+        grid.props.halign = Gtk.Align.CENTER
         self.grid = grid
         self.add(grid)
-        grid.props.halign = Gtk.Align.CENTER
 
         grid.insert_column(0)
         grid.insert_row(0)
@@ -179,7 +304,6 @@ class InitWindow(Gtk.Window):
 
         grid.attach(label,0,0,2,2)
         grid.attach(button1,0,5,2,2)
-        grid.attach(button2,0,25,2,2)
         grid.attach(button2,0,25,2,2)
 
         button1.connect("clicked", self.on_button1_clicked)
@@ -234,6 +358,7 @@ class MainWindow(Gtk.Window):
     """
     def __init__(self):
         Gtk.Window.__init__(self, title="Hello World")
+        self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
 
         self.set_title("Permisos coordinación")
@@ -296,9 +421,9 @@ class MainWindow(Gtk.Window):
         if formated_carnet:
             formated_carnet = int(formated_carnet)
             student_data    = db.get_student(formated_carnet)
-            student_perms   = db.get_student_perms(formated_carnet,Trimestre.septiembreDiciembre,2016)
-            print(student_data )
-            print(student_perms)
+            student_perms   = db.get_student_perms(formated_carnet)
+            # print(student_data )
+            # print(student_perms)
 
             if (not student_data):
                 msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la bd")
@@ -309,7 +434,7 @@ class MainWindow(Gtk.Window):
                 return
 
             self.hide()
-            new_win = StudentWindow(self,student_data[0],student_perms)
+            new_win = StudentAllPerms(self,student_data[0],student_perms)
             # new_win = SearchWindow(self,"carnet")
             response = new_win.show_all()
         else:
