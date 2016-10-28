@@ -13,14 +13,13 @@ RATIO = 0.75
 
 class SearchWindow(Gtk.Window):
 
-    def __init__(self,old_window,name):
+    def __init__(self,old_window,perm_type,code=None):
         self.old_window = old_window
-        self.name       = name
-        Gtk.Window.__init__(self, title="Hello World")
+        self.perm_type  = perm_type
 
+        Gtk.Window.__init__(self, title="Permisos coordinación")
         self.connect("delete-event", Gtk.main_quit)
 
-        self.set_title("Permisos coordinación")
         self.set_default_size(320,200)
 
         # Grid
@@ -42,10 +41,10 @@ class SearchWindow(Gtk.Window):
         grid.set_column_spacing(30)
 
         # Widgets
-        button2 = Gtk.Button(label="←")
+        button_ret = Gtk.Button(label="←")
 
         label = Gtk.Label()
-        label.set_text("Vista de búsqueda")
+        label.set_text(perm_type.name + (" "+code if code else ""))
         label.set_justify(Gtk.Justification.LEFT)
 
         inv_box = Gtk.Box(spacing=20)
@@ -53,14 +52,14 @@ class SearchWindow(Gtk.Window):
         # attach (child, left, top, width, height)
         # grid.attach(label  ,2,0,2,2)
         # grid.attach(button1,2,3,2,2)
-        # grid.attach(button2,0,0,1,1)
+        # grid.attach(button_ret,0,0,1,1)
         grid.attach(label  ,2,0,1,1)
-        grid.attach(button2,0,0,1,1)
+        grid.attach(button_ret,0,0,1,1)
         grid.attach(inv_box,4,2,2,2)
 
 
-        button1.connect("clicked", self.on_button1_clicked)
-        button2.connect("clicked", self.on_button2_clicked)
+        # button1.connect("clicked", self.on_button1_clicked)
+        button_ret.connect("clicked", self.on_button_ret_clicked)
 
 
 
@@ -68,7 +67,7 @@ class SearchWindow(Gtk.Window):
     def on_button1_clicked(self, widget):
         pass
 
-    def on_button2_clicked(self, widget):
+    def on_button_ret_clicked(self, widget):
         # self.hide()
         self.old_window.show()
         self.destroy()
@@ -357,11 +356,10 @@ class MainWindow(Gtk.Window):
         Ventana principal de búsqueda de permisos y estudiantes
     """
     def __init__(self):
-        Gtk.Window.__init__(self, title="Hello World")
+        Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
 
-        self.set_title("Permisos coordinación")
         self.set_default_size(320,200)
 
         grid = Gtk.Grid()
@@ -369,7 +367,7 @@ class MainWindow(Gtk.Window):
         self.add(grid)
         grid.props.halign = Gtk.Align.CENTER
         grid.set_row_spacing(10)
-        grid.set_column_spacing(50)
+        grid.set_column_spacing(4)
 
         grid.insert_row(0)
         grid.insert_row(1)
@@ -378,17 +376,28 @@ class MainWindow(Gtk.Window):
         grid.insert_column(0)
         grid.insert_column(1)
         grid.insert_column(2)
+
         button1 = Gtk.Button(label="Buscar por carnet")
         button2 = Gtk.Button(label="Buscar por materia")
-        button3 = Gtk.Button(label="Permisos de generales")
+        button3 = Gtk.Button(label="Permisos dos generales")
         button4 = Gtk.Button(label="Permisos de extra creditos")
         button5 = Gtk.Button(label="Permisos de PP")
+
+        button2.type = TipoPermiso.permiso_materia
+        button3.type = TipoPermiso.dos_generales
+        button4.type = TipoPermiso.limite_creditos
+        button5.type = TipoPermiso.pp
+
         self.student_entry = Gtk.Entry()
+        self.class_entry   = Gtk.Entry()
 
-        inv_box = Gtk.Box(spacing=4)
+        # inv_box  = Gtk.Box(spacing=4)
+        # inv_box.pack_start(button1,True,True,0)
+        # inv_box.pack_end(self.student_entry,True,True,3)
 
-        inv_box.pack_start(button1,True,True,0)
-        inv_box.pack_end(self.student_entry,True,True,2)
+        # inv_box2  = Gtk.Box(spacing=4)
+        # inv_box2.pack_start(button2,True,True,0)
+        # inv_box2.pack_end(self.class_entry,True,True,3)
 
         # grid.attach(inv_box,1,5,1,1)
 
@@ -400,18 +409,30 @@ class MainWindow(Gtk.Window):
 
 
 
-        # grid.attach(button1,0,20,2,2)
         # grid.attach(student_entry,2,20,1,1)
-        grid.attach(inv_box,1,20,1,1)
+        # grid.attach(inv_box ,1,20,1,1)
+        # grid.attach(inv_box2,1,25,1,1)
 
+        # Busqueda estudiante
+        grid.attach(button1,1,20,2,2)
+        grid.attach(self.student_entry,6,20,2,2)
+        
+        # Busqueda materia
+        grid.attach(button2,1,25,2,2)
+        grid.attach(self.class_entry,6,25,2,2)
+
+        # Permisos de dos generales
         grid.attach(label  ,1,0,2,2)
-        grid.attach(button2,1,25,2,3)
         grid.attach(button3,1,30,2,3)
-        grid.attach(button4,1,35,2,3)
+        grid.attach(button4,1,35,2,5)
         grid.attach(button5,1,40,2,3)
 
-
+        print(button1)
         button1.connect("clicked", self.on_student_clicked)
+        button2.connect("clicked", self.on_search_view_clicked)
+        button3.connect("clicked", self.on_search_view_clicked)
+        button4.connect("clicked", self.on_search_view_clicked)
+        button5.connect("clicked", self.on_search_view_clicked)
 
 
 
@@ -440,6 +461,12 @@ class MainWindow(Gtk.Window):
         else:
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
 
+    def on_search_view_clicked(self,widget):
+        mat = self.class_entry.get_text()
+        mat = mat if widget.type == TipoPermiso.permiso_materia else None
+        self.hide()
+        new_win = SearchWindow(self,widget.type,mat)
+        new_win.show_all()
 
 win = InitWindow()
 win.connect("delete-event", Gtk.main_quit)
