@@ -12,8 +12,14 @@ from copy import deepcopy
 db = PermStore()
 RATIO = 0.75
 
-class HeaderBarWindow(Gtk.Window):
+def extend_instance(obj, cls):
+    """Apply mixins to a class instance after creation"""
+    base_cls = obj.__class__
+    base_cls_name = obj.__class__.__name__
+    obj.__class__ = type(base_cls_name, (base_cls, cls),{})
 
+class HeaderBarWindow(Gtk.Window):
+    """ Clase de todas las ventanas con boton de retorno """
     def __init__(self,return_window):
         Gtk.Window.__init__(self, title="HeaderBar Demo")
         self.set_border_width(10)
@@ -42,81 +48,6 @@ class HeaderBarWindow(Gtk.Window):
         self.destroy()
 
 
-class SearchWindow(HeaderBarWindow):
-
-    def __init__(self,old_window,perm_type,code=None):
-        HeaderBarWindow.__init__(self,old_window)
-        self.perm_type  = perm_type
-        self.set_default_size(320,200)
-        self.missing_count = None
-
-        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-
-        # Box for label
-        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
-        main_box.pack_start(self.fst_box,True,True,0)
-
-        # scrollable view para permisos
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        main_box.pack_start(self.scrolled_view,True,True,0)
-
-
-        # Obtener premisos
-        if perm_type == TipoPermiso.permiso_materia:
-            courses = db.get_course_perms(code)
-        else:
-            courses = db.get_type_perm(perm_type)
-
-        self.update_missing_perms(len(courses))
-
-        # Tipos de permiso
-        [liststore_status.append(e) for e in get_all_names(TipoPermiso)]
-        # status     = dir(EstadoPermiso)[4:]
-        # liststore_status = Gtk.ListStore(str)
-        # for item in status:
-        #     liststore_status.append([item])
-
-
-        # Inicio de carga de permisos solicitados
-        liststore = Gtk.ListStore(str, str)
-        for elem in std_data.items():
-            liststore.append([ elem[0],str(elem[1]) ] )
-        treeview = Gtk.TreeView(model=liststore)
-
-        renderer_text = Gtk.CellRendererText()
-        column_text = Gtk.TreeViewColumn("Dato", renderer_text, text=0)
-        treeview.append_column(column_text)
-
-        renderer_spin = Gtk.CellRendererSpin()
-        renderer_spin.set_property("editable", False)
-
-        column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
-        treeview.append_column(column_spin)
-        # Inicio de carga de permisos solicitados
-
-    def update_missing_perms(self,new_val):
-        if self.missing_count:
-            self.missing_count.destroy()
-
-        missing_count = Gtk.Label()
-        missing_count.set_text(str(new_val) + " permisos pendientes")
-        missing_count.set_justify(Gtk.Justification.CENTER)
-        self.missing_count = missing_count
-
-        self.fst_box.pack_start(missing_count,True,True,0)
-        missing_count.show()
-
-
-
-    def on_button1_clicked(self, widget):
-        pass
-
-    def on_button_ret_clicked(self, widget):
-        # self.hide()
-        self.old_window.show()
-        self.destroy()
-
 class StudentWindow(Gtk.Window):
     """
         Ventana para ver un estudiante
@@ -136,10 +67,6 @@ class StudentWindow(Gtk.Window):
         grid.props.halign = Gtk.Align.CENTER
 
         self.add(self.wrapper_grid)
-
-        # Grid
-        # self.grid = grid
-        
 
         grid.insert_row(0)
         grid.insert_row(1)
@@ -209,39 +136,25 @@ class StudentWindow(Gtk.Window):
 
         button_ret.connect("clicked", self.go_back)
 
-
-    def on_button1_clicked(self, widget):
-        pass
-
     def go_back(self, widget):
         self.old_window.show()
         self.destroy()
 
-class StudentAllPerms(StudentWindow):
-    """docstring for StudentAllPerms"""
-    def __init__(self,old_window,std_data,std_perms):
-        StudentWindow.__init__(self,old_window,std_data)
 
-        self.std_perms = std_perms
-        # All type of enums
-        # trims      = dir(Trimestre)[4:]
-        # perm_types = dir(TipoPermiso)[4:]
-
-        status     = dir(EstadoPermiso)[4:]
-
-        liststore_status = Gtk.ListStore(str)
-
-        for item in status:
-            liststore_status.append([item])
-
+class WithPermTable():
+    def poblate_table(self):
         # Inicio de lista de datos
+
+        # Fill combo with EstadoPermiso
+        liststore_status = Gtk.ListStore(str)
+        [liststore_status.append((e,)) for e in get_all_names(EstadoPermiso)]
+
+
         # tipo, trim, anio, extra_field, aprobado
-        liststore = Gtk.ListStore(str,int,str,str,str,int)
+        liststore      = Gtk.ListStore(str,int,str,str,str,int)
         self.liststore = liststore
 
-        print(std_perms)
-
-        for i,elem in enumerate(std_perms):
+        for i,elem in enumerate(self.std_perms):
             typ = TipoPermiso(elem['tipo'])
             extra_field = ""
 
@@ -280,25 +193,99 @@ class StudentAllPerms(StudentWindow):
         treeview.append_column(column_text2)
         treeview.append_column(column_text3)
         treeview.append_column(column_combo)
-        # Fin de la tabla
-
-
-        # renderer_spin = Gtk.CellRendererSpin()
-        # renderer_spin.set_property("editable", False)
-
-        # column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
-        # treeview.append_column(column_spin)
-        #Fin de lista de datos
-
-        self.wrapper_grid.attach(treeview,0,1,1,1)
-    # def go_back(self, widget):
-    #     self.old_window.show()
-    #     self.destroy()      
+        return treeview
 
     def on_combo_changed(self, widget, path, text):
+        self.other_updates(EstadoPermiso(self.liststore[path][4][0])
+                          ,EstadoPermiso(text[0]))
+
         i = self.liststore[path][5]
         db.update_perm_state(self.std_perms[i]['id_permiso'], EstadoPermiso(text[0]))
-        self.liststore[path][4] = text   
+        self.liststore[path][4] = text  
+
+    def other_updates(self,stuff1,stuff2):
+        pass
+
+
+class StudentAllPerms(StudentWindow):
+    """Clase de ventana para ver todos los permisos de un estudiante"""
+    def __init__(self,old_window,std_data,std_perms):
+        StudentWindow.__init__(self,old_window,std_data)
+        extend_instance(self,WithPermTable)
+
+        self.std_perms = std_perms
+        
+        treeview       = self.poblate_table()
+
+        self.wrapper_grid.attach(treeview,0,1,1,1)
+ 
+class SearchWindow(HeaderBarWindow):
+    """ 
+        Clase para todas las búsquedas de permisos
+    """
+    def __init__(self,old_window,perm_type,code=None):
+        HeaderBarWindow.__init__(self,old_window)
+        extend_instance(self,WithPermTable)
+
+        self.perm_type  = perm_type
+        self.set_default_size(320,500)
+        self.missing_count = None
+
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add(main_box)
+
+        description = Gtk.Label()
+        description.set_text(perm_type.name)
+        description.set_justify(Gtk.Justification.CENTER)
+        main_box.pack_start(description,True,True,0)
+
+        # Box for label with count
+        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        main_box.pack_start(self.fst_box,True,True,0)
+
+        # scrollable view para permisos
+        scrollable = Gtk.ScrolledWindow()
+        scrollable.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        main_box.pack_start(scrollable,True,True,0)
+
+
+        # Obtener premisos
+        if perm_type == TipoPermiso.permiso_materia:
+            self.std_perms = db.get_course_perms(code)
+        else:
+            self.std_perms = db.get_type_perm(perm_type)
+
+        self.count =  len(list(filter(is_pendiente,self.std_perms)))
+
+        treeview = self.poblate_table()
+        scrollable.add(treeview)
+
+        self.update_missing_perms(self.count)
+
+    def update_missing_perms(self,new_val):
+        if self.missing_count:
+            self.missing_count.destroy()
+
+        missing_count = Gtk.Label()
+        extra_s = "s" if new_val != 1 else ""
+        missing_count.set_text(str(new_val)+" permiso" + extra_s + " pendiente" + extra_s )
+        missing_count.set_justify(Gtk.Justification.CENTER)
+        self.missing_count = missing_count
+
+        self.fst_box.pack_start(missing_count,True,True,0)
+        missing_count.show()
+
+    def other_updates(self,old,new):
+        if old != new:
+            if old==EstadoPermiso.pendiente and new!=EstadoPermiso.pendiente:
+                self.count -= 1
+            elif old!=EstadoPermiso.pendiente and new==EstadoPermiso.pendiente:
+                self.count += 1
+            else:
+                return None
+            self.update_missing_perms(self.count)
+
+
 
 
 class InitWindow(Gtk.Window):
@@ -456,7 +443,6 @@ class MainWindow(Gtk.Window):
         grid.attach(button4,1,35,2,5)
         grid.attach(button5,1,40,2,3)
 
-        print(button1)
         button1.connect("clicked", self.on_student_clicked)
         button2.connect("clicked", self.on_search_view_clicked)
         button3.connect("clicked", self.on_search_view_clicked)

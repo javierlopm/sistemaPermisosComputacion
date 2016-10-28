@@ -20,6 +20,9 @@ class EstadoPermiso(Enum):
     negado    = 'n'
     pendiente = 'p'
 
+def is_pendiente(row):
+    return row['aprobado'] == "p"
+
 def get_all_names(a_class):
     return [e.name for e in a_class]
 
@@ -52,6 +55,8 @@ type_qry = """SELECT *
               WHERE tipo      = (?) AND 
                     trimestre = (?) AND
                     anio      = (?)"""
+
+type_qry_no_trim = "SELECT * FROM permiso WHERE tipo = (?)"
 
 pending_qry= """SELECT * 
                 FROM permiso 
@@ -122,9 +127,12 @@ class PermStore():
         self.conn.commit()
         c.close()
 
-    def get_type_perm(self,type_,trimestre,anio):
+    def get_type_perm(self,type_,trimestre=None,anio=None):
         # Procedimiento que obtiene todo los permisos de un tipo dado
-        return self._run_with_args(type_qry,(type_,trimestre.value,anio))
+        if trimestre:
+            return self._run_with_args(type_qry,(type_.value,trimestre.value,anio))
+        else:
+            return self._run_with_args(type_qry_no_trim,(type_.value))
 
 
     def get_missign_perms(self,trimestre,anio):
