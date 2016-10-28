@@ -1,5 +1,5 @@
 import sqlite3
-from enum import Enum
+from enum import Enum    
 
 # Enums para tipos de permisos
 class TipoPermiso(Enum):
@@ -20,6 +20,9 @@ class EstadoPermiso(Enum):
     negado    = 'n'
     pendiente = 'p'
 
+def get_all_names(a_class):
+    return [e.name for e in a_class]
+
 # Strings auxiliares para insertar en la base de datos
 std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo) VALUES (?,?,?,?)"
 per_insert = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio)               VALUES (?,?,?,?)"
@@ -36,6 +39,12 @@ extra_str_qry    = """
     WHERE tipo         = (?) AND
           trimestre    = (?) AND
           anio         = (?) AND
+          string_extra = (?) """
+
+extra_str_qry_no_trim    = """
+    SELECT * 
+    FROM permiso p
+    WHERE tipo         = (?) AND
           string_extra = (?) """
 
 type_qry = """SELECT *
@@ -122,10 +131,16 @@ class PermStore():
         # Procedimiento que obtiene los permisos por aprobar
         return self._run_with_args(pending_qry,(trimestre.value,anio))
 
-    def get_course_perms(self,materia,trimestre,anio):
-        return self._run_with_args(extra_str_qry,(TipoPermiso.permiso_materia.value
-                                            ,trimestre.value
-                                            ,anio,materia))
+    def get_course_perms(self,materia,trimestre=None,anio=None):
+        if trimestre:
+            return self._run_with_args(extra_str_qry
+                                      ,  (TipoPermiso.permiso_materia.value
+                                         ,trimestre.value
+                                         ,anio,materia))
+        else:
+            return self._run_with_args(extra_str_qry_no_trim
+                                      ,  (TipoPermiso.permiso_materia.value
+                                         ,materia))
 
     def get_student(self,carnet):
         return self._run_with_args(std_qry,(carnet,))

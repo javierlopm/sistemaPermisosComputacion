@@ -7,60 +7,105 @@ from easygui       import msgbox
 import os.path
 import csv_creator
 from perm_store import *
+from copy import deepcopy
 
 db = PermStore()
 RATIO = 0.75
 
-class SearchWindow(Gtk.Window):
+class HeaderBarWindow(Gtk.Window):
+
+    def __init__(self,return_window):
+        Gtk.Window.__init__(self, title="HeaderBar Demo")
+        self.set_border_width(10)
+        # self.set_default_size(400, 200)
+        self.old_window = return_window
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.connect("delete-event", Gtk.main_quit)
+        hb = Gtk.HeaderBar()
+        hb.set_show_close_button(True)
+        hb.props.title = "Permisos coordinación"
+        self.set_titlebar(hb)
+
+        
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        Gtk.StyleContext.add_class(box.get_style_context(), "linked")
+
+        button = Gtk.Button()
+        button.add(Gtk.Arrow(Gtk.ArrowType.LEFT, Gtk.ShadowType.NONE))
+        box.add(button)
+        button.connect("clicked",self.on_button_ret_clicked)
+
+        hb.pack_start(box)
+        
+    def on_button_ret_clicked(self, widget):
+        self.old_window.show()
+        self.destroy()
+
+
+class SearchWindow(HeaderBarWindow):
 
     def __init__(self,old_window,perm_type,code=None):
-        self.old_window = old_window
+        HeaderBarWindow.__init__(self,old_window)
         self.perm_type  = perm_type
-
-        Gtk.Window.__init__(self, title="Permisos coordinación")
-        self.connect("delete-event", Gtk.main_quit)
-
         self.set_default_size(320,200)
+        self.missing_count = None
 
-        # Grid
-        grid = Gtk.Grid()
-        self.grid = grid
-        self.add(grid)
-        grid.props.halign = Gtk.Align.CENTER
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
 
-        grid.insert_row(0)
-        grid.insert_row(1)
-        grid.insert_row(2)
-        grid.insert_column(0)
-        grid.insert_column(1)
-        grid.insert_column(2)
-        grid.insert_column(3)
-        grid.insert_column(4)
+        # Box for label
+        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        main_box.pack_start(self.fst_box,True,True,0)
 
-        grid.set_row_spacing(10)
-        grid.set_column_spacing(30)
-
-        # Widgets
-        button_ret = Gtk.Button(label="←")
-
-        label = Gtk.Label()
-        label.set_text(perm_type.name + (" "+code if code else ""))
-        label.set_justify(Gtk.Justification.LEFT)
-
-        inv_box = Gtk.Box(spacing=20)
-
-        # attach (child, left, top, width, height)
-        # grid.attach(label  ,2,0,2,2)
-        # grid.attach(button1,2,3,2,2)
-        # grid.attach(button_ret,0,0,1,1)
-        grid.attach(label  ,2,0,1,1)
-        grid.attach(button_ret,0,0,1,1)
-        grid.attach(inv_box,4,2,2,2)
+        # scrollable view para permisos
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        main_box.pack_start(self.scrolled_view,True,True,0)
 
 
-        # button1.connect("clicked", self.on_button1_clicked)
-        button_ret.connect("clicked", self.on_button_ret_clicked)
+        # Obtener premisos
+        if perm_type == TipoPermiso.permiso_materia:
+            courses = db.get_course_perms(code)
+        else:
+            courses = db.get_type_perm(perm_type)
 
+        self.update_missing_perms(len(courses))
+
+        # Tipos de permiso
+        [liststore_status.append(e) for e in get_all_names(TipoPermiso)]
+        # status     = dir(EstadoPermiso)[4:]
+        # liststore_status = Gtk.ListStore(str)
+        # for item in status:
+        #     liststore_status.append([item])
+
+
+        # Inicio de carga de permisos solicitados
+        liststore = Gtk.ListStore(str, str)
+        for elem in std_data.items():
+            liststore.append([ elem[0],str(elem[1]) ] )
+        treeview = Gtk.TreeView(model=liststore)
+
+        renderer_text = Gtk.CellRendererText()
+        column_text = Gtk.TreeViewColumn("Dato", renderer_text, text=0)
+        treeview.append_column(column_text)
+
+        renderer_spin = Gtk.CellRendererSpin()
+        renderer_spin.set_property("editable", False)
+
+        column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
+        treeview.append_column(column_spin)
+        # Inicio de carga de permisos solicitados
+
+    def update_missing_perms(self,new_val):
+        if self.missing_count:
+            self.missing_count.destroy()
+
+        missing_count = Gtk.Label()
+        missing_count.set_text(str(new_val) + " permisos pendientes")
+        missing_count.set_justify(Gtk.Justification.CENTER)
+        self.missing_count = missing_count
+
+        self.fst_box.pack_start(missing_count,True,True,0)
+        missing_count.show()
 
 
 
@@ -136,22 +181,6 @@ class StudentWindow(Gtk.Window):
         treeview.append_column(column_spin)
         #Fin de lista de datos
 
-        # Inicio de carga de permisos solicitados
-        liststore = Gtk.ListStore(str, str)
-        for elem in std_data.items():
-            liststore.append([ elem[0],str(elem[1]) ] )
-        treeview = Gtk.TreeView(model=liststore)
-
-        renderer_text = Gtk.CellRendererText()
-        column_text = Gtk.TreeViewColumn("Dato", renderer_text, text=0)
-        treeview.append_column(column_text)
-
-        renderer_spin = Gtk.CellRendererSpin()
-        renderer_spin.set_property("editable", False)
-
-        column_spin = Gtk.TreeViewColumn("Valor", renderer_spin, text=1)
-        treeview.append_column(column_spin)
-        # Inicio de carga de permisos solicitados
 
         # Carga de grafo
         str_image = 'images/'+show_carnet(std_data['carnet'])+".png"
@@ -463,10 +492,18 @@ class MainWindow(Gtk.Window):
 
     def on_search_view_clicked(self,widget):
         mat = self.class_entry.get_text()
-        mat = mat if widget.type == TipoPermiso.permiso_materia else None
+        if widget.type == TipoPermiso.permiso_materia:
+            if mat == "":
+                # Revisar además si es una materia válida
+                msgbox("Debe incluir una materia")
+                return 
+        else:
+            mat = None
         self.hide()
         new_win = SearchWindow(self,widget.type,mat)
         new_win.show_all()
+
+
 
 win = InitWindow()
 win.connect("delete-event", Gtk.main_quit)
