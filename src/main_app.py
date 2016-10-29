@@ -12,6 +12,14 @@ from copy import deepcopy
 db = PermStore()
 RATIO = 0.75
 
+class Col(Enum):
+    carnet    = 0 
+    trimestre = 1 
+    anio      = 2 
+    tipo      = 3 
+    valor     = 4 
+    estado    = 5 
+
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
     base_cls = obj.__class__
@@ -53,7 +61,7 @@ class StudentWindow(Gtk.Window):
         Ventana para ver un estudiante
     """
     def __init__(self,old_window,std_data):
-        self.old_window = old_window
+        self.old_window   = old_window
         Gtk.Window.__init__(self, title="Permisos coordinación")
 
         self.connect("delete-event", Gtk.main_quit)
@@ -137,12 +145,17 @@ class StudentWindow(Gtk.Window):
         button_ret.connect("clicked", self.go_back)
 
     def go_back(self, widget):
+        if hasattr(self.old_window,'last_val'):
+            print("calling")
+            self.old_window.refresh()
+
         self.old_window.show()
         self.destroy()
 
 
 class WithPermTable():
     def poblate_table(self):
+        self.new_val = None
         # Inicio de lista de datos
 
         # Fill combo with EstadoPermiso
@@ -151,7 +164,7 @@ class WithPermTable():
 
 
         # tipo, trim, anio, extra_field, aprobado
-        liststore      = Gtk.ListStore(str,int,str,str,str,int)
+        liststore      = Gtk.ListStore(int,str,int,str,str,str,int,int)
         self.liststore = liststore
 
         for i,elem in enumerate(self.std_perms):
@@ -163,21 +176,31 @@ class WithPermTable():
             elif (typ == TipoPermiso.limite_creditos):
                 extra_field = str(elem['int_extra'])
 
-            liststore.append([Trimestre(elem['trimestre']).name
+            liststore.append([elem['fk_carnet']
+                             ,Trimestre(elem['trimestre']).name
                              ,elem['anio']
                              ,typ.name
                              ,extra_field
                              ,EstadoPermiso(elem['aprobado']).name
-                             ,i])
+                             ,i
+                             ,elem['id_permiso']])
 
         treeview = Gtk.TreeView(model=liststore)
+        self.treeview = treeview
+        treeview.connect("row-activated", self.clicked_cell)
 
         renderer_text = Gtk.CellRendererText()
+        column_text0 = Gtk.TreeViewColumn("Carnet",    renderer_text, text=Col.carnet.value)
+        column_text0.set_clickable(True)
+        column_text1 = Gtk.TreeViewColumn("Trimestre", renderer_text, text=Col.trimestre.value)
 
-        column_text1 = Gtk.TreeViewColumn("Trimestre", renderer_text, text=0)
-        column_text2 = Gtk.TreeViewColumn("Año"      , renderer_text, text=1)
-        column_text  = Gtk.TreeViewColumn("Tipo"     , renderer_text, text=2)
-        column_text3 = Gtk.TreeViewColumn("Valor"    , renderer_text, text=3)
+        # Sirve para ordernar...
+        # column_text1.set_clickable(True)
+        # column_text1.connect("clicked", self.whatIam)
+
+        column_text2 = Gtk.TreeViewColumn("Año"      , renderer_text, text=Col.anio.value)
+        column_text3 = Gtk.TreeViewColumn("Tipo"     , renderer_text, text=Col.tipo.value)
+        column_text4 = Gtk.TreeViewColumn("Valor"    , renderer_text, text=Col.valor.value)
 
         renderer_combo = Gtk.CellRendererCombo()
         renderer_combo.set_property("editable", True)
@@ -186,22 +209,27 @@ class WithPermTable():
         renderer_combo.set_property("has-entry", False)
         renderer_combo.connect("edited", self.on_combo_changed)
 
-        column_combo = Gtk.TreeViewColumn("Aprobado", renderer_combo, text=4)
+        column_combo = Gtk.TreeViewColumn("Aprobado", renderer_combo, text=5)
 
-        treeview.append_column(column_text)
+        treeview.append_column(column_text0)
         treeview.append_column(column_text1)
         treeview.append_column(column_text2)
         treeview.append_column(column_text3)
+        treeview.append_column(column_text4)
         treeview.append_column(column_combo)
         return treeview
 
     def on_combo_changed(self, widget, path, text):
-        self.other_updates(EstadoPermiso(self.liststore[path][4][0])
+        self.other_updates(EstadoPermiso(self.liststore[path][5][0])
                           ,EstadoPermiso(text[0]))
 
-        i = self.liststore[path][5]
+        i = self.liststore[path][6]
         db.update_perm_state(self.std_perms[i]['id_permiso'], EstadoPermiso(text[0]))
-        self.liststore[path][4] = text  
+        self.liststore[path][Col.estado.value] = text
+        self.old_window.new_val = EstadoPermiso(text[0])
+
+    def clicked_cell(self,tree,path,col):
+        pass
 
     def other_updates(self,stuff1,stuff2):
         pass
@@ -212,12 +240,11 @@ class StudentAllPerms(StudentWindow):
     def __init__(self,old_window,std_data,std_perms):
         StudentWindow.__init__(self,old_window,std_data)
         extend_instance(self,WithPermTable)
-
         self.std_perms = std_perms
-        
         treeview       = self.poblate_table()
-
         self.wrapper_grid.attach(treeview,0,1,1,1)
+
+
  
 class SearchWindow(HeaderBarWindow):
     """ 
@@ -262,6 +289,7 @@ class SearchWindow(HeaderBarWindow):
 
         self.update_missing_perms(self.count)
 
+
     def update_missing_perms(self,new_val):
         if self.missing_count:
             self.missing_count.destroy()
@@ -285,6 +313,32 @@ class SearchWindow(HeaderBarWindow):
                 return None
             self.update_missing_perms(self.count)
 
+    def clicked_cell(self,tree,path,col):
+        if col.get_title() == "Carnet":
+            
+            self.last_path = path
+            self.last_val  = EstadoPermiso(self.liststore[self.last_path][Col.estado.value][0])
+
+            student_data    = db.get_student(self.liststore[path][Col.carnet.value])
+            student_perms   = db.get_perm(self.liststore[path][7])
+
+            self.hide()
+            new_win  = StudentAllPerms(self
+                                      ,student_data[0]
+                                      ,student_perms)
+            new_win.show_all()
+
+
+    def refresh(self):
+        print(self.new_val)
+        if self.new_val:
+            print("refreshing to" + self.new_val.name )
+            self.liststore[self.last_path][Col.estado.value] = self.new_val.name
+            print("refreshing from" + self.last_val.name +" to " + self.new_val.name  )
+            self.other_updates(self.last_val,self.new_val)
+
+        self.new_val  = None
+        self.last_val = None
 
 
 
@@ -407,27 +461,10 @@ class MainWindow(Gtk.Window):
         self.student_entry = Gtk.Entry()
         self.class_entry   = Gtk.Entry()
 
-        # inv_box  = Gtk.Box(spacing=4)
-        # inv_box.pack_start(button1,True,True,0)
-        # inv_box.pack_end(self.student_entry,True,True,3)
-
-        # inv_box2  = Gtk.Box(spacing=4)
-        # inv_box2.pack_start(button2,True,True,0)
-        # inv_box2.pack_end(self.class_entry,True,True,3)
-
-        # grid.attach(inv_box,1,5,1,1)
-
-
 
         label = Gtk.Label()
         label.set_text("Quedan permisos por procesar.")
         label.set_justify(Gtk.Justification.LEFT)
-
-
-
-        # grid.attach(student_entry,2,20,1,1)
-        # grid.attach(inv_box ,1,20,1,1)
-        # grid.attach(inv_box2,1,25,1,1)
 
         # Busqueda estudiante
         grid.attach(button1,1,20,2,2)
@@ -440,7 +477,7 @@ class MainWindow(Gtk.Window):
         # Permisos de dos generales
         grid.attach(label  ,1,0,2,2)
         grid.attach(button3,1,30,2,3)
-        grid.attach(button4,1,35,2,5)
+        grid.attach(button4,1,35,2,3)
         grid.attach(button5,1,40,2,3)
 
         button1.connect("clicked", self.on_student_clicked)

@@ -83,6 +83,8 @@ std_qry = """SELECT *
 del_all_perm = "DELETE FROM estudiante"
 del_all_std  = "DELETE FROM permiso"
 
+single_perm = """ SELECT * FROM permiso WHERE id_permiso = (?)"""
+
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -152,6 +154,9 @@ class PermStore():
 
     def get_student(self,carnet):
         return self._run_with_args(std_qry,(carnet,))
+
+    def get_perm(self,id_perm):
+        return self._run_with_args(single_perm,(id_perm,))
 
     def get_student_perms(self,carnet,trimestre=None,anio=None):
         # Procedimiento que obtiene todos los permisos de un estudiante dado su
