@@ -3,14 +3,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-from procesadorOfertas import procesarDOC, procesarPDF, procesarXLS, generarOferta, cargarOfertas
-
-def imprimirResultados(mensaje,listaOfertas):
-    print(mensaje + ": ")
-    for fila in listaOfertas:
-        print(fila)
-    print('\n')
-
+from procesadorOfertas import procesarDOC, procesarPDF, procesarXLS, \
+                                generarOferta, cargarOfertas, imprimirResultados
 
 
 #
@@ -85,21 +79,21 @@ class ProcesarDOC2_XML (Contexto):
 
 class ProcesarDOC3_XML (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre Doc2.xml """
+        """ Prueba de procesamiento sobre Doc3.xml """
         #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
         procesarDOC(self.carpetaBase + "doc3.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento DOC. Archivo doc3.xml")
 
 class ProcesarDOC4_XML (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre Doc2.xml """
+        """ Prueba de procesamiento sobre Doc4.xml """
         #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
         procesarDOC(self.carpetaBase + "doc4.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento DOC. Archivo doc4.xml")
 
 class ProcesarDOC1_PDF (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre doc2.pdf """
+        """ Prueba de procesamiento sobre doc1.pdf """
         procesarPDF(self.carpetaBase + "doc1.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento PDF. Archivo doc1.pdf")
 
@@ -117,7 +111,7 @@ class ProcesarDOC3_PDF (Contexto):
 
 class ProcesarDOC4_PDF (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre doc3.pdf """
+        """ Prueba de procesamiento sobre doc4.pdf """
         procesarPDF(self.carpetaBase + "doc4.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento PDF. Archivo doc4.pdf")
 

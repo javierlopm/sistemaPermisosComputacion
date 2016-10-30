@@ -20,6 +20,9 @@ class Col(Enum):
     valor     = 4 
     estado    = 5 
 
+def triggerCoordDownloader(username, password):
+    pass
+
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
     base_cls = obj.__class__
@@ -412,27 +415,10 @@ class LoginWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_default_size(320,200)
         self.set_position(Gtk.WindowPosition.CENTER)
-        grid = Gtk.Grid()
-        grid.props.halign = Gtk.Align.CENTER
-        self.grid = grid
-        self.add(grid)
-        
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,  spacing=6)
+        self.add(main_box)
 
-        grid.insert_column(0)
-        grid.insert_column(1)
-        grid.insert_column(2)
-        grid.insert_column(3)
-        grid.insert_column(4)
-
-        grid.insert_row(0)
-        grid.insert_row(1)
-        grid.insert_row(2)
-        grid.insert_row(3)
-        grid.insert_row(4)
-        grid.insert_row(5)
-        
-        grid.set_row_spacing(10)
-        grid.set_column_spacing(30)
+        buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
 
         main_label = Gtk.Label()
         main_label.set_text("Ingrese sus credenciales para acceder al sistema de expendientes.")
@@ -446,33 +432,53 @@ class LoginWindow(Gtk.Window):
         password_label.set_text("Contraseña:")
         password_label.set_justify(Gtk.Justification.LEFT)
 
-        username_entry = Gtk.Entry()
-        password_entry = Gtk.Entry()
-        password_entry.set_visibility(False)
+        self.username_entry = Gtk.Entry()
+        self.password_entry = Gtk.Entry()
+        self.password_entry.set_visibility(False)
 
-        inv_box1 = Gtk.Box(spacing=20)
-        inv_box2 = Gtk.Box(spacing=20)
+        mod_label = Gtk.Label()
+        mod_label.set_text("Seleccione la modalidad de permisos.")
+        mod_label.set_justify(Gtk.Justification.CENTER)
+
+        mod_store = Gtk.ListStore(str)
+        modalities = ["Todos", "Solo permisos de generales", "Permisos sin los de generales"]
+        mod_combo = Gtk.ComboBoxText()
+        mod_combo.set_entry_text_column(0)
+        mod_combo.connect("changed", self.on_mod_combo_changed)
+        for modality in modalities:
+            mod_combo.append_text(modality)
+        mod_combo.set_active(0)
+
 
         ok_button = Gtk.Button(label="Aceptar")
         cancel_button = Gtk.Button(label="Cancelar")
 
-        grid.attach(inv_box1,0,0,2,2)
-        grid.attach(inv_box2,4,0,2,2)
-        grid.attach(main_label,2,0,2,2)
-        grid.attach(username_label,2,5,2,2)
-        grid.attach(username_entry,2,25,2,2)
-        grid.attach(password_label,2,125,2,2)
-        grid.attach(password_entry,2,625,2,2)
-        grid.attach(ok_button,1,3125,2,2)
-        grid.attach(cancel_button,3,3125,2,2)
-
         ok_button.connect("clicked", self.on_ok_button_clicked)
         cancel_button.connect("clicked", self.on_cancel_button_clicked)
 
+        main_box.pack_start(main_label      ,True,True,0)
+        main_box.pack_start(username_label  ,True,True,0)
+        main_box.pack_start(self.username_entry  ,True,True,0)
+        main_box.pack_start(password_label  ,True,True,0)
+        main_box.pack_start(self.password_entry  ,True,True,0)
+        main_box.pack_start(mod_label       ,True,True,0)
+        main_box.pack_start(mod_combo       ,True,True,0)
+        main_box.pack_start(buttons_box     ,True,True,0)
+        buttons_box.pack_start(ok_button    ,True,True,0)
+        buttons_box.pack_start(cancel_button,True,True,0)
+
+
+    def on_mod_combo_changed(self, combo):
+        tree_iter = combo.get_active_iter()
+        if tree_iter != None:
+            model = combo.get_model()
+            mod = model[tree_iter][0]
+            print("Selected: mod=%s" % mod)
+
     def on_ok_button_clicked(self, widget):
-        new_win = LoginWindow()
-        response = new_win.show_all()
-        pass
+        # SE PRENDIO ESTA MIERDAAAAAAAAAA
+        triggerCoordDownloader(self.username_entry.get_text(),self.password_entry.get_text())
+
 
     def on_cancel_button_clicked(self, widget):
         self.destroy()

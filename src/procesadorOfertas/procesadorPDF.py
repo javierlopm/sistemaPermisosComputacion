@@ -35,7 +35,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
         "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
         self.patronMateria = "\w\w\s*-?\s*\d\d\d\d"
-        self.patronBloque = "^\(?(A|B|C|D)\)?$"
+        self.patronBloque = "^\(?[A-Z]\)?$"
         self.patronCarrera = "0?800"
 
    # Call when an element starts
@@ -50,6 +50,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def endElement(self, tag):
         if tag == "span":
             #print("Celda", self.celda, self.posCaracteres)
+            #print("Celda", self.celda)
             if not self.cabeceraLista:
                 self.cabeceraLista = \
                     self.filtroCabecera(self.celda, self.posCaracteres)
@@ -71,13 +72,30 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             #     self.tuplas.append(self.fila)
 
             if self.fila:
-                #print(self.fila)
-                if  self.fila[0] in self.listaMaterias:
-                    #print("Aceptada" , self.fila)
-                    self.tuplas.append(self.fila)
+                #print("Apunto de agregar", self.fila)
+                for fil in self.subdividirFilas(self.fila):
+                    if  fil[0] in self.listaMaterias:
+                        #print("Aceptada" , fil)
+                        self.tuplas.append(fil)
+
             self.fila = []
             self.celda = ""
             self.posCaracteres = []
+
+    def subdividirFilas(self,fila):
+        recons = []
+        nuevaFila = []
+        for item in fila:
+            if not isinstance(item,tuple) and \
+                re.search(self.patronMateria, item, re.I):
+                nuevaFila = []
+                recons.append(nuevaFila)
+                nuevaFila.append(item)
+            else:
+                nuevaFila.append(item)
+
+        #print("\nRecons", recons)
+        return recons
 
 
    # Call when a character is read
@@ -162,15 +180,18 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
         # Procesar los PDFs usando MuPDF. Se extrae el texto del documento en
         # archivo XML.
         page = doc.loadPage(num)
-        xmlText = page.getText(output = "xml")
         # Crear un archivo temporal
-        f = open('textPDFXML.xml', 'w')
-        f.write(xmlText)
-        # Procesar el archivo XML
-        parser.parse("textPDFXML.xml")
-
+        try:
+            f = open('textPDFXML1.xml', 'w')
+            f.write(page.getText(output = "xml"))
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+        else:
+            # Procesar el archivo XML
+            parser.parse("textPDFXML1.xml")
+    
     f.close()
-    remove('textPDFXML.xml')
+    remove('textPDFXML1.xml')
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
@@ -179,11 +200,11 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
     nroCampo = 0
-    for fil in Handler.tuplas:    #Eliminar residuos de la cabecera
+    for fil in Handler.tuplas:
         if fil:
             #print(fil)
             if len(fil) > 2:
-                #print("Fila", fil, fil[1:])
+                #print("Fila", fil, "\nhorario", fil[1:], "\n")
                 if isinstance(fil[1],tuple):
                     acum = fil[0] + ',A'
                     #print("Seleccion1", fil[1:])
@@ -241,7 +262,7 @@ if ( __name__ == "__main__"):
     try:
         matArch = open(nomArchivoMaterias, 'r')
     except FileNotFoundError:
-        print("El archivo no encontrado", nomArchivoDace)
+        print("El archivo no encontrado:", nomArchivoMaterias)
         sys.exit(2)
     except IsADirectoryError:
         print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
@@ -258,15 +279,26 @@ if ( __name__ == "__main__"):
         remove(nomArchivoSalida)
 
     if nomArchivoSalida:
-        f = open(nomArchivoSalida, 'a')
-        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        try:
+            f = open(nomArchivoSalida, 'a')
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        except IsADirectoryError:
+            print(nomArchivoSalida ,"es un directorio. Se requiere un archivo")
+            sys.exit(2)
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+            sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
 
     for fila in fdSalida:
         if nomArchivoSalida:
-            f.write(','.join(fila) + "\n")
+            try:
+                f.write(','.join(fila) + "\n")
+            except OSError as ose:
+                print("Error de E/S: ", ose)
+                sys.exit(2)
         else:
             print(','.join(fila))
 
@@ -279,4 +311,3 @@ if ( __name__ == "__main__"):
     # f = open('xmlPDF.txt', 'w')
     # f.write(xmlText)
     # f.close()
-
