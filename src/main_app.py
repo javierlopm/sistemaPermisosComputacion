@@ -516,6 +516,7 @@ class MainWindow(Gtk.Window):
         button6 = Gtk.Button(label="Permisos pendientes")
         button7 = Gtk.Button(label="Generar archivos csv")
 
+        button8 = Gtk.FileChooserWidget(gtk.FILE_CHOOSER_ACTION_OPEN)
 
 
         button2.type = TipoPermiso.permiso_materia
@@ -602,17 +603,20 @@ class MainWindow(Gtk.Window):
             else:
                 return
 
-        gen = filesavebox("Archivo de generales"
-                         ,"Introduzca nombre para guardar el archivo de generales"
-                         ,filetypes=[" *.csv","Archivo separado por comas"])
-        if not gen:
-            return
+        # gen = filesavebox("Archivo de generales"
+        #                  ,"Introduzca nombre para guardar el archivo de generales"
+        #                  ,filetypes=[" *.csv","Archivo separado por comas"])
+        # if not gen:
+        #     return
 
-        mat_perms  = filesavebox("Archivo para permiso de materias"
-                                ,"Introduzca nombre para guardar el archivo para permiso de materias"
-                                ,filetypes=[" *.csv","Archivo separado por comas"])
-        if not mat_perms:
-            return
+        # mat_perms  = filesavebox("Archivo para permiso de materias"
+        #                         ,"Introduzca nombre para guardar el archivo para permiso de materias"
+        #                         ,filetypes=[" *.csv","Archivo separado por comas"])
+        # if not mat_perms:
+        #     return
+
+        gen       = "perm_gen.csv"
+        mat_perms = "perm_gen.csv"
 
         print(gen)
         print(mat_perms)
