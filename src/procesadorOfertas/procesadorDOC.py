@@ -33,7 +33,7 @@ class Ofertas( xml.sax.ContentHandler ):
         self.patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
         self.patronHorario = "(" + self.patronDia + "((\s*|;*)-(\s*|;*)" + self.patronDia + ")?" \
          + "(\s+|;)" + self.patronHoras + "(\s+|;)?){1,2}"
-        self.patronBloque = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+\D\)?"
+        self.patronBloque = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
    # Call when an element starts
     def startElement(self, tag, attributes):
         pass
@@ -244,14 +244,25 @@ def obtArgs(entrada):
 if ( __name__ == "__main__"):
     corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
 
+    # Pasaje de argumentos por la entrada estandar
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
+    # Cargar listas de materias requeridas
     listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
+    try:
+        f = open(nomArchivoMaterias, 'r')
+    except FileNotFoundError:
+        print("El archivo no encontrado", nomArchivoDace)
+        sys.exit(2)
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+        sys.exit(2)
+    else:
+      for materia in f:
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-    # create an XMLReader
+    # Crear un lector de XML
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
@@ -261,13 +272,17 @@ if ( __name__ == "__main__"):
     parser.setContentHandler( Handler )
     parser.parse(args[0])
 
-    # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,HORARIO)
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
+    # Crear archivo de salida
     if nomArchivoSalida:
-        f = open(nomArchivoSalida, 'a')
-        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        try:
+          f = open(nomArchivoSalida, 'a')
+          f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+            sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
     # Concatenar en un solo string e imprimir filas y
@@ -290,7 +305,11 @@ if ( __name__ == "__main__"):
          acum = fil[0] + ',A,,,,,'
 
       if nomArchivoSalida:
-        f.write(acum + '\n')
+          try:
+            f.write(acum + '\n')
+          except OSError as ose:
+            print("Error de E/S: ", ose)
+            sys.exit(2)
       else:
         print(acum)
       acum = ""

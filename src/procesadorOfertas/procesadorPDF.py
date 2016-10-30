@@ -3,11 +3,14 @@
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 18/09/2016
+# Fecha: 26/10/2016
 # Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
-# Se apoya en las etiquetas "table:table-cell" y "table:table-row".
-# La salida es un archivo.csv conforme al siguiente formato :
-# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES)
+# Se apoya en las etiquetas "<span>" y "<char>".
+# En caso que se haya un archivo de salida, su formato será CSV conforme al
+# siguiente formato :
+# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES
+# En otro caso, se devuelve una [fila1,fila2,..., filaN] al estilo CSV de acuerdo
+# al formato anterior.
 
 import fitz # Usando MuPDf 1.9.2
 import xml.sax
@@ -32,7 +35,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
         "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
         self.patronMateria = "\w\w\s*-?\s*\d\d\d\d"
-        self.patronBloque = "^\(?(A|B|C|D)\)?$"
+        self.patronBloque = "^\(?[A-Z]\)?$"
         self.patronCarrera = "0?800"
 
    # Call when an element starts
@@ -47,6 +50,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def endElement(self, tag):
         if tag == "span":
             #print("Celda", self.celda, self.posCaracteres)
+            #print("Celda", self.celda)
             if not self.cabeceraLista:
                 self.cabeceraLista = \
                     self.filtroCabecera(self.celda, self.posCaracteres)
@@ -68,13 +72,30 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             #     self.tuplas.append(self.fila)
 
             if self.fila:
-                #print(self.fila)
-                if  self.fila[0] in self.listaMaterias:
-                    #print("Aceptada" , self.fila)
-                    self.tuplas.append(self.fila)
+                #print("Apunto de agregar", self.fila)
+                for fil in self.subdividirFilas(self.fila):
+                    if  fil[0] in self.listaMaterias:
+                        #print("Aceptada" , fil)
+                        self.tuplas.append(fil)
+
             self.fila = []
             self.celda = ""
             self.posCaracteres = []
+
+    def subdividirFilas(self,fila):
+        recons = []
+        nuevaFila = []
+        for item in fila:
+            if not isinstance(item,tuple) and \
+                re.search(self.patronMateria, item, re.I):
+                nuevaFila = []
+                recons.append(nuevaFila)
+                nuevaFila.append(item)
+            else:
+                nuevaFila.append(item)
+
+        #print("\nRecons", recons)
+        return recons
 
 
    # Call when a character is read
@@ -98,7 +119,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
             #print(searchMat)
-            self.fila.append(normalizarMateria(searchMat.group()))
+            self.fila.append(self.normalizarMateria(searchMat.group()))
         elif re.search(self.patronBloque, txt, re.I):
             #print(re.search(self.patronBloque, txt, re.I))
             self.fila.append(txt)
@@ -123,27 +144,27 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def normalizarMateria(self,txt):
         mat = ""
         for char in txt:
-            if char != ' ' and char != '-':
+            if char != ' ' and char != '-' and char != '\n':
                 mat += char
         return mat
 
 def componerHorarioCSV(listaHorarios):
-   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
-   ultimoDia = ''
-   horarios = ""
-   for (hora,dia) in listaHorarios:
-      if ultimoDia == '':
-         ultimoDia = dia
-         horarios += (corresDiaDistancia[dia] * ',') + hora
-      else:
-         horarios += ((corresDiaDistancia[dia] -  \
+    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
+    ultimoDia = ''
+    horarios = ""
+    for (hora,dia) in listaHorarios:
+        if ultimoDia == '':
+            ultimoDia = dia
+            horarios += (corresDiaDistancia[dia] * ',') + hora
+        else:
+            horarios += ((corresDiaDistancia[dia] -  \
                     corresDiaDistancia[ultimoDia]) * ',') + hora
-         ultimoDia = dia
+            ultimoDia = dia
 
-   if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
+    if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
+        horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
 
-   return horarios
+    return horarios
 
 def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     doc = fitz.open(nombreArchivoEntrada)
@@ -151,7 +172,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-    Handler = Ofertas(listaMaterias)
+    Handler = OfertasGeneral(listaMaterias)
     # override the default ContextHandler
     parser.setContentHandler( Handler )
 
@@ -159,27 +180,31 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
         # Procesar los PDFs usando MuPDF. Se extrae el texto del documento en
         # archivo XML.
         page = doc.loadPage(num)
-        xmlText = page.getText(output = "xml")
-        f = open('textPDFXML.xml', 'w')
-        f.write(xmlText)
-        # Procesar el archivo XML
-        parser.parse("textPDFXML.xml")
-
+        # Crear un archivo temporal
+        try:
+            f = open('textPDFXML1.xml', 'w')
+            f.write(page.getText(output = "xml"))
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+        else:
+            # Procesar el archivo XML
+            parser.parse("textPDFXML1.xml")
+    
     f.close()
-    remove('textPDFXML.xml')
+    remove('textPDFXML1.xml')
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
-   # Variable para escribir las filas en el archivo destino
+    # Variable para escribir las filas en el archivo destino
     row = ""
     # Variable para marcar el ultimo dia procesado para el horario
     ultimoDia = ''
     nroCampo = 0
-    for fil in Handler.tuplas:    #Eliminar residuos de la cabecera
+    for fil in Handler.tuplas:
         if fil:
             #print(fil)
             if len(fil) > 2:
-                #print("Fila", fil, fil[1:])
+                #print("Fila", fil, "\nhorario", fil[1:], "\n")
                 if isinstance(fil[1],tuple):
                     acum = fil[0] + ',A'
                     #print("Seleccion1", fil[1:])
@@ -232,12 +257,20 @@ def obtArgs(entrada):
 
 if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
-    nomArchivoEntrada = 'Oferta_Pregrado_1.pdf'
 
     listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
+    try:
+        matArch = open(nomArchivoMaterias, 'r')
+    except FileNotFoundError:
+        print("El archivo no encontrado:", nomArchivoMaterias)
+        sys.exit(2)
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+        sys.exit(2)
+    else:
+        for materia in matArch:
+            if (not materia.isspace()) and materia[0] != '#':
+                listaMaterias.append(materia.rstrip(' \t\n\r'))
 
     fdSalida = []
     procesarPDF(args[0],listaMaterias,fdSalida)
@@ -246,15 +279,26 @@ if ( __name__ == "__main__"):
         remove(nomArchivoSalida)
 
     if nomArchivoSalida:
-        f = open(nomArchivoSalida, 'a')
-        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        try:
+            f = open(nomArchivoSalida, 'a')
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        except IsADirectoryError:
+            print(nomArchivoSalida ,"es un directorio. Se requiere un archivo")
+            sys.exit(2)
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+            sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
 
     for fila in fdSalida:
         if nomArchivoSalida:
-            f.write(','.join(fila) + "\n")
+            try:
+                f.write(','.join(fila) + "\n")
+            except OSError as ose:
+                print("Error de E/S: ", ose)
+                sys.exit(2)
         else:
             print(','.join(fila))
 
