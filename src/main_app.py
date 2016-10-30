@@ -379,8 +379,8 @@ class InitWindow(Gtk.Window):
         button2.connect("clicked", self.on_button2_clicked)
 
     def on_button1_clicked(self, widget):
-        #new_win = SearchWindow(self,"carnet")
-        #response = new_win.show_all()
+        new_win = LoginWindow()
+        response = new_win.show_all()
         pass
 
     def on_button2_clicked(self, widget):
@@ -393,30 +393,71 @@ class LoginWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_default_size(320,200)
+        self.set_position(Gtk.WindowPosition.CENTER)
         grid = Gtk.Grid()
+        grid.props.halign = Gtk.Align.CENTER
         self.grid = grid
         self.add(grid)
-        grid.props.halign = Gtk.Align.CENTER
+        
 
         grid.insert_column(0)
+        grid.insert_column(1)
+        grid.insert_column(2)
+        grid.insert_column(3)
+        grid.insert_column(4)
 
         grid.insert_row(0)
         grid.insert_row(1)
         grid.insert_row(2)
+        grid.insert_row(3)
+        grid.insert_row(4)
+        grid.insert_row(5)
         
         grid.set_row_spacing(10)
         grid.set_column_spacing(30)
 
-        label = Gtk.Label()
-        label.set_text("Ingrese sus credenciales para acceder al sistema de expendientes.")
-        label.set_justify(Gtk.Justification.CENTER)
+        main_label = Gtk.Label()
+        main_label.set_text("Ingrese sus credenciales para acceder al sistema de expendientes.")
+        main_label.set_justify(Gtk.Justification.CENTER)
 
-        username_entry = Gtk.entry()
-        password_entry = Gtk.entry()
+        username_label = Gtk.Label()
+        username_label.set_text("Nombre de usuario:")
+        username_label.set_justify(Gtk.Justification.LEFT)
 
-        grid.attach(label,0,0,2,2)
-        grid.attach(username_entry,0,5,2,2)
-        grid.attach(password_entry,0,25,2,2)
+        password_label = Gtk.Label()
+        password_label.set_text("Contraseña:")
+        password_label.set_justify(Gtk.Justification.LEFT)
+
+        username_entry = Gtk.Entry()
+        password_entry = Gtk.Entry()
+        password_entry.set_visibility(False)
+
+        inv_box1 = Gtk.Box(spacing=20)
+        inv_box2 = Gtk.Box(spacing=20)
+
+        ok_button = Gtk.Button(label="Aceptar")
+        cancel_button = Gtk.Button(label="Cancelar")
+
+        grid.attach(inv_box1,0,0,2,2)
+        grid.attach(inv_box2,4,0,2,2)
+        grid.attach(main_label,2,0,2,2)
+        grid.attach(username_label,2,5,2,2)
+        grid.attach(username_entry,2,25,2,2)
+        grid.attach(password_label,2,125,2,2)
+        grid.attach(password_entry,2,625,2,2)
+        grid.attach(ok_button,1,3125,2,2)
+        grid.attach(cancel_button,3,3125,2,2)
+
+        ok_button.connect("clicked", self.on_ok_button_clicked)
+        cancel_button.connect("clicked", self.on_cancel_button_clicked)
+
+    def on_ok_button_clicked(self, widget):
+        new_win = LoginWindow()
+        response = new_win.show_all()
+        pass
+
+    def on_cancel_button_clicked(self, widget):
+        self.destroy()
 
 
 
