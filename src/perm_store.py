@@ -60,9 +60,7 @@ type_qry_no_trim = "SELECT * FROM permiso WHERE tipo = (?)"
 
 pending_qry= """SELECT * 
                 FROM permiso 
-                WHERE aprobado  = 'p' AND 
-                      trimestre = (?) AND
-                      anio      = (?) """
+                WHERE aprobado  = 'p'"""
 
 std_perms_qry = """ 
     SELECT *
@@ -137,9 +135,9 @@ class PermStore():
             return self._run_with_args(type_qry_no_trim,(type_.value))
 
 
-    def get_missign_perms(self,trimestre,anio):
+    def get_missign_perms(self):
         # Procedimiento que obtiene los permisos por aprobar
-        return self._run_with_args(pending_qry,(trimestre.value,anio))
+        return self._run_simple_query(pending_qry)
 
     def get_course_perms(self,materia,trimestre=None,anio=None):
         if trimestre:
