@@ -412,6 +412,7 @@ class LoginWindow(Gtk.Window):
         grid.insert_row(3)
         grid.insert_row(4)
         grid.insert_row(5)
+        grid.insert_row(6)
         
         grid.set_row_spacing(10)
         grid.set_column_spacing(30)
@@ -438,6 +439,15 @@ class LoginWindow(Gtk.Window):
         ok_button = Gtk.Button(label="Aceptar")
         cancel_button = Gtk.Button(label="Cancelar")
 
+        mod_store = Gtk.ListStore(str)
+        modalities = ["Todos", "Solo permisos de generales", "Permisos sin los de generales"]
+        mod_combo = Gtk.ComboBoxText()
+        mod_combo.set_entry_text_column(0)
+        mod_combo.connect("changed", self.on_mod_combo_changed)
+        for modality in modalities:
+            mod_combo.append_text(modality)
+        mod_combo.set_active(0)
+
         grid.attach(inv_box1,0,0,2,2)
         grid.attach(inv_box2,4,0,2,2)
         grid.attach(main_label,2,0,2,2)
@@ -445,11 +455,19 @@ class LoginWindow(Gtk.Window):
         grid.attach(username_entry,2,25,2,2)
         grid.attach(password_label,2,125,2,2)
         grid.attach(password_entry,2,625,2,2)
-        grid.attach(ok_button,1,3125,2,2)
-        grid.attach(cancel_button,3,3125,2,2)
+        grid.attach(mod_combo,2,3125,2,2)
+        grid.attach(ok_button,1,15625,2,2)
+        grid.attach(cancel_button,3,15625,2,2)
 
         ok_button.connect("clicked", self.on_ok_button_clicked)
         cancel_button.connect("clicked", self.on_cancel_button_clicked)
+
+    def on_mod_combo_changed(self, combo):
+        tree_iter = combo.get_active_iter()
+        if tree_iter != None:
+            model = combo.get_model()
+            mod = model[tree_iter][0]
+            print("Selected: mod=%s" % mod)
 
     def on_ok_button_clicked(self, widget):
         new_win = LoginWindow()
