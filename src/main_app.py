@@ -477,7 +477,7 @@ class LoginWindow(Gtk.Window):
 
     def on_ok_button_clicked(self, widget):
         # SE PRENDIO ESTA MIERDAAAAAAAAAA
-        triggerCoordDownloader(self.username_entry.get_text(),self.password_entry.get_text())
+        triggerCoordDownloader(self.username_entry.get_text(),self.password_entry.get_text(),)
 
 
     def on_cancel_button_clicked(self, widget):
