@@ -3,7 +3,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader
-from easygui       import msgbox
+from easygui       import msgbox,ccbox,filesavebox
 import os.path
 import csv_creator
 from perm_store import *
@@ -505,9 +505,10 @@ class MainWindow(Gtk.Window):
         button2 = Gtk.Button(label="Buscar por materia")
         self.class_entry   = Gtk.Entry()
         button3 = Gtk.Button(label="Permisos dos generales")
-        button4 = Gtk.Button(label="Permisos de extra creditos")
+        button4 = Gtk.Button(label="Permisos de extra créditos")
         button5 = Gtk.Button(label="Permisos de PP")
         button6 = Gtk.Button(label="Permisos pendientes")
+        button7 = Gtk.Button(label="Generar archivos csv")
 
 
 
@@ -535,6 +536,7 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(button4  ,True,True,0)
         main_box.pack_start(button5  ,True,True,0)
         main_box.pack_start(button6  ,True,True,0)
+        main_box.pack_start(button7  ,True,True,0)
 
 
         button1.connect("clicked", self.on_student_clicked)
@@ -543,8 +545,7 @@ class MainWindow(Gtk.Window):
         button4.connect("clicked", self.on_search_view_clicked)
         button5.connect("clicked", self.on_search_view_clicked)
         button6.connect("clicked", self.on_search_view_clicked)
-
-
+        button7.connect("clicked", self.on_write_csv_clicked)
 
     def on_student_clicked(self, widget):
         formated_carnet = format_id(self.student_entry.get_text())
@@ -583,6 +584,34 @@ class MainWindow(Gtk.Window):
         self.hide()
         new_win = SearchWindow(self,widget.type,mat)
         new_win.show_all()
+
+    def on_write_csv_clicked(self, widget):
+        pendientes = len(self.pending)
+        if pendientes > 0:  
+            msg = "Todavía queda(n) {0} permisos por procesar\n".format(pendientes)
+            msg +=  "¿Desea continuar?"
+            title = "Por favor confirme"
+            if ccbox(msg, title):
+                pass 
+            else:
+                return
+
+        gen = filesavebox("Archivo de generales"
+                         ,"Introduzca nombre para guardar el archivo de generales"
+                         ,filetypes=[" *.csv","Archivo separado por comas"])
+        if not gen:
+            return
+
+        mat_perms  = filesavebox("Archivo para permiso de materias"
+                                ,"Introduzca nombre para guardar el archivo para permiso de materias"
+                                ,filetypes=[" *.csv","Archivo separado por comas"])
+        if not mat_perms:
+            return
+
+        print(gen)
+        print(mat_perms)
+
+
 
     def is_main(self):
         return True
