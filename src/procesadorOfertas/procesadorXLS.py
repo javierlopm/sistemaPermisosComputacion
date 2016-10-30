@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from mmap import mmap,ACCESS_READ
 from xlrd import open_workbook,cellname
 from os.path import isfile

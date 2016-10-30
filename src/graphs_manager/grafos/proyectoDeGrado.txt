@@ -1,0 +1,190 @@
+//Matriz: Se tiene un grafo de 14 x 9 donde se tienen 15 trimestres y 10 materias por trimestre , dispuestas como el ejemplo a continuacion. Se colocan las coordenadas segun la posicion en que se desee tener la materia
+
+// Materias
+
+// Primer ano
+
+//Primer Trimestre
+1, 6, MA1111
+1, 8, ID1111
+1, 9, LLA111
+1, 10, CSA211
+
+//Segundo Trimestre
+2, 6, MA1112
+2, 7, FS1111
+2, 8, ID1112
+2, 9, LLA112
+2, 10, CSA212
+
+//Tercer Trimestre
+3, 6, MA1116
+3, 7, FS1112
+3, 8, ID1113
+3, 9, LLA113
+3, 10, CSA213
+
+// Segundo ano
+
+//Cuarto Trimestre
+5, 1, CI2525
+5, 2, CI2511
+5, 6, MA2115
+5, 10, GEN001
+
+//Quinto Trimestre
+6, 1, CI2526
+6, 2, CI2611
+6, 4, CI2691
+6, 6, MA2112
+
+//Sexto Trimestre
+7, 1, CI2527
+7, 2, CI2612
+7, 4, CI2692
+7, 7, CO3211
+
+// Tercer ano
+
+//Septimo Trimestre
+9, 2, CI2613
+9, 3, CI2693
+9, 4, CI3815
+9, 7, CO3121
+9, 10, GEN002
+
+//Octavo Trimestre
+10, 2, CI3311
+10, 3, CI3391
+10, 4, CI3825
+10, 7, CO3321
+
+//Noveno Trimestre
+11, 1, CI3725
+11, 2, PS1115
+11, 3, CI3715
+
+// Cuarto ano
+
+//Decimo Trimestre
+13, 2, CI3641
+13, 3, CI3661
+13, 5, CI4835
+13, 9, PS1111
+
+//Onceavo Trimestre
+14, 6, CI4325
+14, 8, AREA01
+14, 10, GEN003
+
+//Doceavo Trimestre
+15, 8, AREA02
+15, 9, AREA03
+15, 10, GEN004
+
+//Decimotercero Trimestre
+17, 1, EP1308
+17, 3, EP5855
+17, 5, LIB001
+17, 9, AREA04
+
+//Decimocuarto Trimestre
+18, 1, EP2308
+18, 3, EP5856
+18, 5, LIB002
+18, 10, GEN005
+
+//Decimoquinto Trimestre
+19, 1, EP3308
+19, 5, LIB003
+19, 10, GEN006
+
+//Requisitos
+
+//Requisitos Segundo trimestre
+MA1111, MA1112
+MA1111, FS1111
+ID1111, ID1112
+LLA111, LLA112
+CSA211, CSA212
+
+//Requisitos Tercer trimestre
+MA1112, MA1116
+MA1112, FS1112
+FS1111, FS1112
+ID1112, ID1113
+LLA112, LLA113
+CSA212, CSA213
+
+//Requisitos Cuarto trimestre
+MA1112, CI2511
+MA1116, CI2525
+MA1116, MA2115
+
+//Requisitos Quinto trimestre
+CI2525, CI2526
+CI2511, CI2526
+CI2511, CI2611
+CI2611, CI2691
+CI2691, CI2611
+MA2115, MA2112
+
+//Requisitos Sexto trimestre
+CI2526, CI2527
+CI2611, CI2612
+CI2526, CI2612
+CI2691, CI2692
+CI2612, CI2692
+CI2692, CI2612
+CI2691, CO3211
+MA2115, CO3211
+
+//Requisitos Septimo trimestre
+CI2526, CI2613
+CI2612, CI2613
+CI2692, CI2693
+CI2612, CI3815
+CI2613, CI2693
+CI2693, CI2613
+MA2112, CO3121
+
+//Requisitos Octavo trimestre
+CI2613, CI3311
+CI2693, CI3391
+CI3311, CI3391
+CI3391, CI3311
+CI3815, CI3825
+CO3121, CO3321
+
+//Requisitos Noveno trimestre
+CI2523, CI3725
+CI2613, CI3725
+CI3311, PS1115
+CI3311, CI3715
+CI3391, CI3715
+
+//Requisitos Decimo trimestre
+CI2613, CI3641
+CI3641, CI3661
+CI3661, CI3641
+CI2693, CI3661
+CI3825, CI4835
+CO3211, PS1111
+
+//Requisitos Undecimo trimestre
+CI3825, CI4325
+
+//Requisitos Decimotercero trimestre
+EP1308, EP5855
+EP5855, EP1308
+
+//Requisitos Decimocuarto trimestre
+EP2308, EP5856
+EP5856, EP2308
+EP1308, EP2308
+EP5855, EP2308
+EP5855, EP5856
+
+//Requisitos Decimoquinto trimestre
+EP2308, EP3308
+EP5856, EP3308

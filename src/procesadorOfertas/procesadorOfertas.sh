@@ -1,3 +1,4 @@
+#!/bin/bash
 # Nombre: Daniel Leones
 # Carné: 09-10977
 # Fecha: 26/10/2016
@@ -7,6 +8,7 @@
 #   - Preprocesa los archivos DOC a FODT. Paso previo a esto es que Libreoffice
 #     no esté ejecutandose.
 #   - Ejecuta el procesadorOfertas con los argumentos recibidos
+
 function usoAyuda() {
     echo "Instrucciones de uso: "
     echo -e "- Uso 1:\n\tprocesadorOfertas -f camino/nombre_archivo_salida -d nombre_archivo_dace"
@@ -17,7 +19,9 @@ function usoAyuda() {
     echo "- Ayuda: procesadorOfertas -h"
     return
 }
+reanalisis=0
 
+<<<<<<< HEAD
 reanalisis=0
 
 function pasajeParametros() {
@@ -103,12 +107,14 @@ function pasajeParametros() {
 #Procesar la entrada estandar
 pasajeParametros $@
 shift $((OPTIND-1))
+
 # Preprocesar los DOCS para Flat XML de libreoffice
 existe=$(exec ps -U $(whoami) | awk '/soffice/ {print $4}' | wc -l)
 python_bin=$(whereis python3 | grep -oE '/usr\/bin\/python3[[:space:]]')
 # Linea para obtener python 3.x
 #$(whereis python3 | grep -oE '/usr\/bin\/python3(\.[[:digit:]])?[[:space:]]' | awk '{ print $1}')
 # Pedir reanalsiis de ofertas
+
 if [[ $reanalisis -eq 1 ]]; then
     $python_bin procesadorOfertas.py -r -f $nombreArchSalida -d $nombreArchDace $1
     exit

@@ -311,4 +311,3 @@ if ( __name__ == "__main__"):
     # f = open('xmlPDF.txt', 'w')
     # f.write(xmlText)
     # f.close()
-
