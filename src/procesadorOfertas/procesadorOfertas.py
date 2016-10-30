@@ -39,7 +39,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
         # Constuir el camino para procesar los archivos.
         if opcionDir:
             camino = join(nomDirectorio,archivo)
-            print(camino)
+            print("\t", camino)
 
         if  nomArchivoDace == archivo:
             if  ext == ".fodt":
@@ -262,6 +262,9 @@ if __name__ == '__main__':
         except IsADirectoryError:
             print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
             sys.exit(2)
+        except UnicodeDecodeError:
+            print("Archivo no codificado para UTF-8. Recodifique.")
+            sys.exit(2)
         else:
             for materia in matArch:
                 if (not materia.isspace()) and materia[0] != '#':
@@ -286,6 +289,9 @@ if __name__ == '__main__':
         except IsADirectoryError:
             print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
             sys.exit(2)
+        except UnicodeDecodeError:
+            print("Archivo no codificado para UTF-8. Recodifique.")
+            sys.exit(2)
 
         for fila in fdOfertas:
             if sinCabecera:
@@ -307,10 +313,11 @@ if __name__ == '__main__':
         for fila in procesado:
             fdSalida.write(','.join(fila) + '\n')
     except IsADirectoryError:
-        print(nomArchivoMaterias ,"es un directorio. Eliga un nombre distinto")
-        nomArchivoSalida = raw_input("Introduzca el nombre del archivo de salida: ")
+        print(nomArchivoSalida ,"es un directorio. Eliga un nombre distinto")
+        sys.exit(2)
     except OSError as ose:
         print("Error de E/S: ", ose)
+        sys.exit(2)
     finally:
         fdSalida.close()
     print("Ofertas procesadas exitosamente")
@@ -322,4 +329,3 @@ if __name__ == '__main__':
 
 # python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls
 # -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
-
