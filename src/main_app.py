@@ -52,8 +52,13 @@ class HeaderBarWindow(Gtk.Window):
         hb.pack_start(box)
         
     def on_button_ret_clicked(self, widget):
+        if self.old_window.is_main():
+            self.old_window.refresh_main_lab()
         self.old_window.show()
         self.destroy()
+
+    def is_main():
+        return False
 
 
 class StudentWindow(Gtk.Window):
@@ -149,8 +154,14 @@ class StudentWindow(Gtk.Window):
             print("calling")
             self.old_window.refresh()
 
+        if self.old_window.is_main():
+            self.old_window.refresh_main_lab()
+
         self.old_window.show()
         self.destroy()
+
+    def is_main():
+        return False
 
 
 class WithPermTable():
@@ -250,7 +261,7 @@ class SearchWindow(HeaderBarWindow):
     """ 
         Clase para todas las búsquedas de permisos
     """
-    def __init__(self,old_window,perm_type,code=None):
+    def __init__(self,old_window,perm_type=None,code=None):
         HeaderBarWindow.__init__(self,old_window)
         extend_instance(self,WithPermTable)
 
@@ -261,8 +272,13 @@ class SearchWindow(HeaderBarWindow):
         main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.add(main_box)
 
+        try:
+            window_title = perm_type.name
+        except Exception as e:
+            window_title = "Permisos pendientes"
+
         description = Gtk.Label()
-        description.set_text(perm_type.name)
+        description.set_text(window_title)
         description.set_justify(Gtk.Justification.CENTER)
         main_box.pack_start(description,True,True,0)
 
@@ -279,6 +295,8 @@ class SearchWindow(HeaderBarWindow):
         # Obtener premisos
         if perm_type == TipoPermiso.permiso_materia:
             self.std_perms = db.get_course_perms(code)
+        elif perm_type == None:
+            self.std_perms = self.old_window.pending
         else:
             self.std_perms = db.get_type_perm(perm_type)
 
@@ -429,62 +447,61 @@ class MainWindow(Gtk.Window):
         Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_position(Gtk.WindowPosition.CENTER)
         self.connect("delete-event", Gtk.main_quit)
-
         self.set_default_size(320,200)
 
-        grid = Gtk.Grid()
-        self.grid = grid
-        self.add(grid)
-        grid.props.halign = Gtk.Align.CENTER
-        grid.set_row_spacing(10)
-        grid.set_column_spacing(4)
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,  spacing=6)
+        self.add(main_box)
 
-        grid.insert_row(0)
-        grid.insert_row(1)
-        grid.insert_row(2)
-        grid.insert_row(3)
-        grid.insert_column(0)
-        grid.insert_column(1)
-        grid.insert_column(2)
+        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
 
-        button1 = Gtk.Button(label="Buscar por carnet")
+        self.label = None
+
+        std_box   = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        class_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+
+        button1 = Gtk.Button(label="Buscar por carnet ")
+        self.student_entry = Gtk.Entry()
         button2 = Gtk.Button(label="Buscar por materia")
+        self.class_entry   = Gtk.Entry()
         button3 = Gtk.Button(label="Permisos dos generales")
         button4 = Gtk.Button(label="Permisos de extra creditos")
         button5 = Gtk.Button(label="Permisos de PP")
+        button6 = Gtk.Button(label="Permisos pendientes")
+
+
 
         button2.type = TipoPermiso.permiso_materia
         button3.type = TipoPermiso.dos_generales
         button4.type = TipoPermiso.limite_creditos
         button5.type = TipoPermiso.pp
-
-        self.student_entry = Gtk.Entry()
-        self.class_entry   = Gtk.Entry()
+        button6.type = None
 
 
-        label = Gtk.Label()
-        label.set_text("Quedan permisos por procesar.")
-        label.set_justify(Gtk.Justification.LEFT)
+        # First label
+        main_box.pack_start(self.fst_box ,True,True,0)
+        self.refresh_main_lab()
 
-        # Busqueda estudiante
-        grid.attach(button1,1,20,2,2)
-        grid.attach(self.student_entry,6,20,2,2)
-        
-        # Busqueda materia
-        grid.attach(button2,1,25,2,2)
-        grid.attach(self.class_entry,6,25,2,2)
+        # Composite buttons
+        std_box.pack_start(button1           ,True,True,0)
+        std_box.pack_start(self.student_entry,True,True,0)
+        class_box.pack_start(button2         ,True,True,0)
+        class_box.pack_start(self.class_entry,True,True,0)
 
-        # Permisos de dos generales
-        grid.attach(label  ,1,0,2,2)
-        grid.attach(button3,1,30,2,3)
-        grid.attach(button4,1,35,2,3)
-        grid.attach(button5,1,40,2,3)
+        # All buttons
+        main_box.pack_start(std_box  ,True,True,0)
+        main_box.pack_start(class_box,True,True,0)
+        main_box.pack_start(button3  ,True,True,0)
+        main_box.pack_start(button4  ,True,True,0)
+        main_box.pack_start(button5  ,True,True,0)
+        main_box.pack_start(button6  ,True,True,0)
+
 
         button1.connect("clicked", self.on_student_clicked)
         button2.connect("clicked", self.on_search_view_clicked)
         button3.connect("clicked", self.on_search_view_clicked)
         button4.connect("clicked", self.on_search_view_clicked)
         button5.connect("clicked", self.on_search_view_clicked)
+        button6.connect("clicked", self.on_search_view_clicked)
 
 
 
@@ -525,6 +542,32 @@ class MainWindow(Gtk.Window):
         self.hide()
         new_win = SearchWindow(self,widget.type,mat)
         new_win.show_all()
+
+    def is_main(self):
+        return True
+
+    def refresh_main_lab(self):
+        perms        = db.get_missign_perms()
+        self.pending = perms
+
+        count = len(perms)
+
+        if count == 1:
+            plural = [" "+str(count),""]
+        else:
+            plural = ["n "+str(count),"s"]
+
+        if self.label:
+            self.label.destroy()
+
+        self.label = Gtk.Label()
+        self.label.set_justify(Gtk.Justification.LEFT)
+        
+        self.label.set_text("Queda{0} permiso{1} por procesar".format(
+                                                         plural[0],plural[1]))
+
+        self.fst_box.pack_start(self.label,True,True,0)
+        self.label.show()
 
 
 
