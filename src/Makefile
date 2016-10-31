@@ -3,7 +3,7 @@ target: cleanup
 bd = build
 
 buildform: 
-	pyinstaller check_answers.py
+	pyinstaller main_app.py
 	cp client_secret.json dist/check_answers
 	cp -R /usr/local/selenium dist/check_answers
 	tar -zcvf check_answers.tar.gz dist/check_answers

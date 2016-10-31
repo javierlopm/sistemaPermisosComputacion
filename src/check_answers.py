@@ -88,8 +88,12 @@ def parseCoursesId(c_string, k):
         return lis 
 class AnswersChecker():
     def __init__(self, username, password, modality):
-        print("Us: "+ username +". Pass: "+password)
-        #self.aranita  = StudentDownloader(username,password,"HTML")
+        # print("Us: "+ username +". Pass: "+password)
+        try:
+            self.aranita  = StudentDownloader(username,password,"HTML")
+        except :
+            print("aranita startup failed")
+
         self.modality = modality
 
     def answers_downloader(self):
@@ -121,7 +125,10 @@ class AnswersChecker():
                                     perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
 
                     # Store user grades
-                    #self.aranita.search_student(user_id)
+                    try:
+                        self.aranita.search_student(user_id)
+                    except :
+                        print("Error trying to get student")
                     process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     process.communicate()
                     #Create rows in csv with permissons
