@@ -106,11 +106,17 @@ class StudentWindow(Gtk.Window):
         label.set_text("Estudiante " + show_carnet(std_data['carnet']) )
         label.set_justify(Gtk.Justification.LEFT)
 
-
+        from re import sub,DOTALL
         # Inicio de lista de datos
         liststore = Gtk.ListStore(str, str)
         for elem in std_data.items():
+            # if len
+            if elem[0]=="comentario":
+                comment = sub("(.{32})", "\\1\n", elem[1], 0, DOTALL)
+                continue
             liststore.append([ elem[0],str(elem[1]) ] )
+
+        liststore.append([ "comentario" , comment ] )
         treeview = Gtk.TreeView(model=liststore)
 
         renderer_text = Gtk.CellRendererText()

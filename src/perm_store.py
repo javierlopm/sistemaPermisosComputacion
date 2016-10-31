@@ -182,12 +182,14 @@ class PermStore():
         self.insert_student(1110552
                            ,"Javier López"
                            ,"04129349938"
-                           ,"javierloplom@gmail.com")
+                           ,"javierloplom@gmail.com"
+                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Siria")
 
         self.insert_student(1110584
                            ,"Carlos Martínez"
                            ,"0424222222"
-                           ,"1110584@usb.ve")
+                           ,"1110584@usb.ve"
+                           ,"")
 
         # Extra credito
         self.insert_perm(1110552
@@ -224,7 +226,7 @@ class PermStore():
         print("Permisos de materia CI4722")
         print(self.get_course_perms("CI4722",Trimestre.septiembreDiciembre,2016))
         print("Permisos pendietes")
-        print(self.get_missign_perms(Trimestre.septiembreDiciembre,2016))
+        print(self.get_missign_perms())
         # self.delete_all()
         print("DONE")
 
