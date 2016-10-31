@@ -8,7 +8,7 @@ import os.path
 from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
-
+from check_answers2 import AnswersChecker
 db = PermStore()
 RATIO = 0.75
 
@@ -20,8 +20,9 @@ class Col(Enum):
     valor     = 4 
     estado    = 5 
 
-def triggerCoordDownloader(username, password):
-    pass
+def triggerCoordDownloader(username, password, modality):
+    ans_checker = AnswersChecker(username, password, modality)
+    ans_checker.answers_downloader()
 
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
@@ -442,12 +443,12 @@ class LoginWindow(Gtk.Window):
 
         mod_store = Gtk.ListStore(str)
         modalities = ["Todos", "Solo permisos de generales", "Permisos sin los de generales"]
-        mod_combo = Gtk.ComboBoxText()
-        mod_combo.set_entry_text_column(0)
-        mod_combo.connect("changed", self.on_mod_combo_changed)
+        self.mod_combo = Gtk.ComboBoxText()
+        self.mod_combo.set_entry_text_column(0)
+        self.mod_combo.connect("changed", self.on_mod_combo_changed)
         for modality in modalities:
-            mod_combo.append_text(modality)
-        mod_combo.set_active(0)
+            self.mod_combo.append_text(modality)
+        self.mod_combo.set_active(0)
 
 
         ok_button = Gtk.Button(label="Aceptar")
@@ -462,7 +463,7 @@ class LoginWindow(Gtk.Window):
         main_box.pack_start(password_label  ,True,True,0)
         main_box.pack_start(self.password_entry  ,True,True,0)
         main_box.pack_start(mod_label       ,True,True,0)
-        main_box.pack_start(mod_combo       ,True,True,0)
+        main_box.pack_start(self.mod_combo       ,True,True,0)
         main_box.pack_start(buttons_box     ,True,True,0)
         buttons_box.pack_start(ok_button    ,True,True,0)
         buttons_box.pack_start(cancel_button,True,True,0)
@@ -477,7 +478,17 @@ class LoginWindow(Gtk.Window):
 
     def on_ok_button_clicked(self, widget):
         # SE PRENDIO ESTA MIERDAAAAAAAAAA
-        triggerCoordDownloader(self.username_entry.get_text(),self.password_entry.get_text(),)
+        tree_iter = self.mod_combo.get_active_iter()
+        usr = self.username_entry.get_text()
+        psw = self.password_entry.get_text()
+        if tree_iter != None and usr != "" and psw != "":
+            model = self.mod_combo.get_model()
+            mod = model[tree_iter][0]
+            print("Selected: mod=%s" % mod)
+            triggerCoordDownloader(usr,psw,mod)
+        else:
+            msgbox("Existen campos sin llenar.")
+
 
 
     def on_cancel_button_clicked(self, widget):

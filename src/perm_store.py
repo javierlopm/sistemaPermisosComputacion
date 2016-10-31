@@ -118,10 +118,11 @@ class PermStore():
 
     def insert_perm(self,carnet,tipoPermiso,trim,anio,extra=None):
         c = self.conn.cursor()
-
         if tipoPermiso == TipoPermiso.limite_creditos:
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.permiso_materia:
+            c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
+        elif tipoPermiso == TipoPermiso.sin_requisito:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         else:
             c.execute(per_insert,(carnet,tipoPermiso.value,trim.value,anio))
@@ -182,12 +183,14 @@ class PermStore():
         self.insert_student(1110552
                            ,"Javier López"
                            ,"04129349938"
-                           ,"javierloplom@gmail.com")
+                           ,"javierloplom@gmail.com"
+                           ,"")
 
         self.insert_student(1110584
                            ,"Carlos Martínez"
                            ,"0424222222"
-                           ,"1110584@usb.ve")
+                           ,"1110584@usb.ve"
+                           ,"")
 
         # Extra credito
         self.insert_perm(1110552
@@ -224,7 +227,7 @@ class PermStore():
         print("Permisos de materia CI4722")
         print(self.get_course_perms("CI4722",Trimestre.septiembreDiciembre,2016))
         print("Permisos pendietes")
-        print(self.get_missign_perms(Trimestre.septiembreDiciembre,2016))
+        print(self.get_missign_perms())
         # self.delete_all()
         print("DONE")
 

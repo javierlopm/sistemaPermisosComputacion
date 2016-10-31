@@ -139,6 +139,8 @@ for sheet in gc.openall():
                 new_file.write(str(new_line)+"\n")
             # Store user grades
             aranita.search_student(user_id)
+            process = subprocess.Popen(command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process.communicate()
             #Create rows in csv with permissons
             # dace_csv.write_perm(code,user_id,credit_num)
             new_file.close()
