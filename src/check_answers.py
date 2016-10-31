@@ -4,15 +4,13 @@ from easygui import *
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import subprocess
 import getpass
+from perm_store import PermStore, TipoPermiso, Trimestre
 
 # from csv_creator   import *
 from coord_crawler import *
 
-usuario = enterbox("Ingrese su nombre de usuario","Sistema de permisos")
-if usuario is None: exit()
-clave   = passwordbox("Ingrese la contraseña","Sistema de permisos")
-if clave is None: exit()
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
 # perm_file = "perm.csv"
@@ -20,130 +18,110 @@ if clave is None: exit()
 # trim      = 3
 # year      = 16
 
-aranita  = StudentDownloader(usuario,clave,"HTML")
+
 # dace_csv = CsvCreator(gen_file,perm_files,trim,year)
 
 SCOPE = ["https://spreadsheets.google.com/feeds"]
 SECRETS_FILE = "client_secret.json"
 
-permisos_dict = {
-    1  :  5, # Trimestre a inscribir
-    2  : -1, # Tipo de grafo-
-    3  : -1, # Nº permisos -
-    4  : 29, # Carnet-
-    5  :  1, # nombre
-    6  : -1, # indice-
-    7  : 30, # telefono
-    8  :  4, # creditos aprobados
-    9  :  0, # fecha
-    10 : -1, # trimestre ultimo blabla- 
-    11 : 13, # dos generales
-    12 : 33, # extraplan y general
-    13 : 23, # extraplan
-    14 : 15, # electiva de area
-    15 : 12, # Minimo credito-
-    16 : 12, # maximo credito-
-    17 : 15, # electivas libres-
-    18 :  8, # Pasantia corta-
-    19 :  8, # Pasantia larga-
-    20 :  8, # primera etapa proyecto de grado mas topico-
-    21 :  8, # etapa de proyecto
-    22 : 34, # general adicional
-    23 : 25, # asignatura sin requisito
-    24 :  0, # materias permisos
-    25 :  0, # permiso proyecto a dedicacione xclusiva
-    26 : 28  # observaciones jaja
+perms_dict = {
+    5   : 'm',
+    6   : 'm',
+    7   : 'm',
+    8   : 'm',
+    13  : 'm',
+    14  : 'm',
+    9   : 'g',
+    11  : 'l',
+    12  : 'p',
+    10  : 'e'
 }
 
+trimestre_dict = {
+    "Enero - Marzo"          : 'e',
+    "Abril - Julio"          : 'a',
+    "Julio - Agosto"         : 'j',
+    "Septiembre - Diciembre" : 's'
+}
+
+graphs_command = "cd graphs_manager && java createPngGraph "
 
 # Authenticate using the signed key
 credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
 
 gc = gspread.authorize(credentials)
 
+perm_storer = PermStore()
 
-print("Hojas de cálculo disponibles \n\n")
-for sheet in gc.openall():
-    print("{} - {}".format(sheet.title, sheet.id))
-    print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
+def carnetToInt(carnet):
+    spl = carnet.split('-')
+    return int(spl[0])*100000 + int(spl[1])
 
-    for i,line in enumerate(sheet.get_worksheet(0).get_all_values()):
-        print(str(i) + ".- " + str(line))
-        if i>0:
-            user_id = line[29 ][:8]
+def parseCoursesId(c_string, k):
+    if k == 13:
+        if "larga" in c_string: return ["EP3420"]
+        elif "corta" in c_string: return ["EP1420"]
+        elif "Primera" in c_string: return ["EP1308"]
+        elif "Segunda" in c_string: return ["EP2308"]
+        elif "Tercera" in c_string: return ["EP3308"]
+    else:
+        spl = c_string.split(',')
+        prelist = []
+        for e in spl:
+            if ' ' in e:
+                aux = e.split(' ')
+                for el in aux:
+                    if el != '':
+                        prelist.append(el)
+            else:
+                prelist.append(e)
+        lis = []
+        for elem in prelist:
+            if '-' in elem:
+                splaux = elem.split('-')
+                he = ""
+                for em in splaux:
+                    he += em
+                lis.append(he)
+            else:
+                lis.append(elem)
+        return lis 
+class AnswersChecker():
+    def __init__(self, username, password, modality):
+        #self.aranita  = StudentDownloader(username,password,"HTML")
+        self.modality = modality
 
-            new_file   = open("estudiantes/pendientes/"+user_id+".txt","w")
-            credit_num = ""
-            asig_codes = ""
+    def answers_downloader(self):
+        print("Hojas de cálculo disponibles \n\n")
+        for sheet in gc.openall():
+            print("{} - {}".format(sheet.title, sheet.id))
+            print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
 
+            for i,line in enumerate(sheet.get_worksheet(0).get_all_values()):
+                print(str(i) + ".- " + str(line))
 
-            for i in range(1,27):
-                if (i==4): new_line = user_id
-                elif (i==2): new_line="Pasantia"
-                elif (i==6): new_line=""
-                elif (i==10): new_line="Otro"
-                elif (i==12 or i==22 or i==11):
-                    if line[permisos_dict[i]]=="":
-                        new_line="no"
-                    else:
-                        new_line="si"
-                elif (i==15 or i==16):
-                    if line[permisos_dict[i]]=="":
-                        new_line = "no"
-                    else:
-                        num = int(line[permisos_dict[i]])
-                        if (num < 8 and i == 15) or (num > 16 and i == 16):
-                            new_line   = str(num)
-                            credit_num = new_line
-                        else:
-                            new_line = "no"
-                elif (i==14):
-                    if (permisos_dict[i]==""):
-                        new_line="no"
-                    else:
-                        new_line=line[permisos_dict[i]]
-                elif (i==13):
-                    if line[23] == "" and line[21] == "":
-                        new_line = "no"
-                    else:
-                        new_line = "si"
-                elif (i == 18):
-                    if "larga" in line[permisos_dict[i]]:
-                        new_line = "si"
-                    else:
-                        new_line = "no"
-                elif (i == 19):
-                    if "corta" in line[permisos_dict[i]]:
-                        new_line = "si"
-                    else:
-                        new_line = "no"
-                elif (i == 20):
-                    if "Primera" in line[permisos_dict[i]]:
-                        new_line = "si"
-                    else:
-                        new_line = "no"
-                elif (i == 21):
-                    if "Segunda" in line[permisos_dict[i]]:
-                        new_line = "EP-2308, EP-5856"
-                    elif "Tercera" in line[permisos_dict[i]]:
-                        new_line = "EP-3308"
-                    else:
-                        new_line = "no"
-                elif (i==3 or i==17 or i==24 or i==25): new_line = "no"
-                else:
-                    if (line[permisos_dict[i]]==""):
-                        new_line = "no"
-                    else:
-                        new_line = line[permisos_dict[i]]
-                if (new_line == ""): new_line = "no"
-                new_file.write(str(new_line)+"\n")
-            # Store user grades
-            aranita.search_student(user_id)
-            process = subprocess.Popen(command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.communicate()
-            #Create rows in csv with permissons
-            # dace_csv.write_perm(code,user_id,credit_num)
-            new_file.close()
-    # 1
-    print("\n\n")
+                if i>0:
+                    user_id = line[1].split('@')[0]
+                    carnet = carnetToInt(user_id)
+                    perm_storer.insert_student(carnet, "", line[4], line[3], line[15])
+                    for k in range(5,15):
+                        if line[k] != "":
+                            if perms_dict[k] == 'm':
+                                for elem in parseCoursesId(line[k], k):
+                                    perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), 0, elem)
+                            if perms_dict[k] == 'l' or perms_dict[k] == 'p':
+                                perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0, int(line[k]))
+                            if perms_dict[k] == 'e' or perms_dict[k] == 'g':
+                                perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
+                            if perms_dict[k] == 'r':
+                                for elem in parseCoursesId(line[k], k):
+                                    perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
 
+                    # Store user grades
+                    #self.aranita.search_student(user_id)
+                    process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    print(process.communicate())
+                    #Create rows in csv with permissons
+                    # dace_csv.write_perm(code,user_id,credit_num)
+            # 1
+            print("\n\n")

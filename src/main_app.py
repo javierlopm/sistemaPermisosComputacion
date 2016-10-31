@@ -8,7 +8,7 @@ import os.path
 from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
-from check_answers2 import AnswersChecker
+from check_answers import AnswersChecker
 db = PermStore()
 RATIO = 0.75
 
@@ -496,7 +496,6 @@ class LoginWindow(Gtk.Window):
             print("Selected: mod=%s" % mod)
 
     def on_ok_button_clicked(self, widget):
-        # SE PRENDIO ESTA MIERDAAAAAAAAAA
         tree_iter = self.mod_combo.get_active_iter()
         usr = self.username_entry.get_text()
         psw = self.password_entry.get_text()
@@ -505,6 +504,8 @@ class LoginWindow(Gtk.Window):
             mod = model[tree_iter][0]
             print("Selected: mod=%s" % mod)
             triggerCoordDownloader(usr,psw,mod)
+            msgbox("Permisos descargados.")
+            self.destroy()
         else:
             msgbox("Existen campos sin llenar.")
 
