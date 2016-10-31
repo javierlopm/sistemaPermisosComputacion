@@ -45,16 +45,16 @@ class CsvCreator():
         self.gen_writer.writerow(GEN_HEADER)
 
         # Pick trimester E-M, A-J, verano(J-S) S-D
-        if trim == 0:
+        if trim == 'e':
             self.trim = (1,3)
-        elif trim == 1:
+        elif trim == 'a':
             self.trim = (4,7)
-        elif trim == 2:
+        elif trim == 'j':
             self.trim = (7,9)
         else:
             self.trim = (9,12)
 
-    def write_gen(self,asig_code="",limite_cred="",pp=""):
+    def write_gen(self,student_id,general="",limite_cred="",pp=""):
         new_row = [ student_id[0:2]
                   , student_id[2:]
                   , "1" # Siglo
@@ -63,11 +63,11 @@ class CsvCreator():
                   , self.trim[1]
                   , "" # Situación
                   , "" # Situación ins
-                  , asig_code # General
+                  , general # General
                   , limite_cred # Limite Cred
                   , "" # nota_X_credito_ponderado
                   , "" # total_cred
-                  , "" ] # pp
+                  , pp ] # pp
         self.gen_writer.writerow(new_row)
 
     def write_perm(self,asig_code,student_id,num_cred=""):
@@ -84,7 +84,7 @@ class CsvCreator():
                   , "" # Bloque
                   , "" # Secci'on
                   , num_cred # Num Creditos
-                  , "?" # Permiso s/n
+                  , "S" # Permiso s/n
                   , "" # Renglon
                   , "" # Nota_asig
                   , "" ] # Ind_notaSinEfect
