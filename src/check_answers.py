@@ -30,7 +30,7 @@ perms_dict = {
     7   : 'm',
     8   : 'm',
     13  : 'm',
-    14  : 'm',
+    14  : 'r',
     9   : 'g',
     11  : 'l',
     12  : 'p',
@@ -88,6 +88,7 @@ def parseCoursesId(c_string, k):
         return lis 
 class AnswersChecker():
     def __init__(self, username, password, modality):
+        print("Us: "+ username +". Pass: "+password)
         #self.aranita  = StudentDownloader(username,password,"HTML")
         self.modality = modality
 
@@ -110,17 +111,19 @@ class AnswersChecker():
                                 for elem in parseCoursesId(line[k], k):
                                     perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), 0, elem)
                             if perms_dict[k] == 'l' or perms_dict[k] == 'p':
+                                if perms_dict[k] == 'p': print(line[k])
                                 perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0, int(line[k]))
                             if perms_dict[k] == 'e' or perms_dict[k] == 'g':
                                 perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
                             if perms_dict[k] == 'r':
+                                print(parseCoursesId(line[k], k))
                                 for elem in parseCoursesId(line[k], k):
                                     perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
 
                     # Store user grades
                     #self.aranita.search_student(user_id)
                     process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    print(process.communicate())
+                    process.communicate()
                     #Create rows in csv with permissons
                     # dace_csv.write_perm(code,user_id,credit_num)
             # 1

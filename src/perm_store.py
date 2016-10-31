@@ -120,6 +120,8 @@ class PermStore():
         c = self.conn.cursor()
         if tipoPermiso == TipoPermiso.limite_creditos:
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
+        if tipoPermiso == TipoPermiso.pp:
+            c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.permiso_materia:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.sin_requisito:

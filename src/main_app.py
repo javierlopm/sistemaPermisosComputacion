@@ -61,7 +61,7 @@ class HeaderBarWindow(Gtk.Window):
         self.old_window.show()
         self.destroy()
 
-    def is_main():
+    def is_main(self):
         return False
 
 
@@ -170,7 +170,7 @@ class StudentWindow(Gtk.Window):
         self.old_window.show()
         self.destroy()
 
-    def is_main():
+    def is_main(self):
         return False
 
 
@@ -192,9 +192,9 @@ class WithPermTable():
             typ = TipoPermiso(elem['tipo'])
             extra_field = ""
 
-            if  (typ == TipoPermiso.permiso_materia):
+            if  (typ == TipoPermiso.permiso_materia) or (typ == TipoPermiso.sin_requisito):
                 extra_field = elem['string_extra']
-            elif (typ == TipoPermiso.limite_creditos):
+            elif (typ == TipoPermiso.limite_creditos) or (typ == TipoPermiso.pp):
                 extra_field = str(elem['int_extra'])
 
             liststore.append([elem['fk_carnet']
