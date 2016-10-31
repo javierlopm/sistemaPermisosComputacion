@@ -7,6 +7,8 @@ class TipoPermiso(Enum):
     dos_generales   = 'g'
     limite_creditos = 'l'
     permiso_materia = 'm'
+    general_extra   = 'e'
+    sin_requisito   = 'r'
 
 # Enums para trimestres
 class Trimestre(Enum):
@@ -27,7 +29,7 @@ def get_all_names(a_class):
     return [e.name for e in a_class]
 
 # Strings auxiliares para insertar en la base de datos
-std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo) VALUES (?,?,?,?)"
+std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo,comentario) VALUES (?,?,?,?,?)"
 per_insert = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio)               VALUES (?,?,?,?)"
 per_int = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio,int_extra)      VALUES (?,?,?,?,?)"
 per_str = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio,string_extra)   VALUES (?,?,?,?,?)"
@@ -101,9 +103,9 @@ class PermStore():
 
         self.conn = conn 
     
-    def insert_student(self,carnet,nombre,telefono,correo):
+    def insert_student(self,carnet,nombre,telefono,correo,comentario):
         c = self.conn.cursor()
-        c.execute(std_insert,(carnet,nombre,telefono,correo))
+        c.execute(std_insert,(carnet,nombre,telefono,correo,comentario))
 
         self.conn.commit()
         c.close()
