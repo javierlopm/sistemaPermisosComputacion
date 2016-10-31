@@ -184,7 +184,8 @@ class PermStore():
                            ,"Javier López"
                            ,"04129349938"
                            ,"javierloplom@gmail.com"
-                           ,"")
+                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Siria"
+                           )
 
         self.insert_student(1110584
                            ,"Carlos Martínez"

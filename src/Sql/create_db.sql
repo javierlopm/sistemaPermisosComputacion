@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS estudiante (
     nombre     TEXT                NOT NULL,
     telefono   TEXT                NOT NULL,
     correo     TEXT                NOT NULL,
-    comentario TEXT
+    comentario TEXT                
 );
 
 /*
