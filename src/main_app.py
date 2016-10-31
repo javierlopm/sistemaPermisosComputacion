@@ -5,7 +5,7 @@ from gi.repository import Gtk,GdkPixbuf,Gdk
 from coord_crawler import format_id,show_carnet,StudentDownloader
 from easygui       import msgbox,ccbox,filesavebox
 import os.path
-import csv_creator
+from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
 
@@ -500,14 +500,14 @@ class CsvWindow(HeaderBarWindow):
         lab_gen       = Gtk.Label()
         self.gen_perm = Gtk.Entry()
         lab_gen.set_text("Archivo de generales:")
-        self.gen_perm.set_text("~/permisos_generales.csv")
+        self.gen_perm.set_text("permisos_generales.csv")
 
         # Permisos de materias
         all_perm_box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
         lab_all_perm  = Gtk.Label()
         self.all_perm = Gtk.Entry()
         lab_all_perm.set_text("Archivo de materias:")
-        self.all_perm.set_text("~/permisos_materias.csv")
+        self.all_perm.set_text("permisos_materias.csv")
 
 
         trim_box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
@@ -561,7 +561,7 @@ class CsvWindow(HeaderBarWindow):
         aprobados = db.get_with_state(EstadoPermiso.aprobado
                                      ,self.trim_search
                                      ,anio)
-        if len(aprobado) == 0:
+        if len(aprobados) == 0:
             msgbox("No se encontraron permisos en {0} {1}".format(self.trim_search,anio))
         else:
             gen_count = 0
@@ -579,7 +579,7 @@ class CsvWindow(HeaderBarWindow):
                     gen_count += 1 
                 elif t_perm == TipoPermiso.limite_creditos:
                     csv.write_gen(str(perm['fk_carnet'])
-                                 ,limite_creditos=str(perm['int_extra']))
+                                 ,limite_cred=str(perm['int_extra']))
                     gen_count += 1 
                 elif t_perm == TipoPermiso.permiso_materia:
                     csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
@@ -595,7 +595,7 @@ class CsvWindow(HeaderBarWindow):
                     gen_count += 1 
 
 
-            msgbox("Han sido procedas:\n{0} permiso(s) de generales.\n{1}permiso(s) de materias".format(gen_count,mat_count))
+            msgbox("Éxito se procesaron:\n{0} permiso(s) de generales.\n{1} permiso(s) de materias.".format(gen_count,mat_count))
 
     def on_text_press(self,widget,cosa):
         dialog = Gtk.FileChooserDialog("Please choose a file", self,
