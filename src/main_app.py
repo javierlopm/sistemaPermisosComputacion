@@ -5,7 +5,7 @@ from gi.repository import Gtk,GdkPixbuf,Gdk
 from coord_crawler import format_id,show_carnet,StudentDownloader
 from easygui       import msgbox,ccbox,filesavebox
 import os.path
-import csv_creator
+from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
 
@@ -483,6 +483,137 @@ class LoginWindow(Gtk.Window):
     def on_cancel_button_clicked(self, widget):
         self.destroy()
 
+class CsvWindow(HeaderBarWindow):
+    """ 
+        Clase para todas las búsquedas de permisos
+    """
+    def __init__(self,old_window):
+        HeaderBarWindow.__init__(self,old_window)
+
+        self.set_default_size(600,120)
+
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.add(main_box)
+
+        # Permisos de generales
+        gen_box       = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        lab_gen       = Gtk.Label()
+        self.gen_perm = Gtk.Entry()
+        lab_gen.set_text("Archivo de generales:")
+        self.gen_perm.set_text("permisos_generales.csv")
+
+        # Permisos de materias
+        all_perm_box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        lab_all_perm  = Gtk.Label()
+        self.all_perm = Gtk.Entry()
+        lab_all_perm.set_text("Archivo de materias:")
+        self.all_perm.set_text("permisos_materias.csv")
+
+
+        trim_box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+
+        trim_combo = Gtk.ComboBoxText()
+        trim_combo.set_entry_text_column(0)
+        trim_combo.connect("changed", self.on_trim_combo_changed)
+        for t in Trimestre:
+            trim_combo.append_text(t.name)
+        trim_combo.set_active(0)
+
+        from datetime import datetime
+        year = datetime.now().year
+
+        adjustment = Gtk.Adjustment(2015, 2015, 2199, 1, 10, 0)
+        self.spinbutton = Gtk.SpinButton()
+        self.spinbutton.set_adjustment(adjustment)
+        self.spinbutton.set_numeric(True)
+        self.spinbutton.set_value(year)
+
+
+        button = Gtk.Button(label="Generar archivos")
+
+        gen_box.pack_start      (lab_gen      ,True,True,0)
+        gen_box.pack_start      (self.gen_perm,True,True,0)
+        main_box.pack_start     (gen_box      ,True,True,0)
+        all_perm_box.pack_start (lab_all_perm ,True,True,0)
+        all_perm_box.pack_start (self.all_perm,True,True,0)
+        trim_box.pack_start     (trim_combo   ,True,True,0)
+        trim_box.pack_start     (self.spinbutton,True,True,0)
+        main_box.pack_start     (all_perm_box ,True,True,0)
+        main_box.pack_start     (trim_box     ,True,True,0)
+        main_box.pack_start     (button       ,True,True,0)
+
+        button.connect("clicked", self.on_write_press)
+        # self.gen_perm.connect("focus-in-event", self.on_text_press)
+        # self.all_perm.connect("focus-in-event", self.on_text_press)
+
+
+    def on_trim_combo_changed(self, combo):
+            tree_iter = combo.get_active_iter()
+            if tree_iter != None:
+                model = combo.get_model()
+                mod = model[tree_iter][0]
+                self.trim_search = Trimestre(mod[0])
+
+    def on_write_press(self,widget):
+        print("writing to " + self.gen_perm.get_text() + " and " + self.all_perm.get_text() + " for " + self.trim_search.name + " and " + str(self.spinbutton.get_value_as_int()))
+        anio = self.spinbutton.get_value_as_int()
+
+        aprobados = db.get_with_state(EstadoPermiso.aprobado
+                                     ,self.trim_search
+                                     ,anio)
+        if len(aprobados) == 0:
+            msgbox("No se encontraron permisos en {0} {1}".format(self.trim_search,anio))
+        else:
+            gen_count = 0
+            mat_count = 0
+
+            csv = CsvCreator(self.gen_perm.get_text()
+                            ,self.all_perm.get_text()
+                            ,self.trim_search.value
+                            ,anio)
+
+            for perm in aprobados:
+                t_perm = TipoPermiso(perm['tipo'])
+                if   t_perm == TipoPermiso.dos_generales:
+                    csv.write_gen(str(perm['fk_carnet']),general="E2")
+                    gen_count += 1 
+                elif t_perm == TipoPermiso.limite_creditos:
+                    csv.write_gen(str(perm['fk_carnet'])
+                                 ,limite_cred=str(perm['int_extra']))
+                    gen_count += 1 
+                elif t_perm == TipoPermiso.permiso_materia:
+                    csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                    mat_count += 1 
+                elif t_perm == TipoPermiso.pp:
+                    csv.write_gen(str(perm['fk_carnet']),pp=str(perm['int_extra']))
+                    gen_count += 1 
+                elif t_perm == TipoPermiso.general_extra:
+                    # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                    gen_count += 1 
+                elif t_perm == TipoPermiso.sin_requisitos:
+                    # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                    gen_count += 1 
+
+
+            msgbox("Éxito se procesaron:\n{0} permiso(s) de generales.\n{1} permiso(s) de materias.".format(gen_count,mat_count))
+
+    def on_text_press(self,widget,cosa):
+        dialog = Gtk.FileChooserDialog("Please choose a file", self,
+                 Gtk.FileChooserAction.SAVE,
+                 (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                  Gtk.STOCK_SAVE_AS, Gtk.ResponseType.ACCEPT))
+        dialog.set_current_folder("~")
+        dialog.set_current_folder(widget.get_text())
+
+        filter = Gtk.FileFilter()
+        filter.set_name("Comma separated file")
+        filter.add_pattern("*.csv")
+        dialog.add_filter(filter)
+
+        response = dialog.run()
+
+        if response == Gtk.ResponseType.OK:
+            widget.set_text(dialog.get_filename())
 
 
 
@@ -515,7 +646,6 @@ class MainWindow(Gtk.Window):
         button5 = Gtk.Button(label="Permisos de PP")
         button6 = Gtk.Button(label="Permisos pendientes")
         button7 = Gtk.Button(label="Generar archivos csv")
-
 
 
         button2.type = TipoPermiso.permiso_materia
@@ -602,20 +732,9 @@ class MainWindow(Gtk.Window):
             else:
                 return
 
-        gen = filesavebox("Archivo de generales"
-                         ,"Introduzca nombre para guardar el archivo de generales"
-                         ,filetypes=[" *.csv","Archivo separado por comas"])
-        if not gen:
-            return
-
-        mat_perms  = filesavebox("Archivo para permiso de materias"
-                                ,"Introduzca nombre para guardar el archivo para permiso de materias"
-                                ,filetypes=[" *.csv","Archivo separado por comas"])
-        if not mat_perms:
-            return
-
-        print(gen)
-        print(mat_perms)
+        self.hide()
+        csv_window = CsvWindow(self)
+        csv_window.show_all()
 
 
 

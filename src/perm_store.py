@@ -64,6 +64,12 @@ pending_qry= """SELECT *
                 FROM permiso 
                 WHERE aprobado  = 'p'"""
 
+state_qry = """SELECT * 
+               FROM permiso 
+               WHERE aprobado  = (?) AND
+                     trimestre = (?) AND
+                     anio      = (?)"""
+
 std_perms_qry = """ 
     SELECT *
     FROM permiso p
@@ -165,6 +171,12 @@ class PermStore():
             return self._run_with_args(std_perms_qry,(carnet,trimestre.value,anio))
         else:
             return self._run_with_args(std_all_perms_qry,(carnet,))
+
+    def get_with_state(self,state,trimestre,anio):
+        return self._run_with_args(state_qry,
+                                    (EstadoPermiso.aprobado.value
+                                    ,trimestre.value
+                                    ,anio))
 
     def test(self):
         self.insert_student(1110552
