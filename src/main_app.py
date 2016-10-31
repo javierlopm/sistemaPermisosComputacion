@@ -651,7 +651,10 @@ class MainWindow(Gtk.Window):
         button4 = Gtk.Button(label="Permisos de extra créditos")
         button5 = Gtk.Button(label="Permisos de PP")
         button6 = Gtk.Button(label="Permisos pendientes")
-        button7 = Gtk.Button(label="Generar archivos csv")
+        button7 = Gtk.Button(label="General  extra")
+        button8 = Gtk.Button(label="Sin requisitos")
+        
+        button_csv = Gtk.Button(label="Generar archivos csv")
 
 
         button2.type = TipoPermiso.permiso_materia
@@ -659,6 +662,8 @@ class MainWindow(Gtk.Window):
         button4.type = TipoPermiso.limite_creditos
         button5.type = TipoPermiso.pp
         button6.type = None
+        button7.type = TipoPermiso.general_extra
+        button8.type = TipoPermiso.sin_requisito
 
 
         # First label
@@ -679,6 +684,8 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(button5  ,True,True,0)
         main_box.pack_start(button6  ,True,True,0)
         main_box.pack_start(button7  ,True,True,0)
+        main_box.pack_start(button8  ,True,True,0)
+        main_box.pack_start(button_csv  ,True,True,0)
 
 
         button1.connect("clicked", self.on_student_clicked)
@@ -687,7 +694,9 @@ class MainWindow(Gtk.Window):
         button4.connect("clicked", self.on_search_view_clicked)
         button5.connect("clicked", self.on_search_view_clicked)
         button6.connect("clicked", self.on_search_view_clicked)
-        button7.connect("clicked", self.on_write_csv_clicked)
+        button7.connect("clicked", self.on_search_view_clicked)
+        button8.connect("clicked", self.on_search_view_clicked)
+        button_csv.connect("clicked", self.on_write_csv_clicked)
 
     def on_student_clicked(self, widget):
         formated_carnet = format_id(self.student_entry.get_text())
