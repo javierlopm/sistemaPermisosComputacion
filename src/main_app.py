@@ -397,13 +397,16 @@ class InitWindow(Gtk.Window):
 
         button1 = Gtk.Button(label="Descargar permisos")
         button2 = Gtk.Button(label="Iniciar programa de permisos")
+        button3 = Gtk.Button(label="Borrar permisos actuales")
 
         grid.attach(label,0,0,2,2)
         grid.attach(button1,0,5,2,2)
         grid.attach(button2,0,25,2,2)
+        grid.attach(button3,0,45,2,2)
 
         button1.connect("clicked", self.on_button1_clicked)
         button2.connect("clicked", self.on_button2_clicked)
+        button3.connect("clicked", self.on_button3_clicked)
 
     def on_button1_clicked(self, widget):
         new_win = LoginWindow()
@@ -414,6 +417,16 @@ class InitWindow(Gtk.Window):
         self.hide()
         new_win = MainWindow()
         response = new_win.show_all()
+
+    def on_button3_clicked(self, widget):
+        msg = "Se eliminarán todos los permisos no expotados a csv"
+        msg +=  "¿Desea continuar?"
+        title = "Por favor confirme"
+        if ccbox(msg, title):
+            db.delete_all()
+            msgbox("Eliminado con éxito")
+        else:
+            return
 
 class LoginWindow(Gtk.Window):
 
@@ -653,7 +666,7 @@ class MainWindow(Gtk.Window):
         button6 = Gtk.Button(label="Permisos pendientes")
         button7 = Gtk.Button(label="General  extra")
         button8 = Gtk.Button(label="Sin requisitos")
-        
+
         button_csv = Gtk.Button(label="Generar archivos csv")
 
 
