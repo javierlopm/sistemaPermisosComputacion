@@ -3,14 +3,8 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-from procesadorOfertas import procesarDOC, procesarPDF, procesarXLS, generarOferta, cargarOfertas
-
-def imprimirResultados(mensaje,listaOfertas):
-    print(mensaje + ": ")
-    for fila in listaOfertas:
-        print(fila)
-    print('\n')
-
+from procesadorOfertas import procesarDOC, procesarPDF, procesarXLS, \
+                                generarOferta, cargarOfertas, imprimirResultados
 
 
 #
@@ -99,7 +93,7 @@ class ProcesarDOC4_XML (Contexto):
 
 class ProcesarDOC1_PDF (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre doc2.pdf """
+        """ Prueba de procesamiento sobre doc1.pdf """
         procesarPDF(self.carpetaBase + "doc1.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento PDF. Archivo doc1.pdf")
 
@@ -117,7 +111,7 @@ class ProcesarDOC3_PDF (Contexto):
 
 class ProcesarDOC4_PDF (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre doc3.pdf """
+        """ Prueba de procesamiento sobre doc4.pdf """
         procesarPDF(self.carpetaBase + "doc4.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento PDF. Archivo doc4.pdf")
 

@@ -121,14 +121,17 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
         page = doc.loadPage(num)
         if page.searchFor(codigoCarr):
             #print("pag.", num + 1)
-            f = open('textPDFXML.xml', 'w')
-            f.write(page.getText(output = "xml"))
-            contenedor = OfertasDace()
-            # override the default ContextHandler
-            parser.setContentHandler( contenedor )
-            f.close()
-            # Procesar el archivo XML
-            parser.parse('textPDFXML.xml')
+            try:
+                f = open('textPDFXML.xml', 'w')
+                f.write(page.getText(output = "xml"))
+            except OSError as ose:
+                print("Error de E/S: ", ose)
+            else:
+                contenedor = OfertasDace()
+                # override the default ContextHandler
+                parser.setContentHandler( contenedor )
+                # Procesar el archivo XML
+                parser.parse('textPDFXML.xml')
 
             # Juntar listas de materias con lista de bloques. Se conserva
             # las posiciones para comparación de los horarios.
@@ -170,6 +173,7 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
 
                 fdSalida.append(fila)
 
+    f.close()
     remove('textPDFXML.xml')
 
 
@@ -183,18 +187,26 @@ if ( __name__ == "__main__"):
         remove(nomArchivoSalida)
 
     if nomArchivoSalida:
-        f = open(nomArchivoSalida, 'a')
-        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        try:
+            f = open(nomArchivoSalida, 'a')
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        except IsADirectoryError:
+            print(nomArchivoSalida ,"es un directorio. Eliga un nombre distinto")
+            nomArchivoSalida = raw_input("Introduzca el nombre del archivo de salida: ")
+        except OSError as ose:
+            print("Error de E/S: ", ose)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
 
     for fila in fdSalida:
         if nomArchivoSalida:
-            f.write(','.join(fila) + "\n")
+            try:
+                f.write(','.join(fila) + "\n")
+            except OSError as ose:
+                print("Error de E/S: ", ose)
         else:
             print(','.join(fila))
 
     if nomArchivoSalida:
         f.close()
-

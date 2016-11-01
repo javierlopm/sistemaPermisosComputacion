@@ -9,7 +9,7 @@
 #     no esté ejecutandose.
 #   - Ejecuta el procesadorOfertas con los argumentos recibidos
 
-function usoAyuda(){
+function usoAyuda() {
     echo "Instrucciones de uso: "
     echo -e "- Uso 1:\n\tprocesadorOfertas -f camino/nombre_archivo_salida -d nombre_archivo_dace"
     echo -e "\t-m archivo_materias_requeridas -e nomDir \n"
@@ -64,11 +64,23 @@ function pasajeParametros() {
         # echo 'Fin $caminoDirArchs'
     fi
 
+    if [[ $# == 0 ]]; then
+        echo "ERROR: suministre los argumentos apropiados."
+        exit 1
+    fi
+    
     # Acceder a los operandos
     shift $((OPTIND-1))
-    if [[ $reanalisis ]]; then
-        if [[ !( -a "$1" && -a "$nombreArchDace" )]]; then
-            echo "ERROR: Verifica que $1 o $nombreArchDace existan"
+    if [[ $reanalisis -eq 1 ]]; then
+        if [[ !( -a "$1")]]; then
+            if [[ -z "$1" ]]; then
+                echo "ERROR: Especifique el archivo de ofertas"                
+            else
+                echo "ERROR: Verifica que $1 exista"                
+            fi
+            exit 1
+        elif [[ !( -a "$nombreArchDace" ) ]]; then
+            echo "ERROR: Verifique que $nombreArchDace exista"
             exit 1
         fi
     else
@@ -78,8 +90,7 @@ function pasajeParametros() {
             exit 1
         elif [[ -d "$caminoDirArchs" && -a "$caminoDirArchs$nomArchMaterias" \
             && -a "$caminoDirArchs$nombreArchDace" ]]; then
-
-            exit
+            return
         else
             echo "ERROR: Los archivos $nombreArchDace o $nomArchMaterias no se encuentran"
             echo "en el directorio $caminoDirArchs. Asegurese que esten allí."
@@ -89,17 +100,19 @@ function pasajeParametros() {
     return
 }
 
+
 #Procesar la entrada estandar
 pasajeParametros $@
-exit
+shift $((OPTIND-1))
+
 # Preprocesar los DOCS para Flat XML de libreoffice
 existe=$(exec ps -U $(whoami) | awk '/soffice/ {print $4}' | wc -l)
 python_bin=$(whereis python3 | grep -oE '/usr\/bin\/python3[[:space:]]')
 # Linea para obtener python 3.x
 #$(whereis python3 | grep -oE '/usr\/bin\/python3(\.[[:digit:]])?[[:space:]]' | awk '{ print $1}')
 # Pedir reanalsiis de ofertas
-if [[ $reanalisis ]]; then
-    echo "Reanalisis de ofertas"
+
+if [[ $reanalisis -eq 1 ]]; then
     $python_bin procesadorOfertas.py -r -f $nombreArchSalida -d $nombreArchDace $1
     exit
 # Generar ofertas a partir de los documentos de las coordinaciones

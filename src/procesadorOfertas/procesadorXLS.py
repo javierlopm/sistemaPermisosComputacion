@@ -152,7 +152,16 @@ if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
     listaMaterias = []
-    for materia in open(nomArchivoMaterias, 'r'):
+    try:
+        f = open(nomArchivoMaterias, 'r')
+    except FileNotFoundError:
+        print("El archivo no encontrado", nomArchivoDace)
+        sys.exit(2)
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+        sys.exit(2)
+    else:
+      for materia in f:
         if (not materia.isspace()) and materia[0] != '#':
             listaMaterias.append(materia.rstrip(' \t\n\r'))
 
@@ -164,8 +173,12 @@ if ( __name__ == "__main__"):
         remove(nomArchivoSalida)
 
     if nomArchivoSalida:
-        f = open(nomArchivoSalida, 'a')
-        f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        try:
+            f = open(nomArchivoSalida, 'a')
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+        except OSError as ose:
+            print("Error de E/S: ", ose)
+            sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
@@ -173,7 +186,11 @@ if ( __name__ == "__main__"):
 
     for fila in fdSalida:
         if nomArchivoSalida:
-            f.write(','.join(fila) + "\n")
+            try:
+                f.write(','.join(fila) + "\n")
+            except OSError as ose:
+                print("Error de E/S: ", ose)
+                sys.exit(2)
         else:
             print(','.join(fila))
 
