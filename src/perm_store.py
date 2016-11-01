@@ -186,8 +186,7 @@ class PermStore():
                            ,"Javier López"
                            ,"04129349938"
                            ,"javierloplom@gmail.com"
-                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Siria"
-                           )
+                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Siria")
 
         self.insert_student(1110584
                            ,"Carlos Martínez"
@@ -220,8 +219,8 @@ class PermStore():
                         ,2016
                         ,"CI4722")
 
-        self.update_perm_state(1,EstadoPermiso.aprobado)
-        self.update_perm_state(2,EstadoPermiso.negado)
+        # self.update_perm_state(1,EstadoPermiso.aprobado)
+        # self.update_perm_state(2,EstadoPermiso.negado)
         
         print("Permisos de estudiante")
         print(self.get_student_perms(1110552,Trimestre.septiembreDiciembre,2016))
