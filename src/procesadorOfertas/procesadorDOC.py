@@ -12,19 +12,20 @@
 
 import xml.sax
 import re
+import sys
 from os.path import isfile
 from os import remove
-import sys
-import getopt
+from funcionesAuxiliares import dividirStr, obtArgs, cargarMaterias, \
+                                  componerHorarioCSV, normalizarMateria, \
+                                    ordenarDias, usoAyuda
 
 # Clase usada por xml.sax para procesar el archivo.xml
 class Ofertas( xml.sax.ContentHandler ):
-    def __init__(self, listaMaterias, corresDiaDistancia):
+    def __init__(self, listaMaterias):
         self.filas = []
         self.celda = ""
         self.tuplas = []
         self.listaMaterias = listaMaterias
-        self.corresDiaDistancia = corresDiaDistancia
         self.ultimoDia = ''
         self.patronDia = "(L;?[Uu];?[Nn];?(es)?|M;?[Aa];?[Rr];?(tes)?|M;?[Ii];?[Eeé];?([Rr];?|rcoles)?|" \
             + "[Jj];?[Uu];?[Ee];?(ves)?|V;?[Ii];?[Ee];?([Rr];?|nes)?)"
@@ -34,6 +35,7 @@ class Ofertas( xml.sax.ContentHandler ):
         self.patronHorario = "(" + self.patronDia + "((\s*|;*)-(\s*|;*)" + self.patronDia + ")?" \
          + "(\s+|;)" + self.patronHoras + "(\s+|;)?){1,2}"
         self.patronBloque = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
+
    # Call when an element starts
     def startElement(self, tag, attributes):
         pass
@@ -53,7 +55,7 @@ class Ofertas( xml.sax.ContentHandler ):
             searchMateria = re.search(self.patronMateria,self.celda, re.I)
             if searchMateria:
                 #print("Materia", searchMateria.group())
-                self.filas.append(self.normalizarMateria(searchMateria.group()))
+                self.filas.append(normalizarMateria(searchMateria.group()))
 
             searchBloque = re.search(self.patronBloque,self.celda, re.I)
             if searchBloque:
@@ -125,64 +127,15 @@ class Ofertas( xml.sax.ContentHandler ):
         #print("Salida horario", nuevoTxt)
         return nuevoTxt
 
-    def normalizarMateria(self,txt):
-        mat = ""
-        for char in txt:
-            if char != ' ' and char != '-':
-                mat += char
-        return mat
-
-def componerHorarioCSV(listaHorarios):
-   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
-   ultimoDia = ''
-   horarios = ""
-   for (hora,dia) in listaHorarios:
-      if ultimoDia == '':
-         ultimoDia = dia
-         horarios += (corresDiaDistancia[dia] * ',') + hora
-      else:
-         horarios += ((corresDiaDistancia[dia] -  \
-                    corresDiaDistancia[ultimoDia]) * ',') + hora
-         ultimoDia = dia
-
-   if ultimoDia != '' and corresDiaDistancia[ultimoDia] < 5:
-         horarios += ((5 - corresDiaDistancia[ultimoDia]) * ',')
-
-   return horarios
-
-# Función auxiliar para el ordenamiento de los horarios
-def ordenarDias(txt):
-   # Accede a una variable no local
-   corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
-   return corresDiaDistancia[txt[1]]
-
-# Funcion auxiliar para dividir cadenas de caracteres por un delimitador
-def dividirStr(txt, delim = " "):
-   cadena = []
-   palabra = ""
-   for c in txt:
-      if delim == c and (palabra != ""):
-         cadena.append(palabra)
-         palabra = ""
-      else:
-         if c != delim:
-            palabra += c
-
-   if palabra != "":
-      cadena.append(palabra)
-
-   return cadena
-
 # Función principal exportada para otros modulos.
 def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
-    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
     # create an XMLReader
     parser = xml.sax.make_parser()
     # turn off namepsaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
     # override the default ContextHandler
-    Handler = Ofertas(listaMaterias, corresDiaDistancia)
+    Handler = Ofertas(listaMaterias)
     parser.setContentHandler( Handler )
     parser.parse(nombreArchivoEntrada)
 
@@ -207,70 +160,18 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
         fdSalida.append(acum.split(','))
         acum = ""
 
-def usoAyuda():
-    print("""Uso: prog -f nombre_archivo_salida -m archivo_materias_requeridas
-                    archivo1.pdf archivo2.xls ... archivoN
-    prog [-h, --help] """)
-
-def obtArgs(entrada):
-    nomArchivoSalida = ""
-    nomArchivoMaterias = ""
-    try:
-        opts, args = getopt.getopt(entrada, "f:m:h", ["help"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err) # will print something like "option -a not recognized"
-        usoAyuda()
-        sys.exit(2)
-
-    for o, a in opts:
-        if o == "-f":
-            nomArchivoSalida = a
-        elif o == "-m":
-            nomArchivoMaterias = a
-        elif o in ("-h", "--help"):
-            usoAyuda()
-            sys.exit()
-        else:
-            assert False, "unhandled option"
-
-    if not nomArchivoMaterias:
-      print("Se requiere el parametro -m")
-      sys.exit(2)
-
-    return (nomArchivoSalida, nomArchivoMaterias, args)
-
 # Programa principal para pruebas
 if ( __name__ == "__main__"):
-    corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
+    #corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
 
     # Pasaje de argumentos por la entrada estandar
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
     # Cargar listas de materias requeridas
-    listaMaterias = []
-    try:
-        f = open(nomArchivoMaterias, 'r')
-    except FileNotFoundError:
-        print("El archivo no encontrado", nomArchivoDace)
-        sys.exit(2)
-    except IsADirectoryError:
-        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
-        sys.exit(2)
-    else:
-      for materia in f:
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
+    listaMaterias = cargarMaterias(nomArchivoMaterias)
 
-    # Crear un lector de XML
-    parser = xml.sax.make_parser()
-    # turn off namepsaces
-    parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-
-    # override the default ContextHandler
-    Handler = Ofertas(listaMaterias, corresDiaDistancia)
-    parser.setContentHandler( Handler )
-    parser.parse(args[0])
+    fdSalida = []
+    procesarDOC(args[0],listaMaterias,fdSalida)
 
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
@@ -285,37 +186,20 @@ if ( __name__ == "__main__"):
             sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
-    # Concatenar en un solo string e imprimir filas y
-    # escribir filas en un archivo estilo csv.
-    acum = ""
-    for fil in Handler.tuplas:
-      #Eliminar Len si todos las filas deben tener horario
-      if len(fil) > 1:
-         #print("Fila", fil, fil[1:])
-         if isinstance(fil[1],tuple):
-            acum = fil[0] + ',A'
-            #print("Seleccion1", fil[1:])
-            horariosOrdenados = sorted(fil[1:], key=ordenarDias)
-         else:
-            #print("Seleccion2", fil[2:])
-            acum = ",".join(fil[:2])
-            horariosOrdenados = sorted(fil[2:], key=ordenarDias)
-         acum += componerHorarioCSV(horariosOrdenados)
-      else:
-         acum = fil[0] + ',A,,,,,'
 
-      if nomArchivoSalida:
-          try:
-            f.write(acum + '\n')
-          except OSError as ose:
-            print("Error de E/S: ", ose)
-            sys.exit(2)
-      else:
-        print(acum)
-      acum = ""
+
+    for fila in fdSalida:
+        if nomArchivoSalida:
+            try:
+                f.write(','.join(fila) + "\n")
+            except OSError as ose:
+                print("Error de E/S: ", ose)
+                sys.exit(2)
+        else:
+            print(','.join(fila))
 
     if nomArchivoSalida:
-      f.close()
+        f.close()
 
 # Pruebas sobre dividirStr
    # print(dividirStr("Mar -Jue  5-6   "))
