@@ -9,6 +9,7 @@ from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
 from check_answers import AnswersChecker
+import subprocess
 db = PermStore()
 RATIO = 0.75
 

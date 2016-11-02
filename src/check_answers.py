@@ -187,7 +187,7 @@ class AnswersChecker():
             self.aranita.search_student(user_id)
         except :
             print("Error trying to get student")
-            
+        
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
         
