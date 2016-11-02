@@ -33,16 +33,19 @@ GEN_HEADER = ["ANIO_CARNET"
 
 
 class CsvCreator():
-    def __init__(self,gen_file,perm_files,trim,anio):
-        self.f1 = open(gen_file  ,"w")
-        self.f2 = open(perm_files,"w")
-        self.perm_writer  = csv.writer(self.f2,delimiter=',')
-        self.gen_writer   = csv.writer(self.f1,delimiter=',')
+    def __init__(self,gen_file,perm_files,trim,anio,type_perm):
+
+        if type_perm == 0:
+            self.f1 = open(gen_file  ,"w")
+            self.gen_writer   = csv.writer(self.f1,delimiter=',')
+            self.gen_writer.writerow(GEN_HEADER)
+        else:
+            self.f2 = open(perm_files,"w")
+            self.perm_writer  = csv.writer(self.f2,delimiter=',')
+            self.perm_writer.writerow(PERM_HEADER)
 
         self.anio = anio
 
-        self.perm_writer.writerow(PERM_HEADER)
-        self.gen_writer.writerow(GEN_HEADER)
 
         # Pick trimester E-M, A-J, verano(J-S) S-D
         if trim == 'e':
@@ -91,18 +94,21 @@ class CsvCreator():
 
         self.perm_writer.writerow(new_row)
     
-    def end_writer(self):
-        self.f1.close()
-        self.f2.close()
+    def end_writer(self,perms):
+        if perms == 0:
+            self.f1.close()
+        else:
+            self.f2.close()
 
-perm_file = "perm.csv"
-gen_file  = "gen.csv"
-trim      = 3
-year      = 16
+# perm_file = "perm.csv"
+# gen_file  = "gen.csv"
+# trim      = 3
+# year      = 16
 
-dace_csv = CsvCreator(gen_file,perm_file,trim,year)
+# dace_csv = CsvCreator(gen_file,perm_file,trim,year)
 
-dace_csv.write_perm("CI4722","1110552","8")
-dace_csv.write_perm("CI5438","1110552","8")
+# dace_csv.write_perm("CI4722","1110552","8")
+# dace_csv.write_perm("CI5438","1110552","8")
 
-dace_csv.end_writer()
+# dace_csv.end_writer(0)
+# dace_csv.end_writer(1)
