@@ -566,7 +566,10 @@ class CsvWindow(HeaderBarWindow):
         self.spinbutton.set_value(year)
 
 
-        button = Gtk.Button(label="Generar archivos")
+        button1 = Gtk.Button(label="Generar archivo generales")
+        button1.type = 0
+        button2 = Gtk.Button(label="Generar archivo materias")
+        button2.type = 1
 
         gen_box.pack_start      (lab_gen      ,True,True,0)
         gen_box.pack_start      (self.gen_perm,True,True,0)
@@ -577,9 +580,11 @@ class CsvWindow(HeaderBarWindow):
         trim_box.pack_start     (self.spinbutton,True,True,0)
         main_box.pack_start     (all_perm_box ,True,True,0)
         main_box.pack_start     (trim_box     ,True,True,0)
-        main_box.pack_start     (button       ,True,True,0)
+        main_box.pack_start     (button1      ,True,True,0)
+        main_box.pack_start     (button2      ,True,True,0)
 
-        button.connect("clicked", self.on_write_press)
+        button1.connect("clicked", self.on_write_press)
+        button2.connect("clicked", self.on_write_press)
         # self.gen_perm.connect("focus-in-event", self.on_text_press)
         # self.all_perm.connect("focus-in-event", self.on_text_press)
 
@@ -611,28 +616,38 @@ class CsvWindow(HeaderBarWindow):
 
             for perm in aprobados:
                 t_perm = TipoPermiso(perm['tipo'])
-                if   t_perm == TipoPermiso.dos_generales:
-                    csv.write_gen(str(perm['fk_carnet']),general="E2")
-                    gen_count += 1 
-                elif t_perm == TipoPermiso.limite_creditos:
-                    csv.write_gen(str(perm['fk_carnet'])
-                                 ,limite_cred=str(perm['int_extra']))
-                    gen_count += 1 
-                elif t_perm == TipoPermiso.permiso_materia:
-                    csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                    mat_count += 1 
-                elif t_perm == TipoPermiso.pp:
-                    csv.write_gen(str(perm['fk_carnet']),pp=str(perm['int_extra']))
-                    gen_count += 1 
-                elif t_perm == TipoPermiso.general_extra:
-                    # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                    gen_count += 1 
-                elif t_perm == TipoPermiso.sin_requisitos:
-                    # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                    gen_count += 1 
+                if widget.type == 0:
+                    if   t_perm == TipoPermiso.dos_generales:
+                        csv.write_gen(str(perm['fk_carnet']),general="E2")
+                        gen_count += 1 
+                    elif t_perm == TipoPermiso.limite_creditos:
+                        csv.write_gen(str(perm['fk_carnet'])
+                                     ,limite_cred=str(perm['int_extra']))
+                        gen_count += 1 
+                    elif t_perm == TipoPermiso.pp:
+                        csv.write_gen(str(perm['fk_carnet']),pp=str(perm['int_extra']))
+                        gen_count += 1 
+                    elif t_perm == TipoPermiso.general_extra:
+                        # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        gen_count += 1 
+                    elif t_perm == TipoPermiso.xplan_gen_gen:
+                        # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        gen_count += 1                     
+                    elif t_perm == TipoPermiso.xplan_d_gen:
+                        # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        gen_count += 1 
+                else:
+                    if t_perm == TipoPermiso.permiso_materia:
+                        csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        mat_count += 1                     
+                    elif t_perm == TipoPermiso.sin_requisito:
+                        csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        mat_count += 1 
 
-
-            msgbox("Éxito se procesaron:\n{0} permiso(s) de generales.\n{1} permiso(s) de materias.".format(gen_count,mat_count))
+            if widget.type == 0:
+                msgbox("Éxito se procesaron:\n{0} permiso(s) de generales".format(gen_count))
+            else:
+                msgbox("Éxito se procesaron:\n{0} permiso(s) de materias.".format(mat_count))
 
     def on_text_press(self,widget,cosa):
         dialog = Gtk.FileChooserDialog("Please choose a file", self,
@@ -684,6 +699,8 @@ class MainWindow(Gtk.Window):
         button6 = Gtk.Button(label="Permisos pendientes")
         button7 = Gtk.Button(label="General  extra")
         button8 = Gtk.Button(label="Sin requisitos")
+        button9 = Gtk.Button(label="Extraplan gen + gen")
+        button10= Gtk.Button(label="Extraplan de general")
 
         button_csv = Gtk.Button(label="Generar archivos csv")
 
@@ -695,6 +712,8 @@ class MainWindow(Gtk.Window):
         button6.type = None
         button7.type = TipoPermiso.general_extra
         button8.type = TipoPermiso.sin_requisito
+        button9.type = TipoPermiso.xplan_gen_gen
+        button10.type = TipoPermiso.xplan_d_gen
 
 
         # First label
@@ -716,6 +735,8 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(button6  ,True,True,0)
         main_box.pack_start(button7  ,True,True,0)
         main_box.pack_start(button8  ,True,True,0)
+        main_box.pack_start(button9  ,True,True,0)
+        main_box.pack_start(button10  ,True,True,0)
         main_box.pack_start(button_csv  ,True,True,0)
 
 
@@ -727,6 +748,8 @@ class MainWindow(Gtk.Window):
         button6.connect("clicked", self.on_search_view_clicked)
         button7.connect("clicked", self.on_search_view_clicked)
         button8.connect("clicked", self.on_search_view_clicked)
+        button9.connect("clicked", self.on_search_view_clicked)
+        button10.connect("clicked", self.on_search_view_clicked)
         button_csv.connect("clicked", self.on_write_csv_clicked)
 
     def on_student_clicked(self, widget):

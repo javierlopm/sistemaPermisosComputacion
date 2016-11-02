@@ -122,8 +122,6 @@ class PermStore():
     def insert_perm(self,carnet,tipoPermiso,trim,anio,extra=None):
         c = self.conn.cursor()
         if tipoPermiso == TipoPermiso.limite_creditos:
-            if not extra:
-                print("limite de creditos none!!")
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.pp:
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
