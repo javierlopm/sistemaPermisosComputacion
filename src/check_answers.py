@@ -100,10 +100,10 @@ def parseCoursesId(c_string, k):
 
 class AnswersChecker():
     def __init__(self, username, password, modality):
-        try:
-            self.aranita  = StudentDownloader(username,password,"HTML")
-        except :
-            print("aranita startup failed")
+        #try:
+        #self.aranita  = StudentDownloader(username,password,"HTML")
+        #except :
+        #    print("aranita startup failed")
 
         self.modality = modality
         if self.modality == 1:
@@ -181,7 +181,7 @@ class AnswersChecker():
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
                             # Store user grades
         #try:
-        self.aranita.search_student(user_id)
+        #self.aranita.search_student(user_id)
         #except :
         #    print("Error trying to get student")
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
