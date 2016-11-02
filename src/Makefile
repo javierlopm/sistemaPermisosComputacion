@@ -1,12 +1,13 @@
-# target: cleanup
+target: buildform
 
-bd = build
+# bd = buildf
 
 buildform: 
-	pyinstaller -F main_app.py
+	pyinstaller -F main_app.spec
 	cp client_secret.json dist
 	cp -R Sql dist
 	cp -R /usr/local/selenium dist
+	cp -R graphs_manager dist
 	# tar -zcvf main_app.tar.gz dist/main_app
 
 cleanup: buildform
@@ -19,4 +20,3 @@ clean:
 	rm -f *\.csv
 	rm -rf build
 	rm -rf dist
-	rm -f *.spec
