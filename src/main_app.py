@@ -612,7 +612,8 @@ class CsvWindow(HeaderBarWindow):
             csv = CsvCreator(self.gen_perm.get_text()
                             ,self.all_perm.get_text()
                             ,self.trim_search.value
-                            ,anio)
+                            ,anio
+                            ,widget.type)
 
             for perm in aprobados:
                 t_perm = TipoPermiso(perm['tipo'])
@@ -642,7 +643,9 @@ class CsvWindow(HeaderBarWindow):
                         mat_count += 1                     
                     elif t_perm == TipoPermiso.sin_requisito:
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                        mat_count += 1 
+                        mat_count += 1
+
+            csv.end_writer(widget.type)
 
             if widget.type == 0:
                 msgbox("Éxito se procesaron:\n{0} permiso(s) de generales".format(gen_count))
