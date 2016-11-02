@@ -129,6 +129,10 @@ class PermStore():
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.sin_requisito:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
+        elif tipoPermiso == TipoPermiso.xplan_gen_gen:
+            c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
+        elif tipoPermiso == TipoPermiso.xplan_d_gen:
+            c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         else:
             c.execute(per_insert,(carnet,tipoPermiso.value,trim.value,anio))
 

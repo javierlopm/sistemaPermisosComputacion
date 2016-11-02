@@ -38,8 +38,19 @@ all_perms_dict = {
 }
 
 onlyg_perms_dict = {
+    5 : 'x',
+    6 : 'z',
     7 : 'g',
     8 : 'e'
+}
+
+nogen_perms_dict = {
+    5   : 'm',
+    6   : 'm',
+    7   : 'm',
+    8   : 'l',
+    9   : 'p',
+    10  : 'm'
 }
 
 trimestre_dict = {
@@ -68,8 +79,8 @@ def carnetToInt(carnet):
     spl = carnet.split('-')
     return int(spl[0])*100000 + int(spl[1])
 
-def parseCoursesId(c_string, k):
-    if k == 13:
+def parseCoursesId(c_string, pasantia):
+    if pasantia:
         if "larga" in c_string: return ["EP3420"]
         elif "corta" in c_string: return ["EP1420"]
         elif "Primera" in c_string: return ["EP1308"]
@@ -130,24 +141,6 @@ class AnswersChecker():
             print(str(i) + ".- " + str(line))
             if i > 0:
                 self.process_fn(line)
-                '''for k in range(5,15):
-                    if line[k] != "":
-                        if perms_dict[k] == 'm':
-                            for elem in parseCoursesId(line[k], k):
-                                perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), 0, elem)
-                        if perms_dict[k] == 'l' or perms_dict[k] == 'p':
-                            if perms_dict[k] == 'p': print(line[k])
-                            perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0, int(line[k]))
-                        if perms_dict[k] == 'e' or perms_dict[k] == 'g':
-                            perm_storer.insert_perm(carnet, TipoPermiso(perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
-                        if perms_dict[k] == 'r':
-                            print(parseCoursesId(line[k], k))
-                            for elem in parseCoursesId(line[k], k):
-                                perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
-'''
-                # Store user grades
-                #Create rows in csv with permissons
-                # dace_csv.write_perm(code,user_id,credit_num)
 
         print("\n\n")
 
@@ -160,6 +153,9 @@ class AnswersChecker():
             if line[k] != "":
                 if onlyg_perms_dict[k] == 'e' or onlyg_perms_dict[k] == 'g':
                     perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year)
+                if onlyg_perms_dict[k] == 'x' or onlyg_perms_dict[k] == 'z':
+                    for elem in parseCoursesId  (line[k], False):
+                        perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
         try:
             self.aranita.search_student(user_id)
         except :
@@ -173,9 +169,10 @@ class AnswersChecker():
         carnet = carnetToInt(user_id)
         perm_storer.insert_student(carnet, "", line[4], line[3], line[15])
         for k in range(5,15):
+            pasantias = k == 13
             if line[k] != "":
                 if all_perms_dict[k] == 'm':
-                    for elem in parseCoursesId(line[k], k):
+                    for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                 elif (all_perms_dict[k] == 'l') or (all_perms_dict[k] == 'p'):
                     if all_perms_dict[k] == 'p': print(line[k])
@@ -183,8 +180,7 @@ class AnswersChecker():
                 elif (all_perms_dict[k] == 'e') or (all_perms_dict[k] == 'g'):
                     perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year)
                 elif all_perms_dict[k] == 'r':
-                    print(parseCoursesId(line[k], k))
-                    for elem in parseCoursesId(line[k], k):
+                    for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                             # Store user grades
         try:
@@ -196,4 +192,27 @@ class AnswersChecker():
         process.communicate()
         
     def process_sin_generales(self, line):
-        print("Sin generales!")
+        user_id = line[1].split('@')[0]
+        if user_id == "coord-comp": return
+        carnet = carnetToInt(user_id)
+        perm_storer.insert_student(carnet, "", line[4], line[3], line[11])
+        for k in range(5,11):
+            pasantias = k == 10
+            if line[k] != "":
+                if nogen_perms_dict[k] == 'm':
+                    for elem in parseCoursesId(line[k], pasantias):
+                        perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
+                elif (nogen_perms_dict[k] == 'l') or (nogen_perms_dict[k] == 'p'):
+                    if nogen_perms_dict[k] == 'p': print(line[k])
+                    perm_storer.insert_perm(carnet, TipoPermiso(nogen_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, int(line[k]))
+                elif nogen_perms_dict[k] == 'r':
+                    for elem in parseCoursesId(line[k], pasantias):
+                        perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
+                            # Store user grades
+        try:
+            self.aranita.search_student(user_id)
+        except :
+            print("Error trying to get student")
+            
+        process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process.communicate()
