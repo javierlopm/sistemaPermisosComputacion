@@ -432,6 +432,12 @@ class InitWindow(Gtk.Window):
 class LoginWindow(Gtk.Window):
 
     def __init__(self):
+        self.mod_dict = {
+            "Todos" : 1,
+            "Solo permisos de generales" : 2,
+            "Permisos sin los de generales" : 3
+        }
+
         Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_default_size(320,200)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -502,8 +508,7 @@ class LoginWindow(Gtk.Window):
         if tree_iter != None and usr != "" and psw != "":
             model = self.mod_combo.get_model()
             mod = model[tree_iter][0]
-            print("Selected: mod=%s" % mod)
-            triggerCoordDownloader(usr,psw,mod)
+            triggerCoordDownloader(usr,psw,self.mod_dict[mod])
             msgbox("Permisos descargados.")
             self.destroy()
         else:
