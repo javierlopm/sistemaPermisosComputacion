@@ -9,6 +9,9 @@ class TipoPermiso(Enum):
     permiso_materia = 'm'
     general_extra   = 'e'
     sin_requisito   = 'r'
+    xplan_gen_gen   = 'x'
+    xplan_d_gen     = 'z'
+
 
 # Enums para trimestres
 class Trimestre(Enum):
@@ -122,7 +125,7 @@ class PermStore():
             if not extra:
                 print("limite de creditos none!!")
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
-        if tipoPermiso == TipoPermiso.pp:
+        elif tipoPermiso == TipoPermiso.pp:
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.permiso_materia:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
