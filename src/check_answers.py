@@ -100,8 +100,11 @@ def parseCoursesId(c_string, k):
 
 class AnswersChecker():
     def __init__(self, username, password, modality):
-        print("Us: "+ username +". Pass: "+password)
-        #self.aranita  = StudentDownloader(username,password,"HTML")
+        try:
+            self.aranita  = StudentDownloader(username,password,"HTML")
+        except :
+            print("aranita startup failed")
+
         self.modality = modality
         if self.modality == 1:
             self.process_fn = self.process_all
@@ -150,7 +153,10 @@ class AnswersChecker():
             if line[k] != "":
                 if onlyg_perms_dict[k] == 'e' or onlyg_perms_dict[k] == 'g':
                     perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
-        #self.aranita.search_student(user_id)
+        try:
+            self.aranita.search_student(user_id)
+        except :
+            print("Error trying to get student")
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
 
@@ -173,6 +179,11 @@ class AnswersChecker():
                     print(parseCoursesId(line[k], k))
                     for elem in parseCoursesId(line[k], k):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
+                            # Store user grades
+        #try:
+        self.aranita.search_student(user_id)
+        #except :
+        #    print("Error trying to get student")
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
         
