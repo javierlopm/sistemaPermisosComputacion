@@ -113,6 +113,13 @@ class AnswersChecker():
         elif self.modality == 3:
             self.process_fn = self.process_sin_generales
 
+        from datetime import datetime
+
+        self.year = datetime.now().year
+        if datetime.now().month >= 10:
+            self.year += 1
+
+
     def answers_downloader(self):
         print("Hojas de cálculo disponibles \n\n")
         sheet = gc.open_by_key(mod_dict[self.modality])
@@ -152,7 +159,7 @@ class AnswersChecker():
         for k in range(5,9):
             if line[k] != "":
                 if onlyg_perms_dict[k] == 'e' or onlyg_perms_dict[k] == 'g':
-                    perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
+                    perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year)
         try:
             self.aranita.search_student(user_id)
         except :
@@ -169,21 +176,21 @@ class AnswersChecker():
             if line[k] != "":
                 if all_perms_dict[k] == 'm':
                     for elem in parseCoursesId(line[k], k):
-                        perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), 0, elem)
-                if all_perms_dict[k] == 'l' or all_perms_dict[k] == 'p':
+                        perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
+                elif (all_perms_dict[k] == 'l') or (all_perms_dict[k] == 'p'):
                     if all_perms_dict[k] == 'p': print(line[k])
-                    perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0, int(line[k]))
-                if all_perms_dict[k] == 'e' or all_perms_dict[k] == 'g':
-                    perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), 0)
-                if all_perms_dict[k] == 'r':
+                    perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, int(line[k]))
+                elif (all_perms_dict[k] == 'e') or (all_perms_dict[k] == 'g'):
+                    perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year)
+                elif all_perms_dict[k] == 'r':
                     print(parseCoursesId(line[k], k))
                     for elem in parseCoursesId(line[k], k):
-                        perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), 0, elem)
+                        perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                             # Store user grades
-        #try:
-        self.aranita.search_student(user_id)
-        #except :
-        #    print("Error trying to get student")
+        try:
+            self.aranita.search_student(user_id)
+        except :
+           print("Error trying to get student")
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
         
