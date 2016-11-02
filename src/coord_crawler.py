@@ -74,9 +74,29 @@ class StudentDownloader():
             self.browser.find_element_by_tag_name("form").submit()
             self.browser.find_element_by_link_text("Informe Académico").click()
 
+            expediente = self.browser.page_source
+
             file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[3:] + ".html", "w",encoding="iso-8859-1")
-            file.write(self.browser.page_source)
+            file.write(expediente)
             file.close()
+
+            return self.get_student_data(expediente)
+
+    def get_student_data(self,str_exp):
+        from bs4 import BeautifulSoup
+
+        parser = BeautifulSoup(str_exp, 'html.parser')
+
+        nombres = parser.body.strong.text.split("\n")
+        last_table = parser.body.table.table.find_all("table")[-3]
+        
+        aprobadas  = int(last_table.find_all("td")[5].text)
+        indice     = float(parser.body.table.table.find_all("table")[-6].
+                                td.text.split("\n")[1].split(" ")[-1])
+        nombres    = nombres[2].split("\t")[-1] + nombres[3].split("\t")[-1]
+
+        return (nombres,indice,aprobadas)
+
 
     def close(self):
         self.browser.close()

@@ -148,7 +148,15 @@ class AnswersChecker():
         user_id = line[1].split('@')[0]
         if user_id == "coord-comp": return
         carnet = carnetToInt(user_id)
+
+        try:
+            (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
+        except :
+            nombre,indice,aprobadas = ("",0.0,0)
+            print("Error trying to get student")
+
         perm_storer.insert_student(carnet, "", line[4], line[3], line[9])
+        
         for k in range(5,9):
             if line[k] != "":
                 if onlyg_perms_dict[k] == 'e' or onlyg_perms_dict[k] == 'g':
@@ -156,10 +164,7 @@ class AnswersChecker():
                 if onlyg_perms_dict[k] == 'x' or onlyg_perms_dict[k] == 'z':
                     for elem in parseCoursesId  (line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-        try:
-            self.aranita.search_student(user_id)
-        except :
-            print("Error trying to get student")
+
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
 
@@ -167,6 +172,14 @@ class AnswersChecker():
         user_id = line[1].split('@')[0]
         if user_id == "coord-comp": return
         carnet = carnetToInt(user_id)
+
+
+        try:
+            (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
+        except :
+            nombre,indice,aprobadas = ("",0.0,0)
+            print("Error trying to get student")
+
         perm_storer.insert_student(carnet, "", line[4], line[3], line[15])
         for k in range(5,15):
             pasantias = k == 13
@@ -183,10 +196,6 @@ class AnswersChecker():
                     for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                             # Store user grades
-        try:
-            self.aranita.search_student(user_id)
-        except :
-            print("Error trying to get student")
         
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
@@ -195,6 +204,13 @@ class AnswersChecker():
         user_id = line[1].split('@')[0]
         if user_id == "coord-comp": return
         carnet = carnetToInt(user_id)
+
+        try:
+            (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
+        except :
+            nombre,indice,aprobadas = ("",0.0,0)
+            print("Error trying to get student")
+
         perm_storer.insert_student(carnet, "", line[4], line[3], line[11])
         for k in range(5,11):
             pasantias = k == 10
@@ -209,10 +225,6 @@ class AnswersChecker():
                     for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                             # Store user grades
-        try:
-            self.aranita.search_student(user_id)
-        except :
-            print("Error trying to get student")
-            
+
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
