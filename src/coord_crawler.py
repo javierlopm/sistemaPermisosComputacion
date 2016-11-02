@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 import pdb
 import codecs
 import re
+import os
 
 # Valid students id formats
 pattern    = []
@@ -32,7 +33,10 @@ class StudentDownloader():
         their academic info
     """
     def __init__(self,user,password,save_dir):
-        self.browser      = webdriver.Firefox()
+        chromedriver = "./chromedriver"
+        os.environ["webdriver.chrome.driver"] = chromedriver
+        driver = webdriver.Chrome(chromedriver)
+        self.browser      = driver #webdriver.Firefox()
         self.first_search = True
         self.save_dir     = save_dir
 
@@ -73,4 +77,7 @@ class StudentDownloader():
             file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[3:] + ".html", "w",encoding="iso-8859-1")
             file.write(self.browser.page_source)
             file.close()
+
+    def close(self):
+        self.browser.close()
 

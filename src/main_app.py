@@ -23,6 +23,7 @@ class Col(Enum):
 def triggerCoordDownloader(username, password, modality):
     ans_checker = AnswersChecker(username, password, modality)
     ans_checker.answers_downloader()
+    ans_checker.aranita.close()
 
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
@@ -133,8 +134,8 @@ class StudentWindow(Gtk.Window):
 
 
         # Carga de grafo
-        str_image = 'images/'+show_carnet(std_data['carnet'])+".png"
-        str_image = str_image if os.path.isfile(str_image) else "images/noFile.png"
+        str_image = 'graphs_manager/grafosPNG/'+show_carnet(std_data['carnet'])+".png"
+        str_image = str_image if os.path.isfile(str_image) else "graphs_manager/grafosPNG/noFile.png"
 
         img = Gtk.Image()
         pixbuf    = GdkPixbuf.Pixbuf.new_from_file(str_image)
