@@ -9,6 +9,7 @@ class TipoPermiso(Enum):
     permiso_materia = 'm'
     general_extra   = 'e'
     sin_requisito   = 'r'
+    extraplan       = 't'
     xplan_gen_gen   = 'x'
     xplan_d_gen     = 'z'
 
