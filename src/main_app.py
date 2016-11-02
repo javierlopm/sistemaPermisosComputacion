@@ -23,6 +23,7 @@ class Col(Enum):
 def triggerCoordDownloader(username, password, modality):
     ans_checker = AnswersChecker(username, password, modality)
     ans_checker.answers_downloader()
+    ans_checker.aranita.close()
 
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
