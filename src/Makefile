@@ -1,18 +1,23 @@
-target: cleanup
+target: buildform
 
-bd = build
+# bd = buildf
 
 buildform: 
-	pyinstaller check_answers.py
-	cp client_secret.json dist/check_answers
-	cp -R /usr/local/selenium dist/check_answers
-	tar -zcvf check_answers.tar.gz dist/check_answers
-
-cleanup: buildform
+	pyinstaller -F main_app.py
+	cp client_secret.json dist
+	cp -R Sql dist
+	cp -R /usr/local/selenium dist
+	cp  chromedriver dist
+	cp -R graphs_manager dist
+	mv dist main_app 
+	tar -zcvf main_app.tar.gz main_app
 	rm -rf build
 	rm -rf dist
-	rm -f *.spec
+	rm -R main_app
 
 clean:
-	rm -f coord_downloader.tar.gz check_answers.tar.gz
+	rm -f coord_downloader.tar.gz main_app.tar.gz
 	rm -f *\.csv
+	rm -rf build
+	rm -rf dist
+	rm -R main_app

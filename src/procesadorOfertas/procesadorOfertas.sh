@@ -21,6 +21,9 @@ function usoAyuda() {
 }
 reanalisis=0
 
+<<<<<<< HEAD
+reanalisis=0
+
 function pasajeParametros() {
     while getopts ":f:d:m:e:hr" opt; do
       case $opt in

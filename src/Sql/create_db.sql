@@ -5,7 +5,10 @@ CREATE TABLE IF NOT EXISTS estudiante (
     carnet     INTEGER PRIMARY KEY NOT NULL,
     nombre     TEXT                NOT NULL,
     telefono   TEXT                NOT NULL,
-    correo     TEXT                NOT NULL
+    correo     TEXT                NOT NULL,
+    indice     REAL                NOT NULL,
+    aprobados  INTEGER             NOT NULL,
+    comentario TEXT                
 );
 
 /*

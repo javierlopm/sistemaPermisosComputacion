@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 import pdb
 import codecs
 import re
+import os
 
 # Valid students id formats
 pattern    = []
@@ -25,14 +26,17 @@ def format_id(student_id):
 
 def show_carnet(int_carnet):
     std_str = str(int_carnet)
-    return std_str[0:2] + "-" + std_str[3:8]
+    return std_str[0:2] + "-" + std_str[2:8]
 
 class StudentDownloader():
     """Class for web crawler that search for students id and downloads
         their academic info
     """
     def __init__(self,user,password,save_dir):
-        self.browser      = webdriver.Firefox()
+        chromedriver = "./chromedriver"
+        os.environ["webdriver.chrome.driver"] = chromedriver
+        driver = webdriver.Chrome(chromedriver)
+        self.browser      = driver #webdriver.Firefox()
         self.first_search = True
         self.save_dir     = save_dir
 
@@ -70,7 +74,30 @@ class StudentDownloader():
             self.browser.find_element_by_tag_name("form").submit()
             self.browser.find_element_by_link_text("Informe Académico").click()
 
+            expediente = self.browser.page_source
+
             file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[3:] + ".html", "w",encoding="iso-8859-1")
-            file.write(self.browser.page_source)
+            file.write(expediente)
             file.close()
+
+            return self.get_student_data(expediente)
+
+    def get_student_data(self,str_exp):
+        from bs4 import BeautifulSoup
+
+        parser = BeautifulSoup(str_exp, 'html.parser')
+
+        nombres = parser.body.strong.text.split("\n")
+        last_table = parser.body.table.table.find_all("table")[-3]
+        
+        aprobadas  = int(last_table.find_all("td")[5].text)
+        indice     = float(parser.body.table.table.find_all("table")[-6].
+                                td.text.split("\n")[1].split(" ")[-1])
+        nombres    = nombres[2].split("\t")[-1] + nombres[3].split("\t")[-1]
+
+        return (nombres,indice,aprobadas)
+
+
+    def close(self):
+        self.browser.close()
 

@@ -79,14 +79,14 @@ class ProcesarDOC2_XML (Contexto):
 
 class ProcesarDOC3_XML (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre Doc2.xml """
+        """ Prueba de procesamiento sobre Doc3.xml """
         #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
         procesarDOC(self.carpetaBase + "doc3.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento DOC. Archivo doc3.xml")
 
 class ProcesarDOC4_XML (Contexto):
     def runTest (self):
-        """ Prueba de procesamiento sobre Doc2.xml """
+        """ Prueba de procesamiento sobre Doc4.xml """
         #procesarDOC(caminoArchivoEntrada,listaMaterias,fdSalida):
         procesarDOC(self.carpetaBase + "doc4.xml",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento DOC. Archivo doc4.xml")
