@@ -32,6 +32,9 @@ def is_pendiente(row):
 def get_all_names(a_class):
     return [e.name for e in a_class]
 
+def get_all_tuples(a_class):
+    return [(e.name,e.value) for e in a_class]
+
 # Strings auxiliares para insertar en la base de datos
 std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo,comentario) VALUES (?,?,?,?,?)"
 per_insert = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio)               VALUES (?,?,?,?)"
