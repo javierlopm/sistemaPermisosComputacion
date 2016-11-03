@@ -311,7 +311,7 @@ class SearchWindow(HeaderBarWindow):
 
         main_box.pack_start(scrollable,True,True,0)
         # Obtener premisos
-        if perm_type == TipoPermiso.permiso_materia:
+        if perm_type == TipoPermiso.permiso_materia and code:
             self.std_perms = db.get_course_perms(code)
         elif perm_type == None:
             self.std_perms = self.old_window.pending
@@ -818,6 +818,7 @@ class MainWindow(Gtk.Window):
     def on_combo_search(self,widget):
         mat = None
         self.hide()
+        print(self.active_type)
         new_win = SearchWindow(self,self.active_type,mat)
         new_win.show_all()
 
