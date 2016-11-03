@@ -194,7 +194,7 @@ class WithPermTable():
             typ = TipoPermiso(elem['tipo'])
             extra_field = ""
 
-            if  (typ == TipoPermiso.permiso_materia) or (typ == TipoPermiso.sin_requisito):
+            if  (typ == TipoPermiso.permiso_materia) or (typ == TipoPermiso.sin_requisito) or (typ == TipoPermiso.extraplan) or (typ == TipoPermiso.xplan_gen_gen) or (typ == TipoPermiso.xplan_d_gen):
                 extra_field = elem['string_extra']
             elif (typ == TipoPermiso.limite_creditos) or (typ == TipoPermiso.pp):
                 extra_field = str(elem['int_extra'])

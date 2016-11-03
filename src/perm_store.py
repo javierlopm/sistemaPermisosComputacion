@@ -128,6 +128,8 @@ class PermStore():
             c.execute(per_int,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.permiso_materia:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
+        elif tipoPermiso == TipoPermiso.extraplan:
+            c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.sin_requisito:
             c.execute(per_str,(carnet,tipoPermiso.value,trim.value,anio,extra))
         elif tipoPermiso == TipoPermiso.xplan_gen_gen:

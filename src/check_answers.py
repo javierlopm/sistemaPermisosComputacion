@@ -26,15 +26,16 @@ SECRETS_FILE = "client_secret.json"
 
 all_perms_dict = {
     5   : 'm',
-    6   : 'm',
-    7   : 'm',
-    8   : 'm',
+    6   : 't',
+    7   : 'z',
+    8   : 't',
     13  : 'm',
     14  : 'r',
     9   : 'g',
     11  : 'l',
     12  : 'p',
-    10  : 'e'
+    10  : 'e',
+    16  : 'x'
 }
 
 onlyg_perms_dict = {
@@ -46,8 +47,8 @@ onlyg_perms_dict = {
 
 nogen_perms_dict = {
     5   : 'm',
-    6   : 'm',
-    7   : 'm',
+    6   : 't',
+    7   : 't',
     8   : 'l',
     9   : 'p',
     10  : 'm'
@@ -181,12 +182,12 @@ class AnswersChecker():
             print("Error trying to get student")
 
         perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[15])
-        for k in range(5,15):
+        for k in range(5,17):
             pasantias = k == 13
-            if line[k] != "":
-                if all_perms_dict[k] == 'm':
+            if line[k] != "" and k != 15:
+                if all_perms_dict[k] == 'm' or all_perms_dict[k] == 't':
                     for elem in parseCoursesId(line[k], pasantias):
-                        perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
+                        perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                 elif (all_perms_dict[k] == 'l') or (all_perms_dict[k] == 'p'):
                     if all_perms_dict[k] == 'p': print(line[k])
                     perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, int(line[k]))
@@ -195,7 +196,9 @@ class AnswersChecker():
                 elif all_perms_dict[k] == 'r':
                     for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-                            # Store user grades
+                elif all_perms_dict[k] == 'x' or all_perms_dict[k] == 'z':
+                    for elem in parseCoursesId(line[k], False):
+                        perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
         
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
@@ -215,9 +218,9 @@ class AnswersChecker():
         for k in range(5,11):
             pasantias = k == 10
             if line[k] != "":
-                if nogen_perms_dict[k] == 'm':
+                if nogen_perms_dict[k] == 'm' or nogen_perms_dict[k] == 't':
                     for elem in parseCoursesId(line[k], pasantias):
-                        perm_storer.insert_perm(carnet, TipoPermiso('m'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
+                        perm_storer.insert_perm(carnet, TipoPermiso(nogen_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                 elif (nogen_perms_dict[k] == 'l') or (nogen_perms_dict[k] == 'p'):
                     if nogen_perms_dict[k] == 'p': print(line[k])
                     perm_storer.insert_perm(carnet, TipoPermiso(nogen_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, int(line[k]))
