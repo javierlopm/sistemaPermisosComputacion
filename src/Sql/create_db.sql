@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS estudiante (
     nombre     TEXT                NOT NULL,
     telefono   TEXT                NOT NULL,
     correo     TEXT                NOT NULL,
-    indice     INTEGER             NOT NULL,
-    aprobados  REAL                NOT NULL,
+    indice     REAL                NOT NULL,
+    aprobados  INTEGER             NOT NULL,
     comentario TEXT                
 );
 

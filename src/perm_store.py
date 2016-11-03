@@ -33,7 +33,7 @@ def get_all_names(a_class):
     return [e.name for e in a_class]
 
 # Strings auxiliares para insertar en la base de datos
-std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo,comentario) VALUES (?,?,?,?,?)"
+std_insert = "INSERT OR REPLACE INTO estudiante(carnet,nombre,telefono,correo,indice,aprobados,comentario) VALUES (?,?,?,?,?,?,?)"
 per_insert = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio)               VALUES (?,?,?,?)"
 per_int = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio,int_extra)      VALUES (?,?,?,?,?)"
 per_str = "INSERT INTO permiso(fk_carnet,tipo,trimestre,anio,string_extra)   VALUES (?,?,?,?,?)"
@@ -113,9 +113,9 @@ class PermStore():
 
         self.conn = conn 
     
-    def insert_student(self,carnet,nombre,telefono,correo,comentario):
+    def insert_student(self,carnet,nombre,telefono,correo,indice,aprobados,comentario):
         c = self.conn.cursor()
-        c.execute(std_insert,(carnet,nombre,telefono,correo,comentario))
+        c.execute(std_insert,(carnet,nombre,telefono,correo,indice,aprobados,comentario))
 
         self.conn.commit()
         c.close()
