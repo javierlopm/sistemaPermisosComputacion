@@ -88,7 +88,7 @@ class OfertasDace( OfertasGeneral ):
             #print(searchMat)
             self.listaMaterias.append((searchMat.group(),
                        Decimal(posCaracteres[1]),Decimal(posCaracteres[3])))
-        elif re.search(self.patronBloque, txt, re.I):
+        elif re.search(self.patronBloque1, txt, re.I):
             #print(re.search(self.patronBloque, txt, re.I))
             self.listaBloque.append((txt,Decimal(posCaracteres[1]),
                                      Decimal(posCaracteres[3])))

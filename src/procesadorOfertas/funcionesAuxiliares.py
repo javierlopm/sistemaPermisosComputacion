@@ -5,8 +5,14 @@ corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
 # Función auxiliar para el ordenamiento de los horarios
 def ordenarDias(txt):
    # Accede a una variable no local
-   #corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5} # CORREGIR EL ALCANCE
    return corresDiaDistancia[txt[1]]
+
+# Función auxiliar para verificar resultados por pantalla
+def imprimirResultados(mensaje,listaOfertas):
+    print(mensaje + ": ")
+    for fila in listaOfertas:
+        print(fila)
+    print('\n')
 
 # Funcion auxiliar para dividir cadenas de caracteres por un delimitador
 def dividirStr(txt, delims = " "):

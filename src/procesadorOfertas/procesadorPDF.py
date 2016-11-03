@@ -71,7 +71,10 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                     self.existeCarrera = True
 
                 #print("Celda", self.celda)
-                self.filtrarTexto(self.celda.strip())
+                if self.modoHorario:
+                    self.filtrarTextoEstiloComputo(self.celda.strip())
+                else:
+                    self.filtrarTexto(self.celda.strip())
 
             self.celda = ""
             self.posCaracteres = []
@@ -106,62 +109,64 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         # if len(self.cabeceraDias) == 5:
         #     print("Cabecera Lista: ", self.cabeceraDias)
 
+    def filtrarTextoEstiloComputo(self,txt):
+        searchMat = re.search(self.patronMateria, txt, re.I)
+        searchBloq2 = re.search(self.patronBloque2, txt, re.I)
+        searchHorario = re.search(self.patronHorario, txt, re.I)
+        searchHorario2 = re.search(self.patronHorario2, txt, re.I)
+        searchSeccion = re.search(self.patronSeccion, txt, re.I)
+
+        if searchMat:
+            self.fila.append(normalizarMateria(searchMat.group()))
+            #print(searchHorario2)
+            #print(searchBloq2)
+        elif searchBloq2:
+            #print(dividirStr(searchBloq2.group())[1])
+            self.fila.append(dividirStr(searchBloq2.group())[1])
+            self.bloque = True
+        elif not self.bloque and searchSeccion:
+            #print(searchSeccion)
+            self.fila.append(self.corresSecBloq[
+                             dividirStr(searchSeccion.group(),' ()')[1]])
+            self.bloque = False
+
+        elif searchHorario or searchHorario2:
+            #print(self.normalizarHorario(dividirStr(txt)))
+            for hor in self.normalizarHorario(
+                              dividirStr(txt)):
+                #print("hor", hor)
+                txt = dividirStr(hor)
+                dias = dividirStr(txt[0],"-")
+                # Garantizar que solo los digitos de las horas
+                txt =  txt[1][0:4]
+                #print(dias, txt)
+                if len(dias) > 1:
+                    #print((txt,dias[0][0:2].upper()), "   ", (txt,dias[1][0:2].upper()))
+                    self.fila.append((txt,dias[0][0:2].upper()))
+                    self.fila.append((txt,dias[1][0:2].upper()))
+                else:
+                    #print((txt,dias[0][0:2].upper()))
+                    self.fila.append((txt,dias[0][0:2].upper()))
+
     def filtrarTexto(self,txt):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
             self.fila.append(normalizarMateria(searchMat.group()))
 
-        elif self.modoHorario:
-            searchBloq2 = re.search(self.patronBloque2, txt, re.I)
-            searchHorario = re.search(self.patronHorario, txt, re.I)
-            searchHorario2 = re.search(self.patronHorario2, txt, re.I)
-            searchSeccion = re.search(self.patronSeccion, txt, re.I)
-            #print(searchHorario2)
-            #print(searchBloq2)
-            if searchBloq2:
-                #print(dividirStr(searchBloq2.group())[1])
-                self.fila.append(dividirStr(searchBloq2.group())[1])
-                self.bloque = True
-            elif not self.bloque and searchSeccion:
-                print(searchSeccion)
-                self.fila.append(self.corresSecBloq[
-                                 dividirStr(searchSeccion.group(),' ()')[1]])
-                self.bloque = False
-
-
-            elif searchHorario or searchHorario2:
-                #print(self.normalizarHorario(dividirStr(txt)))
-                for hor in self.normalizarHorario(
-                                  dividirStr(txt)):
-                    #print("hor", hor)
-                    txt = dividirStr(hor)
-                    dias = dividirStr(txt[0],"-")
-                    # Garantizar que solo los digitos de las horas
-                    txt =  txt[1][0:4]
-                    #print(dias, txt)
-                    if len(dias) > 1:
-                        #print((txt,dias[0][0:2].upper()), "   ", (txt,dias[1][0:2].upper()))
-                        self.fila.append((txt,dias[0][0:2].upper()))
-                        self.fila.append((txt,dias[1][0:2].upper()))
-                    else:
-                        #print((txt,dias[0][0:2].upper()))
-                        self.fila.append((txt,dias[0][0:2].upper()))
-
-        else:
-            if re.search(self.patronBloque1, txt, re.I):
+        elif re.search(self.patronBloque1, txt, re.I):
                 self.fila.append(txt)
 
-            elif re.search(self.patronHoras, txt):
-                #print(re.search(self.patronHoras, txt))
-                #print(self.fila[0])
-                for (dia,limInf,limSup) in self.cabeceraDias:
-                    # print(limInf, "posIniTxt <=", dia, "posIniDia ", Decimal(self.posCaracteres[0][0]), \
-                    #       "posFinTxt", Decimal(self.posCaracteres[-1][0]),"<= posFinDia", limSup )
-                    if (limInf - 3) <= Decimal(self.posCaracteres[0][0]) \
-                        and Decimal(self.posCaracteres[-1][1]) <= (limSup + 3):
-                        self.fila.append((txt,dia))
-                        #print((txt,dia))
-                        break
+        elif re.search(self.patronHoras, txt):
+            #print(re.search(self.patronHoras, txt))
+            #print(self.fila[0])
+            for (dia,limInf,limSup) in self.cabeceraDias:
+                # print(limInf, "posIniTxt <=", dia, "posIniDia ", Decimal(self.posCaracteres[0][0]), \
+                #       "posFinTxt", Decimal(self.posCaracteres[-1][0]),"<= posFinDia", limSup )
+                if (limInf - 3) <= Decimal(self.posCaracteres[0][0]) \
+                    and Decimal(self.posCaracteres[-1][1]) <= (limSup + 3):
+                    self.fila.append((txt,dia))
+                    #print((txt,dia))
+                    break
 
         # elif self.existeCarrera and re.search(self.patronCarrera, txt):
         #     #print(self.fila)
@@ -171,11 +176,16 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def subdividirFilas(self):
         nuevaFila = []
         tuplas = []
+        materiaValida = False
         for item in self.fila:
+            #print(item)
             if not isinstance(item,tuple) and \
                 re.search(self.patronMateria, item, re.I):
+                #print(nuevaFila)
+                if nuevaFila and nuevaFila[0] in self.listaMaterias:
+                    tuplas.append(nuevaFila)
+                    #print("nuevaFila",nuevaFila)
                 nuevaFila = []
-                tuplas.append(nuevaFila)
                 nuevaFila.append(item)
             else:
                 nuevaFila.append(item)
@@ -233,7 +243,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
             parser.parse("textPDFXML1.xml")
 
     f.close()
-    #remove('textPDFXML1.xml')
+    remove('textPDFXML1.xml')
 
     # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
@@ -251,7 +261,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
                     acum = ",".join(fil[:2])
                     horariosOrdenados = sorted(fil[2:], key=ordenarDias)
                 acum += componerHorarioCSV(horariosOrdenados)
-            else:
+            elif len(fil) == 1:
                 acum = fil[0] + ',A,,,,,'
 
             #verificarFila(acum)

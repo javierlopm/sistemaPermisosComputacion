@@ -3,8 +3,9 @@ from xlrd import open_workbook,cellname
 from os.path import isfile
 from os import remove
 import sys
-import getopt
 import re
+from funcionesAuxiliares import obtArgs, cargarMaterias, \
+                                normalizarMateria, usoAyuda
 
 
 patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
@@ -41,13 +42,6 @@ def analizarCabecera(cabecera):
 
 def filtrarBloque(txt):
     return len(txt) == 1 and txt[0].isalpha()
-
-def normalizarMateria(txt):
-    mat = ""
-    for char in txt:
-        if char != ' ' and char != '-' and char != '\n':
-            mat += char
-    return mat
 
 def verificarCerrar(txt):
     return re.search("cerrar", txt, re.I)
@@ -115,55 +109,10 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                 #print(nuevaEntrada)
                 fdSalida.append(nuevaEntrada.split(','))
 
-def usoAyuda():
-    print("""Uso: prog -f nombre_archivo_salida -m archivo_materias_requeridas
-                    archivo1.pdf archivo2.xls ... archivoN
-    prog [-h, --help] """)
-
-def obtArgs(entrada):
-    nomArchivoSalida = ""
-    nomArchivoMaterias = ""
-    try:
-        opts, args = getopt.getopt(entrada, "f:m:h", ["help"])
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(err) # will print something like "option -a not recognized"
-        usoAyuda()
-        sys.exit(2)
-
-    for o, a in opts:
-        if o == "-f":
-            nomArchivoSalida = a
-        elif o == "-m":
-            nomArchivoMaterias = a
-        elif o in ("-h", "--help"):
-            usoAyuda()
-            sys.exit()
-        else:
-            assert False, "unhandled option"
-
-    if not nomArchivoMaterias:
-      print("Se requiere el parametro -m")
-      sys.exit(2)
-
-    return (nomArchivoSalida, nomArchivoMaterias, args)
-
 if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
-    listaMaterias = []
-    try:
-        f = open(nomArchivoMaterias, 'r')
-    except FileNotFoundError:
-        print("El archivo no encontrado", nomArchivoDace)
-        sys.exit(2)
-    except IsADirectoryError:
-        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
-        sys.exit(2)
-    else:
-      for materia in f:
-        if (not materia.isspace()) and materia[0] != '#':
-            listaMaterias.append(materia.rstrip(' \t\n\r'))
+    listaMaterias = cargarMaterias(nomArchivoMaterias)
 
     fdSalida = []
     sheet0 = open_workbook(args[0]).sheet_by_index(0)

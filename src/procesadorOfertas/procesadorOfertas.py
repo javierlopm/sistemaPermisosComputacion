@@ -14,17 +14,13 @@ from procesadorXLS import procesarXLS
 from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
+from funcionesAuxiliares import imprimirResultados
 import sys
 import getopt
 from os.path import splitext, isfile, join
 from os import remove, listdir
 
-# Función auxiliar para verificar resultados por pantalla
-def imprimirResultados(mensaje,listaOfertas):
-    print(mensaje + ": ")
-    for fila in listaOfertas:
-        print(fila)
-    print('\n')
+
 
 def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
                   opcionDir, nomArchivoDace):
@@ -42,7 +38,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
             print("\t", camino)
 
         if  nomArchivoDace == archivo:
-            if  ext == ".fodt" or ext == "xml":
+            if  ext == ".fodt" or ext == ".xml":
                 procesarDOC(camino,listaMaterias ,listaDACE)
             elif ext == ".pdf":
                 procesarPDF(camino, listaMaterias, listaDACE)
@@ -50,7 +46,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
                 procesarXLS(camino, False, listaMaterias, listaDACE)
             continue
 
-        if  ext == ".fodt" or ext == "xml":
+        if  ext == ".fodt" or ext == ".xml":
             procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
             procesarPDF(camino,listaMaterias, listaOfertas)
