@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from easygui import *
+from easygui import msgbox
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
@@ -70,11 +70,13 @@ mod_dict = {
 graphs_command = "cd graphs_manager && java createPngGraph "
 
 # Authenticate using the signed key
-credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
+try:
+    credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
+    gc = gspread.authorize(credentials)
+    perm_storer = PermStore()
+except :
+    msgbox("Error, no hay internet")
 
-gc = gspread.authorize(credentials)
-
-perm_storer = PermStore()
 
 def carnetToInt(carnet):
     spl = carnet.split('-')
@@ -143,6 +145,11 @@ class AnswersChecker():
             if(line[0] == ""): continue
             if i > 0:
                 self.process_fn(line)
+
+        try:
+            self.aranita.close()
+        except :
+            print("aranita startup failed")
 
         print("\n\n")
 
