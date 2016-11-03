@@ -140,6 +140,7 @@ class AnswersChecker():
 
         for i,line in enumerate(sheet.get_worksheet(0).get_all_values()):
             print(str(i) + ".- " + str(line))
+            if(line[0] == ""): continue
             if i > 0:
                 self.process_fn(line)
 
