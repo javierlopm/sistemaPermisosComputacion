@@ -24,7 +24,7 @@ class Col(Enum):
 def triggerCoordDownloader(username, password, modality):
     ans_checker = AnswersChecker(username, password, modality)
     ans_checker.answers_downloader()
-    ans_checker.aranita.close()
+    # ans_checker.aranita.close()
 
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
@@ -299,13 +299,19 @@ class SearchWindow(HeaderBarWindow):
         main_box.pack_start(self.fst_box,True,True,0)
 
         # scrollable view para permisos
-        scrollable = Gtk.ScrolledWindow()
+        scrollable = Gtk.ScrolledWindow(vexpand=True)
         scrollable.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        # ad = scrollable.get_hadjustment()
+        # print(ad)
+        # print(ad.get_page_size())
+        # ad.set_page_size(30)
+
+        # scrollable.set_hadjustment(ad)
+
         main_box.pack_start(scrollable,True,True,0)
-
-
         # Obtener premisos
-        if perm_type == TipoPermiso.permiso_materia:
+        if perm_type == TipoPermiso.permiso_materia and code:
             self.std_perms = db.get_course_perms(code)
         elif perm_type == None:
             self.std_perms = self.old_window.pending
@@ -316,6 +322,7 @@ class SearchWindow(HeaderBarWindow):
 
         treeview = self.poblate_table()
         scrollable.add(treeview)
+
 
         self.update_missing_perms(self.count)
 
@@ -706,7 +713,19 @@ class MainWindow(Gtk.Window):
         button9 = Gtk.Button(label="Extraplan gen + gen")
         button10= Gtk.Button(label="Extraplan de general")
 
+
         button_csv = Gtk.Button(label="Generar archivos csv")
+
+        search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        buttonS    = Gtk.Button(label="Buscar tipo")
+
+        typ_store = Gtk.ListStore(str,str)
+        [typ_store.append(e) for e in get_all_tuples(TipoPermiso)]
+
+        type_combo = Gtk.ComboBox.new_with_model_and_entry(typ_store)
+        type_combo.set_entry_text_column(0)
+        self.combo = type_combo
+
 
 
         button2.type = TipoPermiso.permiso_materia
@@ -729,19 +748,25 @@ class MainWindow(Gtk.Window):
         std_box.pack_start(self.student_entry,True,True,0)
         class_box.pack_start(button2         ,True,True,0)
         class_box.pack_start(self.class_entry,True,True,0)
+        search_box.pack_start(buttonS,True,True,0)
+        search_box.pack_start(type_combo,True,True,0)
+
 
         # All buttons
         main_box.pack_start(std_box  ,True,True,0)
         main_box.pack_start(class_box,True,True,0)
-        main_box.pack_start(button3  ,True,True,0)
-        main_box.pack_start(button4  ,True,True,0)
-        main_box.pack_start(button5  ,True,True,0)
+        # main_box.pack_start(button3  ,True,True,0)
+        # main_box.pack_start(button4  ,True,True,0)
+        # main_box.pack_start(button5  ,True,True,0)
+        # main_box.pack_start(button7  ,True,True,0)
+        # main_box.pack_start(button8  ,True,True,0)
+        # main_box.pack_start(button9  ,True,True,0)
+        # main_box.pack_start(button10  ,True,True,0)
+        main_box.pack_start(search_box,True,True,0)
         main_box.pack_start(button6  ,True,True,0)
-        main_box.pack_start(button7  ,True,True,0)
-        main_box.pack_start(button8  ,True,True,0)
-        main_box.pack_start(button9  ,True,True,0)
-        main_box.pack_start(button10  ,True,True,0)
         main_box.pack_start(button_csv  ,True,True,0)
+
+
 
 
         button1.connect("clicked", self.on_student_clicked)
@@ -755,6 +780,15 @@ class MainWindow(Gtk.Window):
         button9.connect("clicked", self.on_search_view_clicked)
         button10.connect("clicked", self.on_search_view_clicked)
         button_csv.connect("clicked", self.on_write_csv_clicked)
+        type_combo.connect("changed", self.on_combo_changed)
+        buttonS.connect("clicked",    self.on_combo_search)
+
+    def on_combo_changed(self, combo):
+        tree_iter = combo.get_active_iter()
+        if tree_iter != None:
+            model = combo.get_model()
+            mod   = model[tree_iter][1]
+            self.active_type = TipoPermiso(mod)
 
     def on_student_clicked(self, widget):
         formated_carnet = format_id(self.student_entry.get_text())
@@ -780,6 +814,13 @@ class MainWindow(Gtk.Window):
             response = new_win.show_all()
         else:
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
+    
+    def on_combo_search(self,widget):
+        mat = None
+        self.hide()
+        print(self.active_type)
+        new_win = SearchWindow(self,self.active_type,mat)
+        new_win.show_all()
 
     def on_search_view_clicked(self,widget):
         mat = self.class_entry.get_text()
