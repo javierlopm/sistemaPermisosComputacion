@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #!/usr/bin/python3.5
 #!/usr/bin/python3.4
 
@@ -21,12 +20,11 @@
 import fitz # Usando MuPDf 1.9.2
 import xml.sax
 import re
+import sys
 from decimal import Decimal
 from os.path import isfile
 from os import remove
 from procesadorPDF import OfertasGeneral, obtArgs, usoAyuda, componerHorarioCSV
-import sys
-import getopt
 
 class OfertasDace( OfertasGeneral ):
     def __init__(self):
@@ -193,9 +191,10 @@ if ( __name__ == "__main__"):
             f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
         except IsADirectoryError:
             print(nomArchivoSalida ,"es un directorio. Eliga un nombre distinto")
-            nomArchivoSalida = raw_input("Introduzca el nombre del archivo de salida: ")
+            sys.exit(2)
         except OSError as ose:
             print("Error de E/S: ", ose)
+            sys.exit(2)
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
