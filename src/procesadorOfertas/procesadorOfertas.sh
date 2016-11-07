@@ -1,4 +1,4 @@
-#!/bin/bash
+# !/bin/bash
 # Nombre: Daniel Leones
 # Carné: 09-10977
 # Fecha: 26/10/2016
@@ -19,9 +19,7 @@ function usoAyuda() {
     echo "- Ayuda: procesadorOfertas -h"
     return
 }
-reanalisis=0
 
-<<<<<<< HEAD
 reanalisis=0
 
 function pasajeParametros() {
@@ -71,15 +69,15 @@ function pasajeParametros() {
         echo "ERROR: suministre los argumentos apropiados."
         exit 1
     fi
-    
+
     # Acceder a los operandos
     shift $((OPTIND-1))
     if [[ $reanalisis -eq 1 ]]; then
         if [[ !( -a "$1")]]; then
             if [[ -z "$1" ]]; then
-                echo "ERROR: Especifique el archivo de ofertas"                
+                echo "ERROR: Especifique el archivo de ofertas"
             else
-                echo "ERROR: Verifica que $1 exista"                
+                echo "ERROR: Verifica que $1 exista"
             fi
             exit 1
         elif [[ !( -a "$nombreArchDace" ) ]]; then
