@@ -76,7 +76,7 @@ class StudentDownloader():
 
             expediente = self.browser.page_source
 
-            file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[3:] + ".html", "w",encoding="iso-8859-1")
+            file = codecs.open( "./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[2:] + ".html", "w",encoding="iso-8859-1")
             file.write(expediente)
             file.close()
 
