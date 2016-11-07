@@ -115,7 +115,7 @@ def parseCoursesId(c_string, pasantia):
 class AnswersChecker():
     def __init__(self, username, password, modality):
         try:
-            self.aranita  = StudentDownloader(username,password,"HTML")
+            self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
         except :
             print("aranita startup failed")
 
@@ -173,9 +173,9 @@ class AnswersChecker():
                 if onlyg_perms_dict[k] == 'x' or onlyg_perms_dict[k] == 'z':
                     for elem in parseCoursesId  (line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-
+        graphs_command+user_id
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        process.communicate()
+        print(process.communicate())
 
     def process_all(self, line):
         user_id = line[1].split('@')[0]

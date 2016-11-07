@@ -295,7 +295,7 @@ class SearchWindow(HeaderBarWindow):
         main_box.pack_start(description,True,True,0)
 
         # Box for label with count
-        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        self.fst_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=0)
         main_box.pack_start(self.fst_box,True,True,0)
 
         # scrollable view para permisos
@@ -318,18 +318,20 @@ class SearchWindow(HeaderBarWindow):
         else:
             self.std_perms = db.get_type_perm(perm_type)
 
-        self.count =  len(list(filter(is_pendiente,self.std_perms)))
+        self.count   =  len(list(filter(is_pendiente,self.std_perms)))
+        self.count_a =  len(list(filter(is_aprobado,self.std_perms)))
 
         treeview = self.poblate_table()
         scrollable.add(treeview)
 
 
-        self.update_missing_perms(self.count)
+        self.update_missing_perms(self.count,self.count_a)
 
 
-    def update_missing_perms(self,new_val):
+    def update_missing_perms(self,new_val,new_val_a):
         if self.missing_count:
             self.missing_count.destroy()
+            self.aprobado_count.destroy()
 
         missing_count = Gtk.Label()
         extra_s = "s" if new_val != 1 else ""
@@ -337,8 +339,16 @@ class SearchWindow(HeaderBarWindow):
         missing_count.set_justify(Gtk.Justification.CENTER)
         self.missing_count = missing_count
 
+        aprobado_count = Gtk.Label()
+        extra_s = "s" if new_val_a != 1 else ""
+        aprobado_count.set_text(str(new_val_a)+" permiso" + extra_s + " aprobado" + extra_s )
+        aprobado_count.set_justify(Gtk.Justification.CENTER)
+        self.aprobado_count = aprobado_count
+
         self.fst_box.pack_start(missing_count,True,True,0)
+        self.fst_box.pack_start(aprobado_count,True,True,0)
         missing_count.show()
+        aprobado_count.show()
 
     def other_updates(self,old,new):
         if old != new:
@@ -348,7 +358,14 @@ class SearchWindow(HeaderBarWindow):
                 self.count += 1
             else:
                 return None
-            self.update_missing_perms(self.count)
+
+            if old==EstadoPermiso.aprobado and new!=EstadoPermiso.aprobado:
+                self.count_a -= 1
+            elif old!=EstadoPermiso.aprobado and new==EstadoPermiso.aprobado:
+                self.count_a += 1
+            else:
+                return None
+            self.update_missing_perms(self.count,self.count_a)
 
     def clicked_cell(self,tree,path,col):
         if col.get_title() == "Carnet":

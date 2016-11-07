@@ -29,6 +29,9 @@ class EstadoPermiso(Enum):
 def is_pendiente(row):
     return row['aprobado'] == "p"
 
+def is_aprobado(row):
+    return row['aprobado'] == "a"
+
 def get_all_names(a_class):
     return [e.name for e in a_class]
 
