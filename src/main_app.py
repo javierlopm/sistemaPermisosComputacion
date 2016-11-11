@@ -13,6 +13,15 @@ import subprocess
 db = PermStore()
 RATIO = 0.75
 
+# TODO
+# Protecci'on contra doble click en descarga de permiso
+# Advertencia al cargar permisos con datos en tabla de permisos
+# Mover el mensaje de "no hay internet" a la ventana correcta
+# Agrega en csv memo
+# Agergar tercer archivo para memo en vista de csv
+# Comentar codigo
+# Hacer informe y manuales
+
 class Col(Enum):
     carnet    = 0 
     trimestre = 1 
