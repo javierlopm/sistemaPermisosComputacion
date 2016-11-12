@@ -13,6 +13,17 @@ class TipoPermiso(Enum):
     xplan_gen_gen   = 'x'
     xplan_d_gen     = 'z'
 
+    def memo_name(self):
+        if self == TipoPermiso.extraplan:
+            return "EXTRAPLAN"
+        elif self == TipoPermiso.xplan_gen_gen:
+            return "EXTRAPLAN MÁS UN GENERAL"
+        elif self == TipoPermiso.dos_generales:
+            return "DOS GENERALES"
+        elif self == TipoPermiso.general_extra:
+            return "GENERAL ADICIONAL"
+        else:
+            return "??"
 
 # Enums para trimestres
 class Trimestre(Enum):
@@ -20,6 +31,17 @@ class Trimestre(Enum):
     abrilJulio          = 'a'
     julioAgosto         = 'j'
     septiembreDiciembre = 's'
+
+    def memo_name(self):
+        if self == Trimestre.eneroMarzo:
+            return "ENE/MAR"
+        elif self == Trimestre.abrilJulio:
+            return "ABR/JUL"
+        elif self == Trimestre.julioAgosto:
+            return "VERANO"
+        elif self == Trimestre.septiembreDiciembre:
+            return "SEP/DIC"
+
 
 class EstadoPermiso(Enum):
     aprobado  = 'a'

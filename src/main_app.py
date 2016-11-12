@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
@@ -8,7 +9,6 @@ import os.path
 from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
-from check_answers import AnswersChecker
 import subprocess
 db = PermStore()
 RATIO = 0.75
@@ -16,9 +16,6 @@ RATIO = 0.75
 # TODO
 # Protecci'on contra doble click en descarga de permiso
 # Advertencia al cargar permisos con datos en tabla de permisos
-# Mover el mensaje de "no hay internet" a la ventana correcta
-# Agrega en csv memo
-# Agregar tercer archivo para memo en vista de csv
 # Comentar codigo
 # Hacer informe y manuales
 
@@ -31,10 +28,12 @@ class Col(Enum):
     valor     = 4 
     estado    = 5 
 
-def triggerCoordDownloader(username, password, modality):
-    ans_checker = AnswersChecker(username, password, modality)
-    ans_checker.answers_downloader()
-    # ans_checker.aranita.close()
+
+def purge(dir, pattern):
+    import os, re
+    for f in os.listdir(dir):
+        if re.search(pattern, f):
+            os.remove(os.path.join(dir, f))
 
 def extend_instance(obj, cls):
     """Apply mixins to a class instance after creation"""
@@ -456,7 +455,7 @@ class InitWindow(Gtk.Window):
         response = new_win.show_all()
 
     def on_button3_clicked(self, widget):
-        msg = "Se eliminarán todos los permisos no expotados a csv"
+        msg = "Se eliminarán todos los permisos no expotados a csv "
         msg +=  "¿Desea continuar?"
         title = "Por favor confirme"
         if ccbox(msg, title):
@@ -541,11 +540,20 @@ class LoginWindow(Gtk.Window):
         tree_iter = self.mod_combo.get_active_iter()
         usr = self.username_entry.get_text()
         psw = self.password_entry.get_text()
+
+        from check_answers import AnswersChecker
+
         if tree_iter != None and usr != "" and psw != "":
             model = self.mod_combo.get_model()
             mod = model[tree_iter][0]
-            triggerCoordDownloader(usr,psw,self.mod_dict[mod])
-            msgbox("Permisos descargados.")
+
+            ans_checker = AnswersChecker(usr, psw, self.mod_dict[mod])
+            status = ans_checker.answers_downloader()
+
+            if status:
+                msgbox("Permisos descargados.")
+
+
             self.destroy()
         else:
             msgbox("Existen campos sin llenar.")
@@ -641,11 +649,13 @@ class CsvWindow(HeaderBarWindow):
                 self.trim_search = Trimestre(mod[0])
 
     def on_write_press(self,widget,creator_type):
-        print("writing to " + self.gen_perm.get_text() + 
-              " and " + self.all_perm.get_text()       + 
-              " and " + self.memo.get_text()       + 
-              " for " + self.trim_search.name + 
-              " and " + str(self.spinbutton.get_value_as_int()))
+        print("writing to {} and {} and {} for {} and {}".format(
+                self.gen_perm.get_text()
+                ,self.all_perm.get_text()
+                ,self.memo.get_text()
+                ,self.trim_search.name
+                ,str(self.spinbutton.get_value_as_int())))
+
         anio = self.spinbutton.get_value_as_int()
 
         aprobados = db.get_with_state(EstadoPermiso.aprobado
@@ -654,22 +664,29 @@ class CsvWindow(HeaderBarWindow):
         if len(aprobados) == 0:
             msgbox("No se encontraron permisos en {0} {1}".format(self.trim_search,anio))
         else:
-            gen_count = 0
-            mat_count = 0
+            gen_count  = 0
+            memo_count = 0
+            mat_count  = 0
 
             csv = CsvCreator(self.gen_perm.get_text()
                             ,self.all_perm.get_text()
+                            ,self.memo.get_text()
                             ,self.trim_search.value
-                            ,anio
-                            ,creator_type)
+                            ,anio)
 
             for perm in aprobados:
                 t_perm = TipoPermiso(perm['tipo'])
                 if creator_type == 0:
-                    if   t_perm == TipoPermiso.dos_generales:
-                        # escribir en memo
+                    if  t_perm == TipoPermiso.dos_generales:
                         csv.write_gen(str(perm['fk_carnet']),general="E2")
-                        gen_count += 1 
+
+                        student = db.get_student(perm['fk_carnet'])[0]
+                        csv.write_memo(show_carnet(perm['fk_carnet'])
+                                      ,student['nombre']
+                                      ,TipoPermiso(perm['tipo']).memo_name()
+                                      ,Trimestre(perm['trimestre']).memo_name())
+                        memo_count += 1
+                        gen_count  += 1
                     elif t_perm == TipoPermiso.limite_creditos:
                         csv.write_gen(str(perm['fk_carnet'])
                                      ,limite_cred=str(perm['int_extra']))
@@ -677,20 +694,20 @@ class CsvWindow(HeaderBarWindow):
                     elif t_perm == TipoPermiso.pp:
                         csv.write_gen(str(perm['fk_carnet']),pp=str(perm['int_extra']))
                         gen_count += 1 
-                    elif t_perm == TipoPermiso.general_extra:
+                    elif (t_perm in [TipoPermiso.general_extra
+                                    ,TipoPermiso.xplan_gen_gen
+                                    ,TipoPermiso.extraplan]):
                         # Escribir en permiso de materia
-                        # escribir en memo
-                        # gen_count += 1 
-                        pass
-                    elif t_perm == TipoPermiso.xplan_gen_gen:
-                        # mostrar código en permio de materias
-                        # escribir en memo
-                        # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                        gen_count += 1                     
-                    elif t_perm == TipoPermiso.xplan_d_gen:
-                        # csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                        # gen_count += 1 
-                        pass
+                        csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
+                        
+                        # Escribir memo
+                        student = db.get_student(perm['fk_carnet'])[0]
+                        csv.write_memo(show_carnet(perm['fk_carnet'])
+                                      ,student['nombre']
+                                      ,t_perm.memo_name()
+                                      ,Trimestre(perm['trimestre']).memo_name())
+                        memo_count += 1
+                        mat_count  += 1
                 else:
                     if t_perm == TipoPermiso.permiso_materia:
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
@@ -699,12 +716,20 @@ class CsvWindow(HeaderBarWindow):
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
                         mat_count += 1
 
-            csv.end_writer(creator_type)
+            csv.end_writer()
 
-            if creator_type == 0:
-                msgbox("Éxito se procesaron:\n{0} permiso(s) de generales".format(gen_count))
-            else:
-                msgbox("Éxito se procesaron:\n{0} permiso(s) de materias.".format(mat_count))
+            msg_t ="Éxito se procesaron:"
+            msg_t += "{} permiso(s) de generales".format(gen_count) if gen_count > 0 else ""
+            msg_t += "{} permiso(s) de materias".format(mat_count)  if mat_count > 0 else ""
+            msg_t += "{} memo(s)".format(mat_count) if memo_count > 0 else ""
+
+            print("Got {}, {} and {}".format(gen_count,mat_count,memo_count))
+
+            if gen_count==0 and mat_count==0 and memo_count:
+                msg_t = "No se procesó ningún permiso"
+
+            msgbox(msg_t)
+
 
     def on_text_press(self,widget,cosa):
         dialog = Gtk.FileChooserDialog("Please choose a file", self,
