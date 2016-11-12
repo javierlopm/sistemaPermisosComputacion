@@ -46,6 +46,7 @@ class CsvCreator():
 
         self.anio = anio
 
+        self.memos = []
 
         # Pick trimester E-M, A-J, verano(J-S) S-D
         if trim == 'e':
@@ -56,6 +57,9 @@ class CsvCreator():
             self.trim = (7,9)
         else:
             self.trim = (9,12)
+
+    # def write_memo(self,student,perm_type,trim):
+
 
     def write_gen(self,student_id,general="",limite_cred="",pp=""):
         new_row = [ student_id[0:2]
