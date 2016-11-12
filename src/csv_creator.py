@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
+import os
 # from perm_store import TipoPermiso,Trimestre,EstadoPermiso
 
 PERM_HEADER = ["COD_ASIGNATURA"
@@ -40,18 +41,28 @@ MEMO_HEADER = [ "N°"
 class CsvCreator():
     def __init__(self,gen_file,perm_files,memo_file,trim,anio):
 
-        # if type_perm == 0:
-        self.f1 = open(gen_file  ,"a")
-        self.gen_writer   = csv.writer(self.f1,delimiter=',')
-        self.gen_writer.writerow(GEN_HEADER)
-        self.memof       = open(memo_file  ,"w")
+        # Archivo de generales
+        is_new_file      = not os.path.isfile(gen_file)
+        self.f1          = open(gen_file  ,"a")
+        self.gen_writer  = csv.writer(self.f1,delimiter=',')
+        if is_new_file:
+            self.gen_writer.writerow(GEN_HEADER)
+            
+
+        # Archivo de memos
+        is_new_file      = not os.path.isfile(memo_file)
+        self.memof       = open(memo_file  ,"a")
         self.memo_writer = csv.writer(self.memof,delimiter=',')
-        self.memo_writer.writerow(MEMO_HEADER)
+        if is_new_file:
+            self.memo_writer.writerow(MEMO_HEADER)
         self.memo_list   = []
-        # else:
-        self.f2 = open(perm_files,"a")
+
+        # Archivo de materias
+        is_new_file       = not os.path.isfile(perm_files)
+        self.f2           = open(perm_files,"a")
         self.perm_writer  = csv.writer(self.f2,delimiter=',')
-        self.perm_writer.writerow(PERM_HEADER)
+        if is_new_file:
+            self.perm_writer.writerow(PERM_HEADER)
 
         self.anio = anio
 
@@ -108,11 +119,10 @@ class CsvCreator():
         self.perm_writer.writerow(new_row)
     
     def end_writer(self):
-        # if perms == 0:
         self.f1.close()
+        self.f2.close()
 
         new_sorted = sorted(self.memo_list,key=lambda student: student[0])
-
         last_user = None
         index     = 0
         for row in new_sorted:
@@ -125,8 +135,7 @@ class CsvCreator():
             self.memo_writer.writerow([writen_index]+row)
 
         self.memof.close()
-        # else:
-        self.f2.close()
+
 
 # perm_file = "perm.csv"
 # gen_file  = "gen.csv"

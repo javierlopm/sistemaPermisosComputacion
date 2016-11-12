@@ -627,6 +627,7 @@ class CsvWindow(HeaderBarWindow):
 
         button1 = Gtk.Button(label="Generar archivo generales")
         button2 = Gtk.Button(label="Generar archivo materias")
+        button_del = Gtk.Button(label="Eliminar csv en este directorio")
 
         gen_box.pack_start      (lab_gen      ,True,True,0)
         gen_box.pack_start      (self.gen_perm,True,True,0)
@@ -642,12 +643,22 @@ class CsvWindow(HeaderBarWindow):
         main_box.pack_start     (trim_box     ,True,True,0)
         main_box.pack_start     (button1      ,True,True,0)
         main_box.pack_start     (button2      ,True,True,0)
+        main_box.pack_start     (button_del   ,True,True,0)
 
         button1.connect("clicked", self.on_write_press,0)
         button2.connect("clicked", self.on_write_press,1)
+        button_del.connect("clicked", self.on_delete_csv)
         # self.gen_perm.connect("focus-in-event", self.on_text_press)
         # self.all_perm.connect("focus-in-event", self.on_text_press)
 
+    def on_delete_csv(self, widget):
+        msg = "Se eliminarán todas las tablas csv del directorio del sistema.\n"
+        msg +=  "¿Desea continuar?"
+        title = "Por favor confirme"
+        if ccbox(msg, title):
+            purge('.','.*\.csv')
+        else:
+            return
 
     def on_trim_combo_changed(self, combo):
             tree_iter = combo.get_active_iter()
@@ -727,13 +738,13 @@ class CsvWindow(HeaderBarWindow):
             csv.end_writer()
 
             msg_t ="Éxito se procesaron:"
-            msg_t += "{} permiso(s) de generales".format(gen_count) if gen_count > 0 else ""
-            msg_t += "{} permiso(s) de materias".format(mat_count)  if mat_count > 0 else ""
-            msg_t += "{} memo(s)".format(mat_count) if memo_count > 0 else ""
+            msg_t += "{} permiso(s) de generales\n".format(gen_count) if gen_count > 0 else ""
+            msg_t += "{} permiso(s) de materias\n".format(mat_count)  if mat_count > 0 else ""
+            msg_t += "{} memo(s)\n".format(memo_count) if memo_count > 0 else ""
 
-            print("Got {}, {} and {}".format(gen_count,mat_count,memo_count))
+            print("Got {}, {} and {}\n".format(gen_count,mat_count,memo_count))
 
-            if gen_count==0 and mat_count==0 and memo_count:
+            if gen_count==0 and mat_count==0 and memo_count==0:
                 msg_t = "No se procesó ningún permiso"
 
             msgbox(msg_t)
