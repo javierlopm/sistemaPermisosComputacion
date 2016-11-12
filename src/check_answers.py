@@ -109,7 +109,7 @@ class AnswersChecker():
     def __init__(self, username, password, modality):
         try:
             self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
-        except :
+        except:
             print("aranita startup failed")
 
         # Authenticate using the signed key
@@ -138,6 +138,10 @@ class AnswersChecker():
 
     def answers_downloader(self):
         if self.do_nothing:
+            try:
+                self.aranita.close()
+            except:
+                pass
             return False
 
         print("Hojas de cálculo disponibles \n\n")

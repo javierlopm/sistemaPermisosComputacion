@@ -14,7 +14,6 @@ db = PermStore()
 RATIO = 0.75
 
 # TODO
-# Protecci'on contra doble click en descarga de permiso
 # Advertencia al cargar permisos con datos en tabla de permisos
 # Comentar codigo
 # Hacer informe y manuales
@@ -408,6 +407,7 @@ class SearchWindow(HeaderBarWindow):
 class InitWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self, title="Permisos coordinacion")
+
         self.set_default_size(320,140)
         self.set_position(Gtk.WindowPosition.CENTER)
 
@@ -473,6 +473,8 @@ class LoginWindow(Gtk.Window):
             "Permisos sin los de generales" : 3
         }
 
+        self.processing = False
+
         Gtk.Window.__init__(self, title="Permisos coordinación")
         self.set_default_size(320,200)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -537,6 +539,11 @@ class LoginWindow(Gtk.Window):
             print("Selected: mod=%s" % mod)
 
     def on_ok_button_clicked(self, widget):
+        if self.processing:
+            return
+
+        self.processing = True
+
         tree_iter = self.mod_combo.get_active_iter()
         usr = self.username_entry.get_text()
         psw = self.password_entry.get_text()
@@ -558,6 +565,7 @@ class LoginWindow(Gtk.Window):
         else:
             msgbox("Existen campos sin llenar.")
 
+        self.processing = False
 
 
     def on_cancel_button_clicked(self, widget):
