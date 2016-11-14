@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import csv
+import os
+# from perm_store import TipoPermiso,Trimestre,EstadoPermiso
 
 PERM_HEADER = ["COD_ASIGNATURA"
               ,"ANIO_CARNET" 
@@ -30,18 +32,36 @@ GEN_HEADER = ["ANIO_CARNET"
              ,"TOTAL_CREDITOS"
              ,"PP"]
 
-
+MEMO_HEADER = [ "N°"
+              , "CARNÉ"
+              , "NOMBRES Y APELLIDOS."
+              , "PERMISO"
+              , "PERIODO"]
 
 class CsvCreator():
-    def __init__(self,gen_file,perm_files,trim,anio,type_perm):
+    def __init__(self,gen_file,perm_files,memo_file,trim,anio):
 
-        if type_perm == 0:
-            self.f1 = open(gen_file  ,"w")
-            self.gen_writer   = csv.writer(self.f1,delimiter=',')
+        # Archivo de generales
+        is_new_file      = not os.path.isfile(gen_file)
+        self.f1          = open(gen_file  ,"a")
+        self.gen_writer  = csv.writer(self.f1,delimiter=',')
+        if is_new_file:
             self.gen_writer.writerow(GEN_HEADER)
-        else:
-            self.f2 = open(perm_files,"w")
-            self.perm_writer  = csv.writer(self.f2,delimiter=',')
+            
+
+        # Archivo de memos
+        is_new_file      = not os.path.isfile(memo_file)
+        self.memof       = open(memo_file  ,"a")
+        self.memo_writer = csv.writer(self.memof,delimiter=',')
+        if is_new_file:
+            self.memo_writer.writerow(MEMO_HEADER)
+        self.memo_list   = []
+
+        # Archivo de materias
+        is_new_file       = not os.path.isfile(perm_files)
+        self.f2           = open(perm_files,"a")
+        self.perm_writer  = csv.writer(self.f2,delimiter=',')
+        if is_new_file:
             self.perm_writer.writerow(PERM_HEADER)
 
         self.anio = anio
@@ -56,6 +76,10 @@ class CsvCreator():
             self.trim = (7,9)
         else:
             self.trim = (9,12)
+
+    # def write_memo(self,student,perm_type,trim):
+    def write_memo(self,student_id,nombres,permiso,periodo):
+        self.memo_list.append([student_id,nombres,permiso,periodo])
 
     def write_gen(self,student_id,general="",limite_cred="",pp=""):
         new_row = [ student_id[0:2]
@@ -94,11 +118,24 @@ class CsvCreator():
 
         self.perm_writer.writerow(new_row)
     
-    def end_writer(self,perms):
-        if perms == 0:
-            self.f1.close()
-        else:
-            self.f2.close()
+    def end_writer(self):
+        self.f1.close()
+        self.f2.close()
+
+        new_sorted = sorted(self.memo_list,key=lambda student: student[0])
+        last_user = None
+        index     = 0
+        for row in new_sorted:
+            if row[0] != last_user:
+                index     += 1
+                last_user = row[0]
+                writen_index = str(index)
+            else:
+                writen_index = ""
+            self.memo_writer.writerow([writen_index]+row)
+
+        self.memof.close()
+
 
 # perm_file = "perm.csv"
 # gen_file  = "gen.csv"

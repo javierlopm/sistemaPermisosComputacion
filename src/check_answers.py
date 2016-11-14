@@ -68,14 +68,7 @@ mod_dict = {
 }
 
 graphs_command = "cd graphs_manager && java createPngGraph "
-
-# Authenticate using the signed key
-try:
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
-    gc = gspread.authorize(credentials)
-    perm_storer = PermStore()
-except :
-    msgbox("Error, no hay internet")
+perm_storer    = PermStore()
 
 
 def carnetToInt(carnet):
@@ -116,8 +109,17 @@ class AnswersChecker():
     def __init__(self, username, password, modality):
         try:
             self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
-        except :
+        except:
             print("aranita startup failed")
+
+        # Authenticate using the signed key
+        try:
+            credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
+            self.gc = gspread.authorize(credentials)
+            self.do_nothing = False
+        except:
+            self.do_nothing = True
+            msgbox("Error, no hay internet. Cierre la ventana e intente nuevamente")
 
         self.modality = modality
         if self.modality == 1:
@@ -135,8 +137,15 @@ class AnswersChecker():
 
 
     def answers_downloader(self):
+        if self.do_nothing:
+            try:
+                self.aranita.close()
+            except:
+                pass
+            return False
+
         print("Hojas de cálculo disponibles \n\n")
-        sheet = gc.open_by_key(mod_dict[self.modality])
+        sheet = self.gc.open_by_key(mod_dict[self.modality])
         print("{} - {}".format(sheet.title, sheet.id))
         print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
 
@@ -152,6 +161,8 @@ class AnswersChecker():
             print("aranita startup failed")
 
         print("\n\n")
+
+        return True
 
     def process_solo_generales(self, line):
         user_id = line[1].split('@')[0]
