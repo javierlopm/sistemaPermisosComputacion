@@ -10,10 +10,17 @@ Si se encuentra el simbolo "Cerrar" se salta la fila y pasa a otra.
 
 
 # Ejecución
-$ python procesadorOferta.py -f nombre_archivo_salida -d nombre_archivo_dace
+* por shell Bash
+    - Colocar los permisos adecuados. $ chmod 744 procesadorOferta.sh
+
+    $ procesadorOferta.sh -f nombre_archivo_salida -d nombre_archivo_dace
+                    -m archivo_materias_requeridas -e nomDir
+
+* Usando Python
+    $ python3 procesadorOferta.py -f nombre_archivo_salida -d nombre_archivo_dace
                     -m archivo_materias_requeridas [--dir-input=nomDir ]
                     archivo1.pdf archivo2.xls ... archivoN
-$ python procesadorOferta.py [-h, --help]
+    $ python3 procesadorOferta.py [-h, --help]
 
 donde:
     Requeridos
@@ -33,23 +40,49 @@ Se puede usar o --dir-input o argumentos de insumo pero no ambos.
 
 # Instalaciones requeridas
 * python >=3.4
-* Instalar los siguientes paquetes via pip o por $ python setup.py install
-    - MuPDF 1.9.2
-    - xlrd 1.0.0
+* pip
+* MuPDF 1.9.2
+* xlrd 1.0.0
 
-MuPDF 1.9.2
+MuPDF 1.9.2 para Windows
     - Se descomprime el archivo pymupdf-1.9.2.0-pyXX-(x86|x64). El resultado será
     una carpeta llamada "fitz".
     - Acceder a la carpeta a través del terminal.
-    - En el terminal se ejecuta : python setup.py install. Posiblemente requiera
+    - En el terminal se ejecuta : python3.x setup.py install. Posiblemente requiera
     privilegios de root o sudo.
+
+MuPDF 1.9.2 para Linux (Debian y Ubuntu)
+    - Posiblemente requiera privilegios de root o sudo.
+    - Descomprimir PyMuPDF.zip. Renombrar a la carpeta resultante a PyFitz.
+    - Descomprimir mupdf-1.9a-source.tar.gz. Renombrar a "mupdf".
+    - Trasladar la carpeta "mupdf" dentro de PyFitz.
+    - En la "mupdf", editar la MakeRules. En la linea 10, en la variable
+        CFLAGS colocar -fPIC.
+
+        Debe quedar como sigue: CFLAGS += -Wall -fPIC.
+
+        Guardar.
+    - $ sudo make prefix=/usr/local/ install
+    - En la carpeta PyFitz, editar setup.py. Comentar la linea 15 y 16.
+        Debe quedar asi:
+
+            libraries=[
+               'mupdf',
+               #'crypto', #openssl is required by mupdf on archlinux
+               #'jbig2dec', 'openjp2', 'jpeg', 'freetype',
+               'mupdfthird',
+            ], # the libraries to link with
+
+    - Guardar
+    - $ python3.x -m pip setup.py install
 
 xlrd 1.0.0
     - Acceder a la carpeta donde se encuentra el archivo a través del terminal.
-    - Ejecutar el siguiente comandos: pythpn -m pip install xlrd 1.0.0.
+    - Ejecutar el siguiente comandos: python3.x -m pip install xlrd 1.0.0.
     Posiblemente requiera privilegios de root o sudo.
 
 
 # Más información sobre la instalaciones
 http://www.python-excel.org/
 http://pythonhosted.org/PyMuPDF/installation.html
+https://github.com/rk700/PyMuPDF

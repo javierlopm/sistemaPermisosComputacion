@@ -2,43 +2,72 @@ from mmap import mmap,ACCESS_READ
 from xlrd import open_workbook,cellname
 from os.path import isfile
 from os import remove
+from math import floor
+from funcionesAuxiliares import obtArgs, cargarMaterias, \
+                                normalizarMateria, usoAyuda, dividirStr
 import sys
 import re
-from funcionesAuxiliares import obtArgs, cargarMaterias, \
-                                normalizarMateria, usoAyuda
 
 
 patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
-patronDias = "(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
-    "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|es)?)"
+patronDias = "^(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
+    "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|rnes)?)$"
 patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
-patronHorario = "^(\d{1,2}(-\d{1,2})?)$"
+patronHoras = "^(\d{1,2}((-|..)\d{1,2})?)$"
+existeEspecial = False
 
 def analizarCabecera(cabecera):
     nroCampo = 0
     posCamposValidos = []
     existeCarrera = False
     campoCarrera = -1
+    campoAccion = -1
+    existeAccion = False
+    campoEspecial = -1
+    global existeEspecial
+    testposCamposValidos = []
 
     for celda in cabecera:
-        searchCodMateria = re.search("C[oó]d(_Asignatura|igo)", celda, re.I)
-        searchHorario = re.search(patronDias, celda, re.I)
-        searchBloque = re.search(patronBloque,celda, re.I)
-        searchCarrera = re.search("Carreras?",celda, re.I)
-        if searchCodMateria or searchHorario or searchBloque:
-            #posCamposValidos.append((nroCampo,celda)) #para debugging
-            posCamposValidos.append(nroCampo)
-        elif searchCarrera:
+        if celda:
+            searchCodMateria = re.search("^C[oó]d(_Asignatura|igo" +
+                                         "(\sAsignatura)?|.)$", celda, re.I)
+            searchHorario = re.search(patronDias, celda, re.I)
+            searchBloque = re.search(patronBloque,celda, re.I)
+            searchCarrera = re.search("^Carreras?$",celda, re.I)
+            searchAccion = re.search("Acci[oó]n(es)?",celda, re.I)
+            searchEspecial = re.search("^(Oferta(_|\s))?Especial$", celda, re.I)
+            if searchCodMateria or searchHorario or searchBloque:
+                #print(searchCodMateria)
+                #testposCamposValidos.append((nroCampo,celda)) #para debugging
+                testposCamposValidos.append(celda) #para debugging
+                posCamposValidos.append(nroCampo)
+
+            if searchCarrera:
                 existeCarrera = True
                 campoCarrera = nroCampo
+                testposCamposValidos.append(celda)
+
+            if searchAccion:
+                campoAccion = nroCampo
+                existeAccion = True
+                testposCamposValidos.append(celda)
+            if searchEspecial:
+                existeEspecial = True
+                campoEspecial = nroCampo
+                testposCamposValidos.append(celda)
         nroCampo += 1
 
-    #print("posCamposValidos: ",posCamposValidos, existeCarrera, campoCarrera)
-    #print("posCamposInvalidos: ",posCamposInvalidos)
     if len(posCamposValidos) == 7:
-        return (True,posCamposValidos, existeCarrera, campoCarrera)
+        print("Reconocimiento")
+        print("\tCabecera: ", testposCamposValidos)
+        print("\tCampo de carrera:", existeCarrera)
+        print("\tCampo de acción: ", existeAccion)
+        print("\tCampo de especial: ", existeEspecial)
+        return (True,posCamposValidos, existeCarrera, campoCarrera,
+                existeAccion, campoAccion,existeEspecial, campoEspecial)
     else:
-        return (False,posCamposValidos, existeCarrera, campoCarrera)
+        return (False,posCamposValidos, existeCarrera, campoCarrera,
+                existeAccion, campoAccion, existeEspecial, campoEspecial)
 
 def filtrarBloque(txt):
     return len(txt) == 1 and txt[0].isalpha()
@@ -46,7 +75,19 @@ def filtrarBloque(txt):
 def verificarCerrar(txt):
     return re.search("cerrar", txt, re.I)
 
-def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
+def normalizarHoras(txt):
+    #print("entrada", txt)
+    nuevo = dividirStr(txt,'.')
+    if len(nuevo) > 1:
+        temp = nuevo[1]
+        nuevo[1] = '-'
+        nuevo.append(temp)
+    nuevo = "".join(nuevo)
+    #print("salida", nuevo)
+    return nuevo
+
+def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
+    global existeEspecial
     # Abrir el la hoja de cálculo en cuestión
     book = open_workbook(nomArchivoEntrante)
     # Acceder a la primera hoja.
@@ -56,30 +97,37 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
     cabeceraProcesada = False
     for nroFila in range(sheet0.nrows):
         if not cabeceraProcesada:
-            (cabeceraProcesada, \
-             posCamposValidos, \
-             existeCarrera, \
-             campoCarrera) = analizarCabecera(sheet0.row_values(nroFila))
+            #print(sheet0.row_values(nroFila))
+            (cabeceraProcesada, posCamposValidos,
+             existeCarrera,campoCarrera,
+             existeAccion, campoAccion,
+             existeEspecial,
+             campoEspecial) = analizarCabecera(sheet0.row_values(nroFila))
         else:
             entrada = sheet0.row_values(nroFila)
             #print(entrada)
             # Comprueba si pertenece al pensum de computación
-            if activarFitrado:
+            if activarFiltrado:
                 if (existeCarrera and \
-                    (not re.search("0800",str(entrada[campoCarrera])))):
-                    #print("Eliminar por Carrera", entrada)
+                    (not re.search("0?800",str(entrada[campoCarrera])))):
+                    #print("Eliminar por Carrera",str(entrada[campoCarrera]))
                     continue
 
                 if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
                     #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
-                    # print("Eliminar por lista materias ",
+                     #print("Eliminar por lista materias ",
                     #       normalizarMateria(entrada[posCamposValidos[0]]), entrada, "\n")
+                    continue
+                if existeAccion and verificarCerrar(entrada[campoAccion]):
+                    # print("Eliminada por cerrar", entrada[posCamposValidos[0]],
+                    #       entrada[posCamposValidos[1]])
                     continue
 
             nuevaEntrada = ""
             for pos in posCamposValidos:
                 if isinstance(entrada[pos],float):
-                    txt = str(round(entrada[pos]))
+                    #Compvertir numeros unitarios flotantes en enteros.
+                    txt = str(floor(entrada[pos]))
                 elif entrada[pos] != '':
                     txt = str(entrada[pos]).strip()
                 else:
@@ -98,10 +146,16 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                 searchMat = re.search(patronMateria,txt, re.I)
                 if searchMat:
                     nuevaEntrada += ',' + normalizarMateria(searchMat.group())
+                elif re.search(patronHoras, txt):
+                    nuevaEntrada += ',' + normalizarHoras(txt)
                 elif filtrarBloque(txt) \
-                    or txt == '' or re.search(patronHorario, txt):
+                    or txt == '':
                     #print("pasa el filtro", txt)
                     nuevaEntrada += ',' + txt
+
+            if existeEspecial and re.search("^[A-Z]$",
+                          entrada[campoEspecial].strip(), re.I):
+                nuevaEntrada += ',' + entrada[campoEspecial].strip()
 
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != ',' :
@@ -110,6 +164,7 @@ def procesarXLS(nomArchivoEntrante, activarFitrado, listaMaterias, fdSalida):
                 fdSalida.append(nuevaEntrada.split(','))
 
 if ( __name__ == "__main__"):
+    global modoDACE
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
     listaMaterias = cargarMaterias(nomArchivoMaterias)
@@ -121,6 +176,8 @@ if ( __name__ == "__main__"):
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
+    procesarXLS(args[0],True,listaMaterias,fdSalida)
+
     if nomArchivoSalida:
         try:
             f = open(nomArchivoSalida, 'a')
@@ -128,10 +185,11 @@ if ( __name__ == "__main__"):
         except OSError as ose:
             print("Error de E/S: ", ose)
             sys.exit(2)
+    elif existeEspecial:
+        print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIAL")
     else:
-        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
+        print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
 
-    procesarXLS(args[0],True,listaMaterias,fdSalida)
 
     for fila in fdSalida:
         if nomArchivoSalida:

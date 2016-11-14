@@ -1,6 +1,14 @@
 import sys
 import getopt
 
+
+class Vacio_Error(Exception):
+  """Excepcion para el caso que alguna lista este vacio"""
+  def __init__(self,ubicacion):
+    self.ubicacion = ubicacion
+    def __str__(self):
+        return repr(self.ubicacion)
+
 corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
 # Función auxiliar para el ordenamiento de los horarios
 def ordenarDias(txt):

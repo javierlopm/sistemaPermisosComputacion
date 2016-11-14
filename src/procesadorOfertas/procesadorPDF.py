@@ -25,7 +25,8 @@ from funcionesAuxiliares import dividirStr, obtArgs, cargarMaterias, \
 
 class OfertasGeneral( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
-        self.fila = []
+        self.filaMatBloq = []
+        self.filaHorario = []
         self.posCaracteres = []
         self.cabeceraDias = []
         self.celda = ""
@@ -37,7 +38,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.patronHoras = "\d{1,2}(-\d{1,2})?"
         self.patronDias = "(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
             "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)"
-        self.patronMateria = "\w\w\s*-?\s*\d\d\d\d"
+        self.patronMateria = "[A-Z][A-Z]\s*-?\s*\d\d\d\d"
         self.patronBloque1 = "^\(?[A-Z]\)?$"
         self.patronBloque2 = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
         self.patronSeccion = "\(?Sec.?i?ó?n?(\s)+\d\)?"
@@ -53,9 +54,13 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def startElement(self, tag, attributes):
         if tag == "char":
             self.celda += attributes["c"]
-            self.posCaracteres.append(
-                (attributes['bbox'].split(" ")[0], \
-                 attributes['bbox'].split(" ")[2]))
+
+        if tag == "span":
+            self.posCaracteres = \
+                (attributes['bbox'].split(" ")[0],
+                 attributes['bbox'].split(" ")[1],
+                 attributes['bbox'].split(" ")[2],
+                 attributes['bbox'].split(" ")[3])
 
    # Call when an elements ends
     def endElement(self, tag):
@@ -96,10 +101,10 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def filtroCabecera(self,txt, posCaracteres):
         searchDias = re.search(self.patronDias, txt, re.I)
         if searchDias:
-            longPalabra = len(txt)
             # print("posCaracteres", txt , posCaracteres)
-            self.cabeceraDias.append((searchDias.group()[0:2],Decimal(posCaracteres[0][0]),\
-                                      Decimal(posCaracteres[longPalabra-1][1])))
+            self.cabeceraDias.append((searchDias.group()[0:2],
+                                      Decimal(posCaracteres[0]),
+                                      Decimal(posCaracteres[2])))
 
             return len(self.cabeceraDias) == 5
         elif re.search("horarios?" , txt, re.I):
@@ -117,17 +122,23 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         searchSeccion = re.search(self.patronSeccion, txt, re.I)
 
         if searchMat:
-            self.fila.append(normalizarMateria(searchMat.group()))
+            self.filaMatBloq.append((normalizarMateria(searchMat.group()),
+                              Decimal(self.posCaracteres[1]),
+                              Decimal(self.posCaracteres[3])))
             #print(searchHorario2)
             #print(searchBloq2)
         elif searchBloq2:
             #print(dividirStr(searchBloq2.group())[1])
-            self.fila.append(dividirStr(searchBloq2.group())[1])
+            self.filaMatBloq.append((dividirStr(searchBloq2.group())[1],
+                              Decimal(self.posCaracteres[1]),
+                              Decimal(self.posCaracteres[3])))
             self.bloque = True
         elif not self.bloque and searchSeccion:
             #print(searchSeccion)
-            self.fila.append(self.corresSecBloq[
-                             dividirStr(searchSeccion.group(),' ()')[1]])
+            self.filaMatBloq.append((self.corresSecBloq[
+                             dividirStr(searchSeccion.group(),' ()')[1]],
+                             Decimal(self.posCaracteres[1]),
+                             Decimal(self.posCaracteres[3])))
             self.bloque = False
 
         elif searchHorario or searchHorario2:
@@ -142,19 +153,28 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                 #print(dias, txt)
                 if len(dias) > 1:
                     #print((txt,dias[0][0:2].upper()), "   ", (txt,dias[1][0:2].upper()))
-                    self.fila.append((txt,dias[0][0:2].upper()))
-                    self.fila.append((txt,dias[1][0:2].upper()))
+                    self.filaHorario.append((txt,dias[0][0:2].upper(),
+                              Decimal(self.posCaracteres[1]),
+                              Decimal(self.posCaracteres[3])))
+                    self.filaHorario.append((txt,dias[1][0:2].upper(),
+                              Decimal(self.posCaracteres[1]),
+                              Decimal(self.posCaracteres[3])))
                 else:
                     #print((txt,dias[0][0:2].upper()))
-                    self.fila.append((txt,dias[0][0:2].upper()))
+                    self.filaHorario.append((txt,dias[0][0:2].upper(),
+                              Decimal(self.posCaracteres[1]), Decimal(self.posCaracteres[3])))
 
     def filtrarTexto(self,txt):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
-            self.fila.append(normalizarMateria(searchMat.group()))
+            self.filaMatBloq.append((normalizarMateria(searchMat.group()),
+                                Decimal(self.posCaracteres[1]),
+                                Decimal(self.posCaracteres[3])))
 
         elif re.search(self.patronBloque1, txt, re.I):
-                self.fila.append(txt)
+                self.filaMatBloq.append((txt,
+                              Decimal(self.posCaracteres[1]),
+                              Decimal(self.posCaracteres[3])))
 
         elif re.search(self.patronHoras, txt):
             #print(re.search(self.patronHoras, txt))
@@ -162,9 +182,11 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             for (dia,limInf,limSup) in self.cabeceraDias:
                 # print(limInf, "posIniTxt <=", dia, "posIniDia ", Decimal(self.posCaracteres[0][0]), \
                 #       "posFinTxt", Decimal(self.posCaracteres[-1][0]),"<= posFinDia", limSup )
-                if (limInf - 3) <= Decimal(self.posCaracteres[0][0]) \
-                    and Decimal(self.posCaracteres[-1][1]) <= (limSup + 3):
-                    self.fila.append((txt,dia))
+                if (limInf - 3) <= Decimal(self.posCaracteres[0]) \
+                    and Decimal(self.posCaracteres[2]) <= (limSup + 3):
+                    self.filaHorario.append((txt,dia,
+                                     Decimal(self.posCaracteres[1]),
+                                    Decimal(self.posCaracteres[3])))
                     #print((txt,dia))
                     break
 
@@ -177,23 +199,33 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         nuevaFila = []
         tuplas = []
         materiaValida = False
-        for item in self.fila:
-            #print(item)
-            if not isinstance(item,tuple) and \
-                re.search(self.patronMateria, item, re.I):
-                #print(nuevaFila)
+        pSupFila = None
+        pInfFila = None
+        self.filaMatBloq.append(('$',0,0))
+        for (item, pSup, pInf) in self.filaMatBloq:
+            #print("Mi item", item)
+            if re.search(self.patronMateria, item, re.I) or item == '$':
                 if nuevaFila and nuevaFila[0] in self.listaMaterias:
+                    for (hora,dia,pSupH,pInfH) in self.filaHorario:
+                        if pSupFila <= pSupH and pInfFila  >= pInfH:
+                            nuevaFila.append((hora,dia))
+
+                    #print("Nueva Fila", nuevaFila)
                     tuplas.append(nuevaFila)
-                    #print("nuevaFila",nuevaFila)
+
                 nuevaFila = []
                 nuevaFila.append(item)
-            else:
+                pSupFila = pSup - 5
+                pInfFila = pInf + 12
+            elif pSupFila <= pSup and pInfFila  >= pInf:
                 nuevaFila.append(item)
 
+            #print("pSupFila", pSupFila - 5, "<=", pSup, "pInfFila", pInfFila + 5, ">=", pInf)
         # print("Tuplas")
         # for item in tuplas:
         #     print(item)
         return tuplas
+
 
     def normalizarHorario(self,txt):
         hor = ""
@@ -260,11 +292,15 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
                     #print("Seleccion2", fil[2:])
                     acum = ",".join(fil[:2])
                     horariosOrdenados = sorted(fil[2:], key=ordenarDias)
-                acum += componerHorarioCSV(horariosOrdenados)
+
+                if horariosOrdenados:
+                    acum += componerHorarioCSV(horariosOrdenados)
+                else:
+                    acum += ',,,,,'
+
             elif len(fil) == 1:
                 acum = fil[0] + ',A,,,,,'
 
-            #verificarFila(acum)
             fdSalida.append(acum.split(','))
             acum = ""
 

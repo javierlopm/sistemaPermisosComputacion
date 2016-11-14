@@ -14,19 +14,20 @@ from procesadorXLS import procesarXLS
 from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
-from funcionesAuxiliares import imprimirResultados
+from funcionesAuxiliares import imprimirResultados, Vacio_Error
 import sys
 import getopt
+import re
 from os.path import splitext, isfile, join
 from os import remove, listdir
 
 
 
-def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
+def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
                   opcionDir, nomArchivoDace):
+
     listaOfertas = []
     listaDACE = []
-
     for archivo in listaArchivos:
         # Selección de archivos para procesar. Se extrae su extensión para
         # elegir el procesador adecuado
@@ -34,8 +35,9 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
 
         # Constuir el camino para procesar los archivos.
         if opcionDir:
-            camino = join(nomDirectorio,archivo)
-            print("\t", camino)
+            if ext != ".doc" and ext != ".txt":
+                camino = join(nomDirectorio,archivo)
+                print("\t", camino)
 
         if  nomArchivoDace == archivo:
             if  ext == ".fodt" or ext == ".xml":
@@ -52,6 +54,12 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias, \
             procesarPDF(camino,listaMaterias, listaOfertas)
         elif ext == ".xls" or ext == ".xlsx":
             procesarXLS(camino, True, listaMaterias, listaOfertas)
+
+
+    if not (listaOfertas and listaDACE):
+        raise Vacio_Error("Lista de Ofertas")
+    if not listaDACE:
+        raise Vacio_Error("Lista de DACE. " + nomArchivoDace)
 
     return (listaOfertas, listaDACE)
 
@@ -78,9 +86,9 @@ def generarOferta(listaOfertas,listaDACE):
         if not (filaEncontrada):
             if (not (filaDace[0][0:2] in iniMatEspeciales)):
                 materiasDacePorBorrar.append(filaDace)
-                procesado.append(filaDace + ['','0800','E'])
+                procesado.append(filaDace + ['0800','E'])
             else:
-                procesado.append(filaDace + ['','0800',''])
+                procesado.append(filaDace + ['0800',''])
 
         filaEncontrada = False
 
@@ -119,6 +127,9 @@ def generarOferta(listaOfertas,listaDACE):
 
         filaEncontrada = None
 
+    if not procesado:
+        raise Vacio_Error(nomArchivoSalida)
+
     return procesado
 
 
@@ -130,23 +141,30 @@ def reanalizarOferta(listaOfertas,listaDACE):
     # Realizar comparación entre listas del dpto y las listas de DACE.
     # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
     # de E e inclusión de materias que existen sólo en DACE.
+
+    # for filaDace in listaDACE:
+    #     if re.search("[A-Z]{3}\d\d\d", filaDace[0]):
+    #         print(re.search("[A-Z]{3}\d\d\d", filaDace[0]))
+    #         procesado.append(filaDace + ['0800',''])
+
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
             if filaOfertas[0] == filaDace[0] \
-                and filaOfertas[1] == filaDace[1]:
+                and filaOfertas[1] == filaDace[1] \
+                and re.search("[A-Z]{3}\d\d\d", filaDace[0]):
                 filaEncontrada = True
                 break
-        # Caso 2:
+        #Caso 2:
         if not (filaEncontrada):
-            materiasDacePorBorrar.append(filaDace)
-            procesado.append(filaDace + ['','0800','E'])
+            #materiasDacePorBorrar.append(filaDace)
+            procesado.append(filaDace + ['0800',''])
 
         filaEncontrada = False
 
     # Descartar las materias de la lista de DACE
     # que no se encuentren en la oferta de dptos
-    for filaPorBorrar in materiasDacePorBorrar:
-        listaDACE.remove(filaPorBorrar)
+    # for filaPorBorrar in materiasDacePorBorrar:
+    #     listaDACE.remove(filaPorBorrar)
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
     # Se agregan las filas con operación E. Se analizan otras.
@@ -158,26 +176,29 @@ def reanalizarOferta(listaOfertas,listaDACE):
                     and filaOfertas[1] == filaDace[1]:
                     filaEncontrada = filaDace
                     break
+
             # Caso 1:
             if filaEncontrada:
                 #print("Comparar", filaEncontrada, filaOfertas)
                 for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                     match = itemOferta == itemDace
-                    if match:
-                        continue
-                    else:
+                    if not match:
                         break
+
                 if match:
-                    procesado.append(filaEncontrada + ['','0800',''])
+                    #print("Acierto", filaEncontrada, "||", filaOfertas)
+                    procesado.append(filaEncontrada + ['0800',''])
                 else:
+                    #print("Materia modificada", filaEncontrada, "||", filaOfertas)
                     # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                     # print((itemOferta,itemDace))
-                    procesado.append(filaOfertas)
+                    procesado.append(filaOfertas[0:9] + ['M'])
             else:
             # Caso 3:
-                procesado.append(filaOfertas[0:7] + ['','0800','I'])
-        else:
-            procesado.append(filaOfertas)
+                #print("Nueva Materia", filaOfertas)
+                procesado.append(filaOfertas[0:9] + ['I'])
+        # else:
+        #     procesado.append(filaOfertas)
 
         filaEncontrada = None
 
@@ -266,13 +287,19 @@ if __name__ == '__main__':
                 if (not materia.isspace()) and materia[0] != '#':
                     listaMaterias.append(materia.rstrip(' \t\n\r'))
 
-        (listaOfertas,listaDACE) = cargarOfertas(args,nomDirectorio,listaMaterias,\
-                                                 opcionDir,nomArchivoDace)
-
-        print("\nOfertas cargadas con éxito")
-        # imprimirResultados("ListaDace",listaDACE)
-        # imprimirResultados("ListaOfertas",listaOfertas)
-        procesado = generarOferta(listaOfertas,listaDACE)
+        try:
+            (listaOfertas,listaDACE) = cargarOfertas(args,
+                                             nomDirectorio,listaMaterias,
+                                             opcionDir,nomArchivoDace)
+            print("\nOfertas cargadas con éxito")
+            # imprimirResultados("ListaDace",listaDACE)
+            # imprimirResultados("ListaOfertas",listaOfertas)
+            procesado = generarOferta(listaOfertas,listaDACE)
+        except Vacio_Error as ve:
+            print("Falta información en: ", ve)
+            print("Revise el formato y datos de los archivos fuentes")
+            print("Abortar")
+            sys.exit(2)
     else:
         print("\nReanalizando Ofertas ")
         listaOfertas = []

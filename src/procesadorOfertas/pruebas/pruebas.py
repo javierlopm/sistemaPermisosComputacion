@@ -185,8 +185,8 @@ class ContextoIntegral(unittest.TestCase):
                 ["PB5671","A","","","","","","","0800","M"],
             ]
 
-class ProcesarOfertasPequeña(ContextoIntegral):
-    """docstring for ProcesarOfertasPequeña"""
+class ProcesarOfertasPequena(ContextoIntegral):
+    """docstring for ProcesarOfertasPequena"""
     def runTest(self):
         self.fdSalida = generarOferta(self.listaOfertas,self.listaDACE)
         #imprimirResultados("Resultado", self.fdSalida)
@@ -219,7 +219,7 @@ def suitePDF():
 
 def suiteIntegral():
     suite = unittest.TestSuite()
-    suite.addTest (ProcesarOfertasPequeña())
+    suite.addTest (ProcesarOfertasPequena())
     return suite
 
 if __name__ == "__main__":
