@@ -29,6 +29,7 @@ def analizarCabecera(cabecera):
 
     for celda in cabecera:
         if celda:
+            celda = celda.strip()
             searchCodMateria = re.search("^C[oó]d(_Asignatura|igo" +
                                          "(\sAsignatura)?|.)$", celda, re.I)
             searchHorario = re.search(patronDias, celda, re.I)
@@ -156,6 +157,8 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
             if existeEspecial and re.search("^[A-Z]$",
                           entrada[campoEspecial].strip(), re.I):
                 nuevaEntrada += ',' + entrada[campoEspecial].strip()
+            else:
+                nuevaEntrada += ','
 
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != ',' :

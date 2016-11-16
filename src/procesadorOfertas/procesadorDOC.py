@@ -114,16 +114,6 @@ class Ofertas( xml.sax.ContentHandler ):
                 #print("frag")
                 hor = "".join(dividirStr(hor))
             # Unir dias fraccionados con horas
-            # elif fragmentado and re.search(self.patronHoras, item):
-
-            #     #nuevoTxt.append(hor + ' ' + item)
-            #     nuevoTxt.append(hor)
-            #     fragmentado = False
-            #     hor = ""
-            # elif re.search(self.patronDiasFrac, hor, re.I)  \
-            #     and re.search(self.patronHoras, item):
-            #     print("frag completo hor")
-
         #print("Salida horario", nuevoTxt)
         return nuevoTxt
 
@@ -152,11 +142,14 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
             else:
                 acum = ",".join(fil[:2])
                 horariosOrdenados = sorted(fil[2:], key=ordenarDias)
-            acum += componerHorarioCSV(horariosOrdenados)
-        else:
-            acum = fil[0] + ',A,,,,,'
 
-        #fdSalida.write(acum + '\n') # Salida para archivo
+            if horariosOrdenados:
+                acum += componerHorarioCSV(horariosOrdenados) + ','
+            else:
+                acum += ',,,,,,Y'
+        else:
+            acum = fil[0] + ',A,,,,,,Y'
+
         fdSalida.append(acum.split(','))
         acum = ""
 

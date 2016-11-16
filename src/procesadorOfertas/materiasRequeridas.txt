@@ -160,6 +160,7 @@ CI4321
 CI5321
 CI5311
 CI5313
+CO5611
 
 # Materias especiales
 CCW114

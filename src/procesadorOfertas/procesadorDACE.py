@@ -37,7 +37,7 @@ class OfertasDace( OfertasGeneral ):
         self.listaBloque = []
         self.listaMaterias = []
         self.listaEspeciales = []
-        self.patronMateria = "(\w\w\d\d\d\d|\w\w\w\d\d\d)"
+        self.patronMateria = "([A-Z]{2}\d\d\d\d|[A-Z]{3}\d\d\d)"
         self.paddReconHorario = 5
         self.existeEspeciales = False
         self.posEspeciales = None
@@ -65,10 +65,7 @@ class OfertasDace( OfertasGeneral ):
         # Se omite las lineas separadoras del documento.
         if tag == "span" and self.celda[0] != '-':
             #print(r"Celda", self.celda.strip())
-            if not self.cabeceraLista:
-                self.cabeceraLista = \
-                    self.filtroCabecera(self.celda.strip(), self.posCaracteres)
-
+            self.filtroCabecera(self.celda.strip(), self.posCaracteres)
             self.filtrarTexto(self.celda.strip(),self.posCaracteres)
             self.celda = ""
             self.posCaracteres = []
@@ -78,27 +75,27 @@ class OfertasDace( OfertasGeneral ):
         searchDias = re.search(self.patronDias, txt, re.I)
         searchEspeciales = re.search(self.patronEspeciales, txt.strip(), re.I)
         #print(txt)
-        if searchDias:
+        if searchDias and (not self.cabeceraLista):
             #print(searchDias)
             #print("posCaracteres", txt , posCaracteres)
             self.cabeceraDias.append((searchDias.group()[0:2],
                                       Decimal(posCaracteres[0]) - self.paddReconHorario,
                                       Decimal(posCaracteres[2]) + self.paddReconHorario))
             self.cabeceraTest.append(searchDias.group())
+            self.cabeceraLista = len(self.cabeceraDias) == 5
+            if self.cabeceraLista:
+                print("Reconocimiento: ")
+                print("\tCabecera: ", self.cabeceraTest)
 
-        if searchEspeciales:
+        if searchEspeciales and (not self.existeEspeciales):
             #print(searchEspeciales)
             self.existeEspeciales = True
             self.posEspeciales = (Decimal(posCaracteres[0]) - self.paddReconHorario,
                                       Decimal(posCaracteres[2]) + self.paddReconHorario)
-
-        if len(self.cabeceraDias) == 5 and self.existeEspeciales:
-            print("Reconocimiento: ")
-            print("\tCabecera: ", self.cabeceraTest)
             print("\tExiste especiales: ", self.existeEspeciales)
-            return True
-        else:
-            return False
+
+        return
+
 
     # Procesa cadenas encontradas por materias, bloque u horarios.
     def filtrarTexto(self,txt, posCaracteres):
@@ -186,12 +183,15 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
                     #print((horas,dia,htechoAlto, htechoBajo))
                     # print(horas,dia,ftechoAlto,htechoAlto - Decimal(0.3),
                     #     htechoBajo + Decimal(0.3), ftechoBajo)
-                    #print("Itera", horas,dia, ftechoAlto,htechoAlto - Decimal(0.3), htechoBajo + Decimal(0.3), ftechoBajo)
+                    #print("Itera", horas,dia, ftechoAlto,
+                    #htechoAlto - Decimal(0.3),
+                    #htechoBajo + Decimal(0.3), ftechoBajo)
 
                     # Se compara las posiciones verticales de los horarios y los
                     # bloques y se agregan en una lista para borrarlas de la
                     # lista original.
-                    #print(htechoBajo + Decimal(0.3), ">=", ftechoBajo, "||", ftechoAlto, ">=", htechoAlto - Decimal(0.3))
+                    #print(htechoBajo + Decimal(0.3), ">=", ftechoBajo, "||",
+                    # ftechoAlto, ">=", htechoAlto - Decimal(0.3))
                     if  (htechoBajo + distRecon) >= ftechoBajo \
                         and ftechoAlto >= (htechoAlto - distRecon):
                         listaHoras.append((horas,dia))
@@ -204,7 +204,8 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
 
                 esp = ''
                 for (espe,alto,bajo) in contenedor.listaEspeciales:
-                    #print(espe, "||", bajo + distRecon2, ">=", ftechoBajo, "||", ftechoAlto, ">=", alto - distRecon2)
+                    #print(espe, "||", bajo + distRecon2, ">=", ftechoBajo,
+                    #"||", ftechoAlto, ">=", alto - distRecon2)
                     if (bajo + distRecon2) >= ftechoBajo \
                         and ftechoAlto >= (alto - distRecon2):
                         esp = espe

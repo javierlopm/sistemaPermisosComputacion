@@ -37,7 +37,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
         if opcionDir:
             if ext != ".doc" and ext != ".txt":
                 camino = join(nomDirectorio,archivo)
-                print("\t", camino)
+                print(camino)
 
         if  nomArchivoDace == archivo:
             if  ext == ".fodt" or ext == ".xml":
@@ -149,15 +149,16 @@ def reanalizarOferta(listaOfertas,listaDACE):
 
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
-            if filaOfertas[0] == filaDace[0] \
-                and filaOfertas[1] == filaDace[1] \
-                and re.search("[A-Z]{3}\d\d\d", filaDace[0]):
+            if filaOfertas[0] == filaDace[0]:
                 filaEncontrada = True
+                #print("encontrado", filaDace, filaOfertas[9])
+                #print("General encontrado", re.search("[A-Z]{3}\d\d\d", filaDace[0]), filaEncontrada)
                 break
         #Caso 2:
-        if not (filaEncontrada):
+        if not (filaEncontrada): #and re.search("[A-Z]{3}\d\d\d", filaDace[0]):
             #materiasDacePorBorrar.append(filaDace)
-            procesado.append(filaDace + ['0800',''])
+            #print("Agregar",filaDace + ['0800', ''])
+            procesado.append(filaDace + ['0800', 'I'])
 
         filaEncontrada = False
 
@@ -170,37 +171,31 @@ def reanalizarOferta(listaOfertas,listaDACE):
     # Se agregan las filas con operación E. Se analizan otras.
     filaEncontrada = None
     for filaOfertas in listaOfertas:
-        if filaOfertas[9] != 'E':
-            for filaDace in listaDACE:
-                if filaOfertas[0] == filaDace[0] \
-                    and filaOfertas[1] == filaDace[1]:
-                    filaEncontrada = filaDace
+        for filaDace in listaDACE:
+            if filaOfertas[0] == filaDace[0] \
+                and filaOfertas[1] == filaDace[1]:
+                filaEncontrada = filaDace
+                break
+
+        # Caso 1:
+        if filaEncontrada:
+            #print("Comparar", filaEncontrada, filaOfertas)
+            for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
+                match = itemOferta == itemDace
+                if not match:
                     break
 
-            # Caso 1:
-            if filaEncontrada:
-                #print("Comparar", filaEncontrada, filaOfertas)
-                for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
-                    match = itemOferta == itemDace
-                    if not match:
-                        break
-
-                if match:
-                    #print("Acierto", filaEncontrada, "||", filaOfertas)
-                    procesado.append(filaEncontrada + ['0800',''])
-                else:
-                    #print("Materia modificada", filaEncontrada, "||", filaOfertas)
-                    # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
-                    # print((itemOferta,itemDace))
-                    procesado.append(filaOfertas[0:9] + ['M'])
+            if match:
+                #print("Acierto", filaEncontrada, "||", filaOfertas)
+                procesado.append(filaOfertas[0:9] + [''])
             else:
-            # Caso 3:
-                #print("Nueva Materia", filaOfertas)
-                procesado.append(filaOfertas[0:9] + ['I'])
-        # else:
-        #     procesado.append(filaOfertas)
+                #print("Materia modificada", filaEncontrada, "||", filaOfertas)
+                # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
+                # print((itemOferta,itemDace))
+                procesado.append(filaOfertas[:9] + ['M'])
 
         filaEncontrada = None
+
 
     return procesado
 
@@ -319,6 +314,7 @@ if __name__ == '__main__':
         for fila in fdOfertas:
             if sinCabecera:
                 temp = fila.split(',')
+                #print(temp)
                 listaOfertas.append(temp[0:9] + [temp[9].split('\n')[0]])
                 #print(temp[0:9] + [temp[9].split('\n')[0]])
             else:

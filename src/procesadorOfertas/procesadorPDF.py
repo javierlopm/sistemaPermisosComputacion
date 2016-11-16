@@ -36,8 +36,8 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.modoHorario = False
         self.bloque = False
         self.patronHoras = "\d{1,2}(-\d{1,2})?"
-        self.patronDias = "(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
-            "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)"
+        self.patronDias = "^(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
+            "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)$"
         self.patronMateria = "[A-Z][A-Z]\s*-?\s*\d\d\d\d"
         self.patronBloque1 = "^\(?[A-Z]\)?$"
         self.patronBloque2 = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
@@ -110,6 +110,8 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         elif re.search("horarios?" , txt, re.I):
             self.modoHorario = True
             return True
+        # if re.search(self.patronEspeciales,txt):
+        #     self.existeEspeciales = True
 
         # if len(self.cabeceraDias) == 5:
         #     print("Cabecera Lista: ", self.cabeceraDias)
@@ -294,12 +296,12 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
                     horariosOrdenados = sorted(fil[2:], key=ordenarDias)
 
                 if horariosOrdenados:
-                    acum += componerHorarioCSV(horariosOrdenados)
+                    acum += componerHorarioCSV(horariosOrdenados) + ','
                 else:
-                    acum += ',,,,,'
+                    acum += ',,,,,,Y'
 
             elif len(fil) == 1:
-                acum = fil[0] + ',A,,,,,'
+                acum = fil[0] + ',A,,,,,,Y'
 
             fdSalida.append(acum.split(','))
             acum = ""
@@ -319,7 +321,7 @@ if ( __name__ == "__main__"):
     if nomArchivoSalida:
         try:
             f = open(nomArchivoSalida, 'a')
-            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIALES\n")
         except IsADirectoryError:
             print(nomArchivoSalida ,"es un directorio. Se requiere un archivo")
             sys.exit(2)
@@ -327,7 +329,7 @@ if ( __name__ == "__main__"):
             print("Error de E/S: ", ose)
             sys.exit(2)
     else:
-        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
+        print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIALES")
 
 
     for fila in fdSalida:
