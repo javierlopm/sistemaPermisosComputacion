@@ -715,6 +715,7 @@ class CsvWindow(HeaderBarWindow):
                         gen_count += 1 
                     elif (t_perm in [TipoPermiso.general_extra
                                     ,TipoPermiso.xplan_gen_gen
+                                    ,TipoPermiso.xplan_d_gen
                                     ,TipoPermiso.extraplan]):
                         # Escribir en permiso de materia
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))

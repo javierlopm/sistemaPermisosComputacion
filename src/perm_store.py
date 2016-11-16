@@ -22,6 +22,8 @@ class TipoPermiso(Enum):
             return "DOS GENERALES"
         elif self == TipoPermiso.general_extra:
             return "GENERAL ADICIONAL"
+        elif self == TipoPermiso.xplan_d_gen:
+            return "EXTRAPLAN DE GENERAL"
         else:
             return "??"
 
