@@ -35,19 +35,47 @@ El objetivo de este Miniproyecto de Desarrollo de Software es implementar un sis
 ## Especificación de reglas
 
 # Diseño
-Agregar pseudo algoritmos
+
+
+La aplicación se encuentra distribuida en los siguientes módulos y plataformas:
+
+* Plataforma google: a través de google form los usuarios realizan sus solicitudes de permisos, estos resultados son almacenados en una hoja de cálculo disponible en google drive para ser procesada posteriormente por la aplicación de escritorio.
+* Generador de grafos: módulo del miniproyecto anterior, genera archivos png con los grafos coloreados con las materias aprobadas de un estudiante cualquier en computación.
+* Módulo de extración de expedientes: automatiza la búsqueda de expedientes mediante las credenciales de la coordinadora de computación, realiza consultas en la página [http://expediente.dii.usb.ve/] http://expediente.dii.usb.ve/ y almacena los archivos en formato html.
+* Módulo csv: permite la generación de tablas en formato csv, requerido por dace, es el producto resultante del procesamiento de todos los permisos.
+* Módulo de bd: mantiene en disco los datos de todos los estudiantes que se encuentran solicitando permisos, los tipos de permisos que requieren y el estado en el que se encuentran (aprobados, negados o pendientes).
+* Módulo consulta de formulario: integra las hojas de cálculo de la plataforma de google, el de extracción de expedientes, generación de grafos y el manejador de base de datos.
+* Aplicación de escritorio: unifica todos los módulos ya mencionados empleando una interfaz gráfica intuitiva para ser manejada por la coordinadora de computación.
+
+Para el módulo de procesamiento de formularios y expedientes seguimos el siguiente algoritmo
 ```
-ejemplo1.pseudo()
-si furula:
-    vamo_a_programá()
+proc procesar_formulario(form):
+    por cada fila en form:
+        obtener_expediente(fila['carnet'])
+        generar_grafo(archivo_carnet,fila[carnet])
+        insertar_en_bd(fila['datos_de_estudiante'])
+
+        por cada permiso en fila:
+            insertart_en_bd(permiso)
 ```
 
-~~~~~~~~~~~~~~~~~~~~~~ {#mycode .py .numberLines startFrom="61"}
-print("Ejemplo de código con sintaxis de python")
-~~~~~~~~~~~~~~~~~~~~~~
+El diseño de las vistas para la aplicación de escritorio se realizó mediante la extensión de clases proporcionadas por Gtk para python. (CAMBIAR O ELIMINAR)
 
 ## Arquitectura
-(Plataforma ????)
+Este miniproyecto fue desarrollado en *python3*, haciendo uso de las siguiente bibliotecas disponibles a través del manejador de paquete *pip*:
+
+* gspread: utilizado para realizar consultas a las hojas de cálculo almacenadas en google drive.
+* oauth2client: necesario para el proceso de autenticación de google drive.
+* selenium: biblioteca para realizar automatizaciones sobre exploradores web, adicionalmente hacemos uso de chromium webdriver de 64 bits para mantener el explorador web en un entorno aislado e indpendente del administrador de paquetes del sistema operativo.  [1]
+* gi, gi.repository,Gtk: bibliotecas estándar de python3 (en versiones nuevas), permiten crear interfaces de escritorio orientadas a eventos.
+* easygui: biblioteca que provee ventanas y pop-ups de interacción preelaborados.
+* sqlite3: *wrapper* de C en *python3* para el sistema de gestión de  bases de datos portable *sqlite3*. No requiere ser instalada, es parte de python3
+* csv: biblioteca estándar de python3 que ayuda a generar archivos csv (Comma Separated Values), los cuales pueden ser importados en cualquier programa de hojas de cálculo (requerido por DACE).
+* bs4: módulo de la biblioteca BeautifulSoup, parser de html, permite la extración del nombre, índice y número de créditos aprobados por cada estudiante desde su expediente.
+
+Este proyecto, adicionalmente hace uso de de la máquina virtual de java 8 para la generación de los grafos de cada estudiante y del selenium webdriver (el cual es dependiente de la arquitectura x86_64 pero puede ser sustuido por x86).
+
+La aplicación de escritorio ya se encuentra operativa en uno de los equipos de la coordinación.
 
 ## Plan de pruebas y resultados
 (Describir el an y resultados de ejecución)
@@ -57,3 +85,5 @@ print("Ejemplo de código con sintaxis de python")
 
 # Bibliografía
 (Dejar para el final)
+
+[1] 
