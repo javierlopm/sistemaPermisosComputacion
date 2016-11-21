@@ -29,6 +29,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.filaHorario = []
         self.posCaracteres = []
         self.cabeceraDias = []
+        self.cabeceraDiasTest = []
         self.celda = ""
         self.listaMaterias = listaMaterias
         self.cabeceraLista = False
@@ -36,8 +37,8 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.modoHorario = False
         self.bloque = False
         self.patronHoras = "\d{1,2}(-\d{1,2})?"
-        self.patronDias = "^(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
-            "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)$"
+        self.patronDias = "(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
+            "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)"
         self.patronMateria = "[A-Z][A-Z]\s*-?\s*\d\d\d\d"
         self.patronBloque1 = "^\(?[A-Z]\)?$"
         self.patronBloque2 = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
@@ -66,32 +67,23 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def endElement(self, tag):
         if tag == "span":
             #print("Celda", self.celda, self.posCaracteres)
-            #print("Celda", self.celda)
             if not self.cabeceraLista:
+                #print("Celda", self.celda)
                 self.cabeceraLista = \
                     self.filtroCabecera(self.celda, self.posCaracteres)
-            else:
-                if re.search("Carreras?", self.celda, re.I):
-                    #print("existeCarrera END")
-                    self.existeCarrera = True
 
-                #print("Celda", self.celda)
-                if self.modoHorario:
-                    self.filtrarTextoEstiloComputo(self.celda.strip())
-                else:
-                    self.filtrarTexto(self.celda.strip())
+            if re.search("Carreras?", self.celda, re.I):
+                #print("existeCarrera END")
+                self.existeCarrera = True
+
+            #print("Celda", self.celda)
+            if self.modoHorario:
+                self.filtrarTextoEstiloComputo(self.celda.strip())
+            else:
+                self.filtrarTexto(self.celda.strip())
 
             self.celda = ""
             self.posCaracteres = []
-
-    # def verificarFila(fila, patronHoras, patronMateria, patronBloque):
-    #     nuevaFila = fila.split(',')
-    #     cent = len(nuevafila) < 6
-
-    #     for item in nuevafila:
-    #         if re.search(item,patronHoras)
-    #             cent = True and cent
-    #         elif re.search(item,patronMateriam re:i)
 
    # Call when a character is read
     def characters(self, content):
@@ -101,20 +93,22 @@ class OfertasGeneral( xml.sax.ContentHandler ):
     def filtroCabecera(self,txt, posCaracteres):
         searchDias = re.search(self.patronDias, txt, re.I)
         if searchDias:
-            # print("posCaracteres", txt , posCaracteres)
+            #print("posCaracteres", txt , posCaracteres)
             self.cabeceraDias.append((searchDias.group()[0:2],
                                       Decimal(posCaracteres[0]),
                                       Decimal(posCaracteres[2])))
+            self.cabeceraDiasTest.append(searchDias.group())
+            if len(self.cabeceraDias) == 5:
+                print("Reconocimiento:\n\t", self.cabeceraDiasTest, end='\n\n')
+                return True
 
-            return len(self.cabeceraDias) == 5
-        elif re.search("horarios?" , txt, re.I):
+        if re.search("horarios?" , txt, re.I):
             self.modoHorario = True
+            print("Reconocimiento:\n\tModo horario (estilo computo):",
+                  self.modoHorario, end='\n\n')
             return True
-        # if re.search(self.patronEspeciales,txt):
-        #     self.existeEspeciales = True
 
-        # if len(self.cabeceraDias) == 5:
-        #     print("Cabecera Lista: ", self.cabeceraDias)
+        return False
 
     def filtrarTextoEstiloComputo(self,txt):
         searchMat = re.search(self.patronMateria, txt, re.I)
@@ -122,12 +116,13 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         searchHorario = re.search(self.patronHorario, txt, re.I)
         searchHorario2 = re.search(self.patronHorario2, txt, re.I)
         searchSeccion = re.search(self.patronSeccion, txt, re.I)
-
+        #print(searchHorario)
+        #print(searchHorario2)
         if searchMat:
             self.filaMatBloq.append((normalizarMateria(searchMat.group()),
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
-            #print(searchHorario2)
+            #print(searchMat)
             #print(searchBloq2)
         elif searchBloq2:
             #print(dividirStr(searchBloq2.group())[1])

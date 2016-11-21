@@ -38,6 +38,7 @@ class OfertasDace( OfertasGeneral ):
         self.listaMaterias = []
         self.listaEspeciales = []
         self.patronMateria = "([A-Z]{2}\d\d\d\d|[A-Z]{3}\d\d\d)"
+        self.patronDias = "^" + self.patronDias + "$"
         self.paddReconHorario = 5
         self.existeEspeciales = False
         self.posEspeciales = None
