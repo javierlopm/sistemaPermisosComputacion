@@ -496,6 +496,7 @@ class LoginWindow(Gtk.Window):
         password_label.set_justify(Gtk.Justification.LEFT)
 
         self.username_entry = Gtk.Entry()
+        self.username_entry.set_text("coord-comp")
         self.password_entry = Gtk.Entry()
         self.password_entry.set_visibility(False)
 
@@ -518,6 +519,8 @@ class LoginWindow(Gtk.Window):
 
         ok_button.connect("clicked", self.on_ok_button_clicked)
         cancel_button.connect("clicked", self.on_cancel_button_clicked)
+
+	
 
         main_box.pack_start(main_label      ,True,True,0)
         main_box.pack_start(username_label  ,True,True,0)

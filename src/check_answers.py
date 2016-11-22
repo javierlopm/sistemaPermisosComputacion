@@ -51,7 +51,8 @@ nogen_perms_dict = {
     7   : 't',
     8   : 'l',
     9   : 'p',
-    10  : 'm'
+    10  : 'm',
+    11	: 'r'
 }
 
 trimestre_dict = {
@@ -103,7 +104,7 @@ def parseCoursesId(c_string, pasantia):
                 lis.append(he)
             else:
                 lis.append(elem)
-        return lis 
+        return list(map( (lambda x: x.upper()) ,lis))
 
 class AnswersChecker():
     def __init__(self, username, password, modality):
@@ -184,7 +185,8 @@ class AnswersChecker():
                 if onlyg_perms_dict[k] == 'x' or onlyg_perms_dict[k] == 'z':
                     for elem in parseCoursesId  (line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-        graphs_command+user_id
+        print(graphs_command+user_id)
+        
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.communicate())
 
@@ -234,7 +236,7 @@ class AnswersChecker():
             print("Error trying to get student")
 
         perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[11])
-        for k in range(5,11):
+        for k in range(5,12):
             pasantias = k == 10
             if line[k] != "":
                 if nogen_perms_dict[k] == 'm' or nogen_perms_dict[k] == 't':
