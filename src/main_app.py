@@ -6,6 +6,7 @@ from gi.repository import Gtk,GdkPixbuf,Gdk
 from coord_crawler import format_id,show_carnet,StudentDownloader
 from easygui       import msgbox,ccbox,filesavebox
 import os.path
+import sys
 from csv_creator import CsvCreator
 from perm_store import *
 from copy import deepcopy
@@ -574,6 +575,7 @@ class LoginWindow(Gtk.Window):
     def on_cancel_button_clicked(self, widget):
         self.destroy()
 
+
 class CsvWindow(HeaderBarWindow):
     """ 
         Clase para todas las búsquedas de permisos
@@ -801,6 +803,7 @@ class MainWindow(Gtk.Window):
         button6 = Gtk.Button(label="Permisos pendientes")
 
         button_csv = Gtk.Button(label="Generar archivos csv")
+        button_em  = Gtk.Button(label="Enviar correos")
 
         # Combo box búsqueda por tipos
         search_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
@@ -853,6 +856,7 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(search_boxSE,True,True,0)
         main_box.pack_start(button6  ,True,True,0)
         main_box.pack_start(button_csv  ,True,True,0)
+        main_box.pack_start(button_em  ,True,True,0)
 
 
 
@@ -863,6 +867,7 @@ class MainWindow(Gtk.Window):
         button6.connect("clicked", self.on_search_view_clicked)
 
         button_csv.connect("clicked", self.on_write_csv_clicked)
+        button_em.connect("clicked", self.on_email_send)
         type_combo.connect("changed", self.on_combo_changed,True)
         state_combo.connect("changed", self.on_combo_changed,False)
         buttonS.connect("clicked",    self.on_combo_search,True)
@@ -879,6 +884,9 @@ class MainWindow(Gtk.Window):
             else:
                 self.active_state = EstadoPermiso(mod)
 
+    def on_email_send(self,widget):
+        new_win = SendEmailsWindow()
+        response = new_win.show_all()
 
     def on_student_clicked(self, widget):
         formated_carnet = format_id(self.student_entry.get_text())
@@ -971,7 +979,127 @@ class MainWindow(Gtk.Window):
         self.fst_box.pack_start(self.label,True,True,0)
         self.label.show()
 
+class SendEmailsWindow(Gtk.Window):
 
+    def __init__(self):
+
+        self.processing = False
+
+        Gtk.Window.__init__(self, title="Permisos coordinación")
+        self.set_default_size(320,200)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,  spacing=6)
+        self.add(main_box)
+
+        buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+
+        main_label = Gtk.Label()
+        main_label.set_text("Ingrese sus credenciales para enviar los correos.")
+        main_label.set_justify(Gtk.Justification.CENTER)
+
+        username_label = Gtk.Label()
+        username_label.set_text("Correo electronico:")
+        username_label.set_justify(Gtk.Justification.LEFT)
+
+        password_label = Gtk.Label()
+        password_label.set_text("Contraseña:")
+        password_label.set_justify(Gtk.Justification.LEFT)
+
+        self.username_entry = Gtk.Entry()
+        self.username_entry.set_text("coord-comp@usb.ve")
+        self.password_entry = Gtk.Entry()
+        self.password_entry.set_visibility(False)
+
+
+
+        ok_button = Gtk.Button(label="Aceptar")
+        cancel_button = Gtk.Button(label="Cancelar")
+
+        ok_button.connect("clicked", self.on_ok_button_clicked)
+        cancel_button.connect("clicked", self.on_cancel_button_clicked)
+
+    
+
+        main_box.pack_start(main_label      ,True,True,0)
+        main_box.pack_start(username_label  ,True,True,0)
+        main_box.pack_start(self.username_entry  ,True,True,0)
+        main_box.pack_start(password_label  ,True,True,0)
+        main_box.pack_start(self.password_entry  ,True,True,0)
+        main_box.pack_start(buttons_box     ,True,True,0)
+        buttons_box.pack_start(ok_button    ,True,True,0)
+        buttons_box.pack_start(cancel_button,True,True,0)
+
+
+    def on_ok_button_clicked(self, widget):
+        if self.processing:
+            return
+
+        self.processing = True
+        gmail_sender = self.username_entry.get_text()
+        gmail_passwd = self.password_entry.get_text()
+
+
+        if gmail_sender != "" and gmail_passwd != "":
+            print("pre import")
+            import smtplib
+            print("post import")
+
+            SUBJECT = 'Solicitud de permisos de coordinacion de Ingenieria de la Computacion'
+
+            # Gmail Sign In
+
+            worked = False
+            while (not worked):
+                try:
+                    print("server")
+                    server = smtplib.SMTP('smtp.gmail.com',587,timeout=5)
+                    print("ehlo")
+                    server.ehlo()
+                    print("startssl")
+                    server.starttls()
+                    print("login")
+                    server.login(gmail_sender, gmail_passwd)
+                    print("done")
+                    worked = True
+                except:
+                    print("error al iniciar sesion, intentando de nuevo")
+
+            for carnet,permisos in db.get_rejected():
+                TEXT = "De los permisos solicitados, no se aprobaron los siguientes:\n"
+                conjunto_correos = set([])
+                for p in permisos:
+                    # print(p)
+                    otro_correo = p['correo']
+                    if otro_correo is not "": conjunto_correos.add(otro_correo)
+                    TEXT += TipoPermiso(p['tipo']).mensaje_permiso((p['string_extra']or "" )+str(p['int_extra'] or ""))
+                conjunto_correos.add(show_carnet(carnet) + "@usb.ve")
+                TO = list(conjunto_correos)
+                print(TO)
+
+
+                BODY = '\r\n'.join(['From: %s' % gmail_sender,
+                                   'Subject: %s' % SUBJECT,
+                                   '', TEXT])
+                print(BODY)
+                worked = False
+                while (not worked):
+                    try:
+                        server.sendmail(gmail_sender, TO, BODY)
+                        worked = True
+                    except:
+                        print("Unexpected error:", sys.exc_info()[0])
+                        print("ups")
+
+            server.quit()
+            self.destroy()
+        else:
+            msgbox("Existen campos sin llenar.")
+
+        self.processing = False
+
+
+    def on_cancel_button_clicked(self, widget):
+        self.destroy()
 
 win = InitWindow()
 win.connect("delete-event", Gtk.main_quit)

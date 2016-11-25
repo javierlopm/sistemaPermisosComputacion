@@ -27,6 +27,27 @@ class TipoPermiso(Enum):
         else:
             return "??"
 
+    def mensaje_permiso(self,extra=""):
+        if self is TipoPermiso.extraplan:
+            return "- Extraplan " + extra + "\n"
+        elif self is TipoPermiso.xplan_gen_gen:
+            return "- Extraplan de general\n"
+        elif self is TipoPermiso.dos_generales:
+            return "- Dos generales\n"
+        elif self is TipoPermiso.general_extra:
+            return "- General adicional\n"
+        elif self is TipoPermiso.extraplan:
+            return "- Extraplan " + extra + "\n"
+        elif self is TipoPermiso.xplan_d_gen:
+            return "- Extraplan de general " + extra + "\n"
+        elif self is TipoPermiso.sin_requisito:
+            return "- Materia sin requisito" + extra + "\n"
+        elif self is TipoPermiso.permiso_materia:
+            return "- Permiso para inscribir " + extra + "\n"
+        elif self is TipoPermiso.pp:
+            return "- Permiso para cursar trimestre en PP \n"
+
+
 # Enums para trimestres
 class Trimestre(Enum):
     eneroMarzo          = 'e'
@@ -97,6 +118,13 @@ type_qry_no_trim = "SELECT * FROM permiso WHERE tipo = (?)"
 pending_qry= """SELECT * 
                 FROM permiso 
                 WHERE aprobado  = 'p'"""
+
+rejected_qry= """SELECT * 
+                FROM permiso, estudiante
+                WHERE aprobado  = 'n' AND
+                      fk_carnet == carnet
+                ORDER BY carnet"""
+
 
 state_qry = """SELECT * 
                FROM permiso 
@@ -226,12 +254,18 @@ class PermStore():
         else:
             return self._run_with_args(state_all_qry, (state.value,))
 
+    def get_rejected(self):
+        from itertools import groupby
+        consulta = iter(self._run_simple_query(rejected_qry))
+        return groupby(consulta,(lambda dic: dic['carnet']))
+
+        # return self._run_simple_query(rejected_qry)
     def test(self):
         self.insert_student(1110552
                            ,"Javier López"
                            ,"04129349938"
                            ,"javierloplom@gmail.com"
-                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Siria")
+                           ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Burkina Faso")
 
         self.insert_student(1110584
                            ,"Carlos Martínez"
