@@ -1,7 +1,6 @@
 import sys
 import getopt
 
-
 class Vacio_Error(Exception):
   """Excepcion para el caso que alguna lista este vacio"""
   def __init__(self,ubicacion):
@@ -103,6 +102,11 @@ def obtArgs(entrada):
 
     return (nomArchivoSalida, nomArchivoMaterias, args)
 
+
+#
+# Funciones para cargar archivos
+#
+
 def cargarMaterias(nomArchivoMaterias):
     listaMaterias = []
 
@@ -120,3 +124,28 @@ def cargarMaterias(nomArchivoMaterias):
                 listaMaterias.append(materia.rstrip(' \t\n\r'))
 
     return listaMaterias
+
+def cargarOfertasCSV(caminoArchCSV,alcance):
+    listaOfertas = []
+    try:
+        fdOfertas = open(caminoArchCSV, 'r')
+    except FileNotFoundError:
+        print("El archivo no encontrado", args[0])
+        sys.exit(2)
+    except IsADirectoryError:
+        print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
+        sys.exit(2)
+    except UnicodeDecodeError:
+        print("Archivo no codificado para UTF-8. Recodifique.")
+        sys.exit(2)
+    else:
+        sinCabecera = False
+        for fila in fdOfertas:
+            if sinCabecera:
+                temp = fila.split(',')
+                #print(temp)
+                listaOfertas.append(temp[0:alcance] + [temp[alcance].split('\n')[0]])
+                #print(temp[0:9] + [temp[9].split('\n')[0]])
+            else:
+                sinCabecera = True
+    return listaOfertas

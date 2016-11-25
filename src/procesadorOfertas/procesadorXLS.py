@@ -125,6 +125,7 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
                     continue
 
             nuevaEntrada = ""
+            horarioNoVacio = True
             for pos in posCamposValidos:
                 if isinstance(entrada[pos],float):
                     #Compvertir numeros unitarios flotantes en enteros.
@@ -149,6 +150,7 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
                     nuevaEntrada += ',' + normalizarMateria(searchMat.group())
                 elif re.search(patronHoras, txt):
                     nuevaEntrada += ',' + normalizarHoras(txt)
+                    horarioNoVacio = False
                 elif filtrarBloque(txt) \
                     or txt == '':
                     #print("pasa el filtro", txt)
@@ -157,6 +159,8 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
             if existeEspecial and re.search("^[A-Z]$",
                           entrada[campoEspecial].strip(), re.I):
                 nuevaEntrada += ',' + entrada[campoEspecial].strip()
+            elif horarioNoVacio:
+                nuevaEntrada += ',Y'
             else:
                 nuevaEntrada += ','
 
@@ -184,14 +188,12 @@ if ( __name__ == "__main__"):
     if nomArchivoSalida:
         try:
             f = open(nomArchivoSalida, 'a')
-            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V\n")
+            f.write("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIAL\n")
         except OSError as ose:
             print("Error de E/S: ", ose)
             sys.exit(2)
-    elif existeEspecial:
-        print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIAL")
     else:
-        print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V")
+        print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIAL")
 
 
     for fila in fdSalida:

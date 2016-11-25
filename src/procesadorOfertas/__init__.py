@@ -1,3 +1,4 @@
 from procesadorXLS import procesarXLS
 from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
+from funcionesAuxiliares import cargarMaterias, cargarOfertasCSV

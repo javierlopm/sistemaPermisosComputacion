@@ -14,7 +14,7 @@ from procesadorXLS import procesarXLS
 from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
-from funcionesAuxiliares import imprimirResultados, Vacio_Error
+from funcionesAuxiliares import imprimirResultados, Vacio_Error, cargarOfertasCSV
 import sys
 import getopt
 import re
@@ -56,7 +56,7 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
             procesarXLS(camino, True, listaMaterias, listaOfertas)
 
 
-    if not (listaOfertas and listaDACE):
+    if not (listaOfertas):
         raise Vacio_Error("Lista de Ofertas")
     if not listaDACE:
         raise Vacio_Error("Lista de DACE. " + nomArchivoDace)
@@ -106,7 +106,6 @@ def generarOferta(listaOfertas,listaDACE):
         for filaDace in listaDACE:
             if filaOfertas[0] == filaDace[0] \
                 and filaOfertas[1] == filaDace[1]:
-
                 filaEncontrada = filaDace
                 break
         # Caso 1:
@@ -118,12 +117,12 @@ def generarOferta(listaOfertas,listaDACE):
                 else:
                     break
             if match:
-                procesado.append(filaOfertas + ['','0800',''])
+                procesado.append(filaOfertas + ['0800',''])
             else:
-                procesado.append(filaOfertas + ['','0800','M'])
+                procesado.append(filaOfertas + ['0800','M'])
         else:
         # Caso 3:
-            procesado.append(filaOfertas + ['','0800','I'])
+            procesado.append(filaOfertas + ['0800','I'])
 
         filaEncontrada = None
 
@@ -142,30 +141,20 @@ def reanalizarOferta(listaOfertas,listaDACE):
     # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
     # de E e inclusión de materias que existen sólo en DACE.
 
-    # for filaDace in listaDACE:
-    #     if re.search("[A-Z]{3}\d\d\d", filaDace[0]):
-    #         print(re.search("[A-Z]{3}\d\d\d", filaDace[0]))
-    #         procesado.append(filaDace + ['0800',''])
-
     for filaDace in listaDACE:
         for filaOfertas in listaOfertas:
+            #print("fi", filaOfertas, filaDace)
             if filaOfertas[0] == filaDace[0]:
                 filaEncontrada = True
-                #print("encontrado", filaDace, filaOfertas[9])
+                #print("encontrado", filaOfertas, filaOfertas[9])
                 #print("General encontrado", re.search("[A-Z]{3}\d\d\d", filaDace[0]), filaEncontrada)
                 break
         #Caso 2:
-        if not (filaEncontrada): #and re.search("[A-Z]{3}\d\d\d", filaDace[0]):
-            #materiasDacePorBorrar.append(filaDace)
-            #print("Agregar",filaDace + ['0800', ''])
+        if not ((filaEncontrada) or re.search("[A-Z]{3}\d\d\d", filaDace[0])):
+            print("Agregar DACE",filaDace + ['0800', ''])
             procesado.append(filaDace + ['0800', 'I'])
 
         filaEncontrada = False
-
-    # Descartar las materias de la lista de DACE
-    # que no se encuentren en la oferta de dptos
-    # for filaPorBorrar in materiasDacePorBorrar:
-    #     listaDACE.remove(filaPorBorrar)
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
     # Se agregan las filas con operación E. Se analizan otras.
@@ -186,13 +175,18 @@ def reanalizarOferta(listaOfertas,listaDACE):
                     break
 
             if match:
-                #print("Acierto", filaEncontrada, "||", filaOfertas)
-                procesado.append(filaOfertas[0:9] + [''])
+                print("Acierto", filaEncontrada, "||", filaOfertas)
+                procesado.append(filaOfertas[:9] + [''])
             else:
-                #print("Materia modificada", filaEncontrada, "||", filaOfertas)
+                print("Materia modificada", filaOfertas)
                 # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                 # print((itemOferta,itemDace))
                 procesado.append(filaOfertas[:9] + ['M'])
+            # if not match:
+            #     procesado.append(filaOfertas[:9] + ['M'])
+        else:
+            print("Agregar " ,filaOfertas[:9] + ['I'])
+            procesado.append(filaOfertas[:9] + ['I'])
 
         filaEncontrada = None
 
@@ -295,14 +289,8 @@ if __name__ == '__main__':
             print("Revise el formato y datos de los archivos fuentes")
             print("Abortar")
             sys.exit(2)
-    else:
-        print("\nReanalizando Ofertas ")
-        listaOfertas = []
-        sinCabecera = False
-        try:
-            fdOfertas = open(args[0], 'r')
         except FileNotFoundError:
-            print("El archivo no encontrado", args[0])
+            print("El archivo no encontrado", nomArchivoMaterias)
             sys.exit(2)
         except IsADirectoryError:
             print(nomArchivoMaterias ,"es un directorio. Se requiere un archivo")
@@ -310,16 +298,9 @@ if __name__ == '__main__':
         except UnicodeDecodeError:
             print("Archivo no codificado para UTF-8. Recodifique.")
             sys.exit(2)
-
-        for fila in fdOfertas:
-            if sinCabecera:
-                temp = fila.split(',')
-                #print(temp)
-                listaOfertas.append(temp[0:9] + [temp[9].split('\n')[0]])
-                #print(temp[0:9] + [temp[9].split('\n')[0]])
-            else:
-                sinCabecera = True
-
+    else:
+        print("\nReanalizando Ofertas ")
+        listaOfertas = cargarOfertasCSV(args[0],9)
         listaDACE = []
         procesarDACE("0800",nomArchivoDace,listaDACE)
         procesado = reanalizarOferta(listaOfertas,listaDACE)
