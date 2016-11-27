@@ -3,7 +3,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-from procesadorOfertas import procesarDOC, procesarPDF, procesarXLS, \
+from procesadorOfertas import procesarDOC, procesarDACE, procesarPDF, procesarXLS, \
                                 generarOferta, cargarOfertas, imprimirResultados, \
                                 cargarOfertasCSV
 #
@@ -96,24 +96,36 @@ class ProcesarDOC1_PDF (Contexto):
         """ Prueba de procesamiento sobre doc1.pdf """
         procesarPDF(self.carpetaBase + "doc1.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento PDF. Archivo doc1.pdf")
+        self.fdSalida = []
+        procesarPDF(self.carpetaBase + "doc11.pdf",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc1, "Falla de procesamiento PDF. Archivo doc11.pdf")
 
 class ProcesarDOC2_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc2.pdf """
         procesarPDF(self.carpetaBase +  "doc2.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc2, "Falla de procesamiento PDF. Archivo doc2.pdf")
+        self.fdSalida = []
+        procesarPDF(self.carpetaBase + "doc21.pdf",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc2, "Falla de procesamiento PDF. Archivo doc21.pdf")
 
 class ProcesarDOC3_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc3.pdf """
         procesarPDF(self.carpetaBase + "doc3.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento PDF. Archivo doc3.pdf")
+        self.fdSalida = []
+        procesarPDF(self.carpetaBase + "doc31.pdf",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc3, "Falla de procesamiento PDF. Archivo doc31.pdf")
 
 class ProcesarDOC4_PDF (Contexto):
     def runTest (self):
         """ Prueba de procesamiento sobre doc4.pdf """
         procesarPDF(self.carpetaBase + "doc4.pdf",self.listaMaterias, self.fdSalida)
         self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento PDF. Archivo doc4.pdf")
+        self.fdSalida = []
+        procesarPDF(self.carpetaBase + "doc41.pdf",self.listaMaterias, self.fdSalida)
+        self.assertEqual(self.fdSalida, self.Correcta_doc4, "Falla de procesamiento PDF. Archivo doc41.pdf")
 
 class ProcesarDOC1_XLS (Contexto):
     def runTest(self):
@@ -146,6 +158,7 @@ class ContextoDatosReales(unittest.TestCase):
     def setUp(self):
         self.carpetaBase = "pruebas_integrales/"
         self.carpetaRespuestas = "res_pruebas_procesamiento/"
+        self.CarpetaDACE = "pruebas_procesamiento/datos_reales/"
         #self.listaMaterias = cargarMaterias("../materiasRequeridas.txt")
         self.listaMaterias = []
         for materia in open("../materiasRequeridas.txt", 'r'):
@@ -209,6 +222,39 @@ class FODT_datosReales_PB(ContextoDatosReales):
         procesarDOC(self.carpetaBase + "ofertas1/OfertaPB.fodt", self.listaMaterias, fdSalida)
         self.assertEqual(fdSalida, respuesta, "Falla de procesamiento DOC. Archivo ofertas1/OfertaPB.fodt")
 
+
+class procesamiento_DACE_EM2017_v1(ContextoDatosReales):
+    """docstring for procesamiento_DACE_EM2017_v1"""
+    def runTest(self):
+        fdSalida = []
+        respuesta = cargarOfertasCSV(self.carpetaRespuestas + "resDACE_EM2017_v1.csv", 7)
+        procesarDACE("0800", "../Oferta_DACE_EN2017_v1.pdf", fdSalida)
+        self.assertEqual(fdSalida, respuesta, "Falla de procesamiento PDF DACE. Archivo Oferta_DACE_EN2017_v1.pdf")
+
+class procesamiento_DACE_EM2017_v2(ContextoDatosReales):
+    """docstring for procesamiento_DACE_EM2017_v2"""
+    def runTest(self):
+        fdSalida = []
+        respuesta = cargarOfertasCSV(self.carpetaRespuestas + "resDACE_EM2017_v2.csv", 7)
+        procesarDACE("0800","../Oferta_DACE_EN2017_v2.pdf", fdSalida)
+        self.assertEqual(fdSalida, respuesta, "Falla de procesamiento PDF DACE. Archivo Oferta_DACE_EN2017_v2.pdf")
+
+class procesamiento_DACE_EM2017_v3(ContextoDatosReales):
+    """docstring for procesamiento_DACE_EM2017_v3"""
+    def runTest(self):
+        fdSalida = []
+        respuesta = cargarOfertasCSV(self.carpetaRespuestas + "resDACE_EM2017_v3.csv", 7)
+        procesarDACE("0800","../Oferta_DACE_EN2017_v3.pdf", fdSalida)
+        self.assertEqual(fdSalida, respuesta, "Falla de procesamiento PDF DACE. Archivo Oferta_DACE_EN2017_v3.pdf")
+
+class procesamiento_DACE_SD2016(ContextoDatosReales):
+    """docstring for procesamiento_DACE_SD2016"""
+    def runTest(self):
+        fdSalida = []
+        respuesta = cargarOfertasCSV(self.carpetaRespuestas + "resDACE_SD2016.csv", 7)
+        procesarDACE("0800",self.CarpetaDACE + "Oferta_DACE_SD2016.pdf", fdSalida)
+        self.assertEqual(fdSalida, respuesta, "Falla de procesamiento PDF DACE. Archivo Oferta_DACE_SD2016.pdf")
+        
 
 
 
@@ -332,6 +378,14 @@ def suitePDF_datosReales():
     suite.addTest (PDF_datosReales_SIG())
     return suite
 
+def suiteDACE():
+    suite = unittest.TestSuite()
+    suite.addTest (procesamiento_DACE_SD2016())
+    suite.addTest (procesamiento_DACE_EM2017_v1())
+    suite.addTest (procesamiento_DACE_EM2017_v2())
+    suite.addTest (procesamiento_DACE_EM2017_v3())
+    return suite
+
 
 def suitePDF():
     suite = unittest.TestSuite()
@@ -351,8 +405,9 @@ if __name__ == "__main__":
     runner = unittest.TextTestRunner()
     # runner.run (suiteDOC())
     # runner.run (suiteXLS())
-    # runner.run (suitePDF())
+    #runner.run (suitePDF())
+    runner.run (suiteDACE())
     # runner.run (suiteXLS_datosReales())
     # runner.run (suiteDOC_datosReales())
     # runner.run (suitePDF_datosReales())
-    runner.run (suiteIntegral())
+    #runner.run (suiteIntegral())

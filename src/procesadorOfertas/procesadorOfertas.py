@@ -135,26 +135,26 @@ def generarOferta(listaOfertas,listaDACE):
 def reanalizarOferta(listaOfertas,listaDACE):
     materiasDacePorBorrar = []
     procesado = []
-    filaEncontrada = False
+    #filaEncontrada = False
 
     # Realizar comparación entre listas del dpto y las listas de DACE.
     # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
     # de E e inclusión de materias que existen sólo en DACE.
 
-    for filaDace in listaDACE:
-        for filaOfertas in listaOfertas:
-            #print("fi", filaOfertas, filaDace)
-            if filaOfertas[0] == filaDace[0]:
-                filaEncontrada = True
-                #print("encontrado", filaOfertas, filaOfertas[9])
-                #print("General encontrado", re.search("[A-Z]{3}\d\d\d", filaDace[0]), filaEncontrada)
-                break
-        #Caso 2:
-        if not ((filaEncontrada) or re.search("[A-Z]{3}\d\d\d", filaDace[0])):
-            print("Agregar DACE",filaDace + ['0800', ''])
-            procesado.append(filaDace + ['0800', 'I'])
+    # for filaDace in listaDACE:
+    #     for filaOfertas in listaOfertas:
+    #         #print("fi", filaOfertas, filaDace)
+    #         if filaOfertas[0] == filaDace[0]:
+    #             filaEncontrada = True
+    #             #print("encontrado", filaOfertas, filaOfertas[9])
+    #             #print("General encontrado", re.search("[A-Z]{3}\d\d\d", filaDace[0]), filaEncontrada)
+    #             break
+    #     #Caso 2:
+    #     if not ((filaEncontrada) or re.search("[A-Z]{3}\d\d\d", filaDace[0])):
+    #         print("Agregar DACE",filaDace + ['0800', ''])
+    #         procesado.append(filaDace + ['0800', 'I'])
 
-        filaEncontrada = False
+    #     filaEncontrada = False
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
     # Se agregan las filas con operación E. Se analizan otras.
@@ -175,17 +175,19 @@ def reanalizarOferta(listaOfertas,listaDACE):
                     break
 
             if match:
-                print("Acierto", filaEncontrada, "||", filaOfertas)
+                #print("Acierto", filaEncontrada, "||", filaOfertas)
                 procesado.append(filaOfertas[:9] + [''])
+            elif filaOfertas[9] == 'E':
+                procesado.append(filaEncontrada[:9] + ['M'])
             else:
-                print("Materia modificada", filaOfertas)
+                #print("Materia modificada", filaOfertas)
                 # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                 # print((itemOferta,itemDace))
                 procesado.append(filaOfertas[:9] + ['M'])
             # if not match:
             #     procesado.append(filaOfertas[:9] + ['M'])
         else:
-            print("Agregar " ,filaOfertas[:9] + ['I'])
+            #print("Agregar " ,filaOfertas[:9] + ['I'])
             procesado.append(filaOfertas[:9] + ['I'])
 
         filaEncontrada = None

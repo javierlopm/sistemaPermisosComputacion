@@ -33,7 +33,6 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         self.celda = ""
         self.listaMaterias = listaMaterias
         self.cabeceraLista = False
-        self.existeCarrera = False
         self.modoHorario = False
         self.bloque = False
         self.patronHoras = "\d{1,2}(-\d{1,2})?"
@@ -41,9 +40,8 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)"
         self.patronMateria = "[A-Z][A-Z]\s*-?\s*\d\d\d\d"
         self.patronBloque1 = "^\(?[A-Z]\)?$"
-        self.patronBloque2 = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
+        self.patronBloque2 = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?\s+[A-Z]\)?"
         self.patronSeccion = "\(?Sec.?i?ó?n?(\s)+\d\)?"
-        self.patronCarrera = "0?800"
         self.corresSecBloq = { '1' : 'A', '2' : 'B', '3' : 'C', '4' : 'D', '5' : 'E'}
         self.patronHorario = self.patronDias + "((\s*(-|–)\s*)" + self.patronDias + ")?" \
             + "\s+" + self.patronHoras
@@ -71,10 +69,6 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                 #print("Celda", self.celda)
                 self.cabeceraLista = \
                     self.filtroCabecera(self.celda, self.posCaracteres)
-
-            if re.search("Carreras?", self.celda, re.I):
-                #print("existeCarrera END")
-                self.existeCarrera = True
 
             #print("Celda", self.celda)
             if self.modoHorario:
@@ -116,17 +110,17 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         searchHorario = re.search(self.patronHorario, txt, re.I)
         searchHorario2 = re.search(self.patronHorario2, txt, re.I)
         searchSeccion = re.search(self.patronSeccion, txt, re.I)
-        #print(searchHorario)
-        #print(searchHorario2)
+        #print(txt, searchBloq2)
         if searchMat:
             self.filaMatBloq.append((normalizarMateria(searchMat.group()),
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
             #print(searchMat)
             #print(searchBloq2)
-        elif searchBloq2:
-            #print(dividirStr(searchBloq2.group())[1])
-            self.filaMatBloq.append((dividirStr(searchBloq2.group())[1],
+
+        if searchBloq2:
+            #print("BLoqe", dividirStr(searchBloq2.group()), dividirStr(searchBloq2.group())[1])
+            self.filaMatBloq.append((dividirStr(searchBloq2.group(),' ()')[1],
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
             self.bloque = True
@@ -138,18 +132,22 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                              Decimal(self.posCaracteres[3])))
             self.bloque = False
 
-        elif searchHorario or searchHorario2:
-            #print(self.normalizarHorario(dividirStr(txt)))
+        if searchHorario or searchHorario2:
+            # print(searchHorario)
+            # print(searchHorario2)
+            #print(self.normalizarHorario(dividirStr(txt)), dividirStr(txt))
             for hor in self.normalizarHorario(
                               dividirStr(txt)):
-                #print("hor", hor)
                 txt = dividirStr(hor)
+                #print("hor", txt)
                 dias = dividirStr(txt[0],"-")
                 # Garantizar que solo los digitos de las horas
                 txt =  txt[1][0:4]
                 #print(dias, txt)
                 if len(dias) > 1:
-                    #print((txt,dias[0][0:2].upper()), "   ", (txt,dias[1][0:2].upper()))
+                    #print((txt,dias[0][0:2].upper()), "   ", 
+                          # (Decimal(self.posCaracteres[1]),
+                          #     Decimal(self.posCaracteres[3])))
                     self.filaHorario.append((txt,dias[0][0:2].upper(),
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
@@ -187,11 +185,6 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                     #print((txt,dia))
                     break
 
-        # elif self.existeCarrera and re.search(self.patronCarrera, txt):
-        #     #print(self.fila)
-        #     self.tuplas.append(self.fila)
-        #     self.fila = []
-
     def subdividirFilas(self):
         nuevaFila = []
         tuplas = []
@@ -202,9 +195,12 @@ class OfertasGeneral( xml.sax.ContentHandler ):
         for (item, pSup, pInf) in self.filaMatBloq:
             #print("Mi item", item)
             if re.search(self.patronMateria, item, re.I) or item == '$':
-                if nuevaFila and nuevaFila[0] in self.listaMaterias:
+                if nuevaFila and (nuevaFila[0] in self.listaMaterias):
                     for (hora,dia,pSupH,pInfH) in self.filaHorario:
+                        #print((hora,dia), "pSupFila", pSupFila, "<=", pSupH, "pInfFila", pInfFila, ">=", pInfH)
                         if pSupFila <= pSupH and pInfFila  >= pInfH:
+                            #print("Aceptada", (hora,dia))
+                            #print("pSupFila", pSupFila - 5, "<=", pSup, "pInfFila", pInfFila + 5, ">=", pInf)
                             nuevaFila.append((hora,dia))
 
                     #print("Nueva Fila", nuevaFila)
@@ -212,12 +208,12 @@ class OfertasGeneral( xml.sax.ContentHandler ):
 
                 nuevaFila = []
                 nuevaFila.append(item)
-                pSupFila = pSup - 5
+                pSupFila = pSup - 6
                 pInfFila = pInf + 12
+                #print("pSupFila", pSupFila, "<=", pSup, "pInfFila", pInfFila, ">=", pInf)
             elif pSupFila <= pSup and pInfFila  >= pInf:
                 nuevaFila.append(item)
 
-            #print("pSupFila", pSupFila - 5, "<=", pSup, "pInfFila", pInfFila + 5, ">=", pInf)
         # print("Tuplas")
         # for item in tuplas:
         #     print(item)
