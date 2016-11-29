@@ -79,9 +79,11 @@ class CsvCreator():
 
     # def write_memo(self,student,perm_type,trim):
     def write_memo(self,student_id,nombres,permiso,periodo):
+    	if len(student_id) == 6: student_id = '0' + student_id
         self.memo_list.append([student_id,nombres,permiso,periodo])
 
     def write_gen(self,student_id,general="",limite_cred="",pp=""):
+    	if len(student_id) == 6: student_id = '0' + student_id
         new_row = [ student_id[0:2]
                   , student_id[2:]
                   , "1" # Siglo
@@ -101,6 +103,7 @@ class CsvCreator():
         #
         # student_id must have ddddddd format
         #
+        if len(student_id) == 6: student_id = '0' + student_id
         new_row = [ asig_code
                   , student_id[0:2]
                   , student_id[2:]
