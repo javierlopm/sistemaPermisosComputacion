@@ -1065,13 +1065,14 @@ class SendEmailsWindow(Gtk.Window):
                     print("error al iniciar sesion, intentando de nuevo")
 
             for carnet,permisos in db.get_rejected():
+                print("Ahora "+str(show_carnet(carnet)))
                 TEXT = "De los permisos solicitados, no se aprobaron los siguientes:\n"
                 conjunto_correos = set([])
                 for p in permisos:
                     # print(p)
                     otro_correo = p['correo']
                     if otro_correo is not "": conjunto_correos.add(otro_correo)
-                    TEXT += TipoPermiso(p['tipo']).mensaje_permiso((p['string_extra']or "" )+str(p['int_extra'] or ""))
+                    TEXT += TipoPermiso(p['tipo']).mensaje_permiso((p['string_extra'] or "" )+str(p['int_extra'] or ""))
                 conjunto_correos.add(show_carnet(carnet) + "@usb.ve")
                 TO = list(conjunto_correos)
                 print(TO)
@@ -1084,6 +1085,7 @@ class SendEmailsWindow(Gtk.Window):
                 worked = False
                 while (not worked):
                     try:
+                        #print("El correo no se esta mandando porque esto es una prueba")
                         server.sendmail(gmail_sender, TO, BODY)
                         worked = True
                     except:
