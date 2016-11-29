@@ -46,6 +46,8 @@ class TipoPermiso(Enum):
             return "- Permiso para inscribir " + extra + "\n"
         elif self is TipoPermiso.pp:
             return "- Permiso para cursar trimestre en PP \n"
+        elif self is TipoPermiso.limite_creditos:
+            return "- Permiso para cursar limite de creditos \n"
 
 
 # Enums para trimestres
