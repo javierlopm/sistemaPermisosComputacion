@@ -79,6 +79,16 @@ La aplicación de escritorio ya se encuentra operativa en uno de los equipos de 
 
 ## Plan de pruebas y resultados
 (Describir el an y resultados de ejecución)
+Durante el desarrollo del Miniproyecto constantemente cada módulo fue probado mediante permisos de prueba creados por los desarrolladores directamente en el formulario de Google los cuales cumplían la función de asegurar la inexistencia de errores en el procesamiento para cada tipo de permiso.
+
+Al momento de finalizado el sistema con todos sus módulos listos se decidió que la mejor manera de realizar la prueba era mediante la solicitud de permisos formal para el trimestre Enero - Marzo 2017, de esta manera se propagó por todos los medios al alcance el link hacia el formulario de Google donde los estudiantes por una semana enviaron sus solicitudes de permisos que vendrían siendo la primera suite de pruebas completa para el sistema desarrollado.
+
+Esta decisión para las pruebas se debió a que en caso de cualquier error estos no iban a significar algún tipo de pérdida de la información suministrada por los estudiantes asomando la posibilidad de realizar una segunda jornada de solicitud de permisos, ya que en la arquitectura del sistema al momento de tratar con la información almacenada en la nube es únicamente para su lectura. Se descargan los permisos, se almacenan localmente y luego se realiza cualquier prueba necesaria sobre éstos y en el peor de los casos sencillamente se vuelven a descargar sin ningún inconveniente. 
+
+Proceso de realización de las pruebas:
+
+*Recopilación de 
+
 
 # Conclusión
 (Dejar para el final)
