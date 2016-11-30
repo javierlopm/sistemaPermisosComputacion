@@ -6,9 +6,25 @@ graphics: yes
 
 # Introducción
 (Dejar para el final)
+Desde que comenzó el auge y la masificación de la informática los sistemas de información han cumplido un papel fundamental para reemplazar los métodos manuales de procesar información disminuyendo de esta manera el uso de materiales físicos y horas de trabajo muy considerablemente.
+
+En el caso de la Universidad Simón Bolívar, a pesar de que existan avances en el uso de la tecnología en bastantes áreas administrativas, aún es posible encontrarse con espacios donde los protocolos se llevan de manera manual, ocasionando una serie de inconvenientes que sumados a la crisis universitaria por la cual la Universidad Simón Bolívar está pasando pueden ser realmente perjudiciales.
+
+Hoy en día existe una cantidad bastante grande de herramientas útiles y de acceso libre que sirven para desarrollar software utilizando tan solo un computador personal y conocimientos adquiridos durante la carrera de Ingeniería de la Computación, de manera considerablemente rápida y lo suficientemente poderosa para el problema a resolver.
+
+Este informe tiene como objeto servir de explicación de como utilizando algunas de estas herramientas fue resuelto un problema de ineficiencia burocrática de tiempo y recursos mediante la aplicación de conocimientos del área de la computación como parte de un Miniproyecto de Desarrollo de Software.
 
 # Resumen
 (Dejar para el final)
+Durante el desarrollo del presente se explicarán a detalle puntos esenciales para entender el trabajo ejecutado y el objetivo del mismo.
+
+Se comenzará planteando el problema, explicando la situación de la coordinación de Ingeniería de la Computación donde el procesamiento de permisos funciona de manera manual, haciendo uso de una planilla donde los estudiantes llenan un formulario solicitando su permiso, lo cual requiere un uso considerable de papel y tinta para imprimir además de ser un problema de personal para la coordinación ya que la coordinadora debe procesar manualmente cada permiso y revisar el expediente de cada estudiante solicitante, tomar la decisión que se considere apropiada y luego escribir manualmente los archivos de tipo CSV en el formato que recibe DACE. En esta sección también es mencionada.
+
+Luego de esto, se mencionan los objetivos del Miniproyecto, sección donde se explica la manera en la que se resolverá el problema planteado una vez culminado el Miniproyecto. En esta sección son explicados los módulos del programa donde se le provee a los distintos actores que interactuarán con el sistema interfaces para realizar sus funciones correspondidas así como también los módulos que realizan de manera automatizada procesos que solían ser manuales.
+
+Después comienza la parte de análisis, donde se explica de una manera menos general y más técnica la lógica de programación del sistema así como también el detalle de la arquitectura utilizada en el mismo, tales como la explicación de cada módulo y el lenguaje de programación junto a todas las librerías utilizadas en el desarrollo.
+
+Por último, en el informe se habla del plan de pruebas y los resultados. En esta parte se explica el procedimiento utilizado para probar cada módulo del sistema, conseguir errores y repararlos de manera segura. También se mencionan los resultados obtenidos una vez realizada la prueba y procesados los permisos.
 
 # Planteamiento del problema
 
@@ -26,7 +42,11 @@ El miniproyecto precedente consistía en una aplicación móvil la cual requerí
 
 
 # Objetivos del miniproyecto
-El objetivo de este Miniproyecto de Desarrollo de Software es implementar un sistema capaz de proveerle a los estudiantes de Ingeniería de la Computación de la Universidad Simón Bolívar una herramienta para solicitar los permisos relacionados con la inscripción de materias más fácil y cómoda de utilizar y a su vez mucho más barata y ecológica ya que, como se mencionó en el punto anterior, quedaría eliminado el uso innecesario de papel y tinta de impresiones para la solicitud de estos permisos. A su vez, del lado del procesamiento de los permisos, es objetivo del Miniproyecto proveerle a la coordinadora de la carrera una interfaz sencilla pero efectiva y poderosa para el procesamiento manual de los permisos solicitados por los estudiantes mediante la herramienta provista la cual será capaz de descargarlos, almacenarlos y , para cada estudiante, el carnet suministrado por él mismo ser utilizado para descargar su expediente de manera automática para poder ser extraídos datos pertinentes de los estudiantes para el momento de procesar sus permisos y una vez finalizado todo el procesamiento, poder generar un archivo contenedor del resultado de este procesamiento de manera automática. Todo lo mencionado logrará cumplir con el objetivo general de este Miniproyecto de automatizar una serie de tareas que hasta este trimestre han sido manuales y ahorrar una cantidad considerable de tiempo, esfuerzo y dinero a la coordinación de Ingeniería de la Computación.
+El objetivo de este Miniproyecto de Desarrollo de Software es implementar un sistema capaz de proveerle a los estudiantes de Ingeniería de la Computación de la Universidad Simón Bolívar una herramienta para solicitar los permisos relacionados con la inscripción de materias más fácil y cómoda de utilizar y a su vez mucho más barata y ecológica ya que, como se mencionó en el punto anterior, quedaría eliminado el uso innecesario de papel y tinta de impresiones para la solicitud de estos permisos.
+
+A su vez, del lado del procesamiento de los permisos, es objetivo del Miniproyecto proveerle a la coordinadora de la carrera una interfaz sencilla pero efectiva y poderosa para el procesamiento manual de los permisos solicitados por los estudiantes mediante la herramienta provista la cual será capaz de descargarlos, almacenarlos y , para cada estudiante, el carnet suministrado por él mismo ser utilizado para descargar su expediente de manera automática para poder ser extraídos datos pertinentes de los estudiantes para el momento de procesar sus permisos y una vez finalizado todo el procesamiento, poder generar un archivo contenedor del resultado de este procesamiento de manera automática.
+
+Todo lo mencionado logrará cumplir con el objetivo general de este Miniproyecto de automatizar una serie de tareas que hasta este trimestre han sido manuales y ahorrar una cantidad considerable de tiempo, esfuerzo y dinero a la coordinación de Ingeniería de la Computación.
 
 # Análisis
 
@@ -87,22 +107,27 @@ Esta decisión para las pruebas se debió a que en caso de cualquier error estos
 
 Proceso de realización de las pruebas:
 
-* Recopilación de 416 permisos solicitados entre 142 estudiantes de Ingeniería de la Computación a través del Google Form
-* Pruebas de modificar errores cometidos por los estudiantes al momento de solicitar los permisos. Errores leves, reconocibles y fáciles de arreglar directamente en la hoja de cálculo en la nube
-* Procesamiento de los permisos
-* Creación de los CSV de salida de 366 permisos correctos procesados
-* Envío de correos anunciando permisos negados
+* Recopilación de 416 permisos solicitados entre 142 estudiantes de Ingeniería de la Computación a través del Google Form.
+* Pruebas de modificar errores cometidos por los estudiantes al momento de solicitar los permisos. Errores leves, reconocibles y fáciles de arreglar directamente en la hoja de cálculo en la nube.
+* Procesamiento de los permisos.
+* Creación de los CSV de salida de 366 permisos correctos procesados.
+* Envío de correos anunciando permisos negados.
 
-Durante la ejecución de las tareas mencionadas anteriormente se pudo comprobar la correctitud del sistema salvo por errores leves que fueron solucionados fácilmente sin exponer la integridad de los datos de los estudiantes en ningún momento
+Durante la ejecución de las tareas mencionadas anteriormente se pudo comprobar la correctitud del sistema salvo por errores leves que fueron solucionados fácilmente sin exponer la integridad de los datos de los estudiantes en ningún momento.
 
-Los resultados fueron 366 permisos procesados, 50 permisos incorrectos por errores de los estudiantes al momento de ingresar
+Los resultados fueron 366 permisos procesados, 50 permisos incorrectos por errores de los estudiantes al momento de ingresar y tres archivos de tipo CSV con los resultados del procesamiento en el formato que recibe DACE.
 
-Errores típicos de código solían ser de inconsistencia de datos. Por parte de los solicitantes de permisos solían ser ingreso de texto en campos de códigos de materias lo cual el sistema reconocía cada palabra como un código de materia lo cual no es causante de mayores inconvenientes ya que con ser dejados en modo "pendiente" son ignorados por el sistema al momento de generar la salida en CSV
+Errores típicos de código solían ser de inconsistencia de datos. Por parte de los solicitantes de permisos solían ser ingreso de texto en campos de códigos de materias lo cual el sistema reconocía cada palabra como un código de materia lo cual no es causante de mayores inconvenientes ya que con ser dejados en modo "pendiente" son ignorados por el sistema al momento de generar la salida en CSV.
 
 
 
 # Conclusión
 (Dejar para el final)
+Uno de los objetivos fundamentales de la carrera de Ingeniería de la Computación es formar a los estudiantes con conocimientos útiles para automatizar procesos y reducir el uso tanto de materiales físicos como de tiempo invertido en horas de trabajo.
+
+Gracias al avance de la tecnología, la masificación de los dispositivos electrónicos y el acceso a internet, la libre propagación de conocimiento que se refleja en la gran variedad de herramientas libres para el uso de cualquiera y los conocimientos adquiridos en la carrera fue posible mejorar considerablemente el proceso administrativo realizado cada trimestre consecuente a la solicitud y procesamiento de los permisos para inscripción de trimestres.
+
+La computación existe para facilitar y volver más eficiente el día a día de los seres humanos, eliminando problemas, reduciendo tiempos de esperas, uso de recursos que pudiesen ser costosos o poco ecológicos y reduciendo uso de energía, de manera que todos estos recursos mencionados puedan ser utilizados en otras áreas del día a día del hombre y así poder avanzar individual y colectivamente como humanidad.
 
 # Bibliografía
 (Dejar para el final)
