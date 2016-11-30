@@ -87,7 +87,18 @@ Esta decisión para las pruebas se debió a que en caso de cualquier error estos
 
 Proceso de realización de las pruebas:
 
-*Recopilación de 
+* Recopilación de 416 permisos solicitados entre 142 estudiantes de Ingeniería de la Computación a través del Google Form
+* Pruebas de modificar errores cometidos por los estudiantes al momento de solicitar los permisos. Errores leves, reconocibles y fáciles de arreglar directamente en la hoja de cálculo en la nube
+* Procesamiento de los permisos
+* Creación de los CSV de salida de 366 permisos correctos procesados
+* Envío de correos anunciando permisos negados
+
+Durante la ejecución de las tareas mencionadas anteriormente se pudo comprobar la correctitud del sistema salvo por errores leves que fueron solucionados fácilmente sin exponer la integridad de los datos de los estudiantes en ningún momento
+
+Los resultados fueron 366 permisos procesados, 50 permisos incorrectos por errores de los estudiantes al momento de ingresar
+
+Errores típicos de código solían ser de inconsistencia de datos. Por parte de los solicitantes de permisos solían ser ingreso de texto en campos de códigos de materias lo cual el sistema reconocía cada palabra como un código de materia lo cual no es causante de mayores inconvenientes ya que con ser dejados en modo "pendiente" son ignorados por el sistema al momento de generar la salida en CSV
+
 
 
 # Conclusión
