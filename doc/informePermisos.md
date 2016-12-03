@@ -6,11 +6,11 @@ graphics: yes
 
 # Introducción
 (Dejar para el final)
-Desde que comenzó el auge y la masificación de la informática los sistemas de información han cumplido un papel fundamental para reemplazar los métodos manuales de procesar información disminuyendo de esta manera el uso de materiales físicos y horas de trabajo muy considerablemente.
+Desde que comenzó el auge y la masificación de la informática los sistemas de información han cumplido un papel fundamental para reemplazar los métodos manuales de procesar datos, disminuyendo de esta manera el uso de materiales físicos y horas de trabajo considerablemente.
 
 En el caso de la Universidad Simón Bolívar, a pesar de que existan avances en el uso de la tecnología en bastantes áreas administrativas, aún es posible encontrarse con espacios donde los protocolos se llevan de manera manual, ocasionando una serie de inconvenientes que sumados a la crisis universitaria por la cual la Universidad Simón Bolívar está pasando pueden ser realmente perjudiciales.
 
-Hoy en día existe una cantidad bastante grande de herramientas útiles y de acceso libre que sirven para desarrollar software utilizando tan solo un computador personal y conocimientos adquiridos durante la carrera de Ingeniería de la Computación, de manera considerablemente rápida y lo suficientemente poderosa para el problema a resolver.
+Hoy en día existe una gran cantidad de herramientas útiles y de acceso libre que sirven para desarrollar software utilizando tan solo un computador personal y conocimientos adquiridos durante la carrera de Ingeniería de la Computación, de manera considerablemente rápida y lo suficientemente poderosa para el problema a resolver.
 
 Este informe tiene como objeto servir de explicación de como utilizando algunas de estas herramientas fue resuelto un problema de ineficiencia burocrática de tiempo y recursos mediante la aplicación de conocimientos del área de la computación como parte de un Miniproyecto de Desarrollo de Software.
 
@@ -34,28 +34,139 @@ Para que los estudiantes de Ingeniería de Computación pudieran solicitar sus p
 
 La coordinación, para que los estudiantes realizaran este proceso debía imprimir planillas de permisos para cada uno, recibirlas después de llenadas y resolver las posibles inquietudes de cada estudiante. Posteriormente para procesar cada permiso, la coordinadora debía descargar todos los expendientes de los estudiantes para comprobar que los grafos llenados por ellos coincidieran con los datos oficiales de la universidad. Luego, tomando en cuenta el índice de los estudiantes, su situación y la cantidad de cupos disponibles para cada asignatura procedía a aprobar o negar los diferentes permisos soliticitados. 
 
-Por último, la coordinación con todos esos datos generaba de forma manual tres hojas de cálculo para DACE: uno para los permisos de asignaturas, un memo con los permisos de generales y un tercer archivo con datos con permisos generales y de límites de créditos.
+Adicionalmente a esto, es necesario enviar correos a cada una de los estudiantes cuyas solicitudes de permiso han sido negadas para que reconsideren su plan de inscripción. La generación de cada uno de estos correos personalizados se realizaba uno a uno manualmente.
 
-Para los permisos del trimestre enero-marzo 2017, hubiese sido necesario procesar de forma manual los permisos de más de 140 estudiantes, lo cual representa, aproximadamente 380 permisos diferentes. La única etapa en el procesamiento de permisos apoyada por software adaptado a las necesidades de la coordinación era la visualización del grafo de los estudiantes, el cual es uno de los módulos realizados como parte de un miniproyecto anterior.
+Por último, la coordinación con los datos de los permisos aprobados, generaba de forma manual tres hojas de cálculo para DACE: uno para los permisos de asignaturas, un memo con los permisos de generales y un tercer archivo con datos con permisos generales y de límites de créditos.
+
+Para los permisos del trimestre enero-marzo 2017, hubiese sido necesario procesar de forma manual los permisos de más de 140 estudiantes, lo cual representa, aproximadamente 400 permisos diferentes. La única etapa en el procesamiento de permisos apoyada por software adaptado a las necesidades de la coordinación era la visualización del grafo de los estudiantes, el cual es uno de los módulos realizados como parte de un miniproyecto anterior.
 
 El miniproyecto precedente consistía en una aplicación móvil la cual requería un servidor para atender las solicitudes de todos los estudiantes y una aplicación de escritorio para el procesamiento de estos. Los inconvenientes encontrados con el uso de esta aplicación radicaban en: la ausencia de un servidor para el alojamiento de la aplicación, la ausencia de un módulo para descargar los expendientes de los estudiantes y fallas en el cumplimiento de los requerimientos de coordinación (todos los permisos de un estudiante eran tomados como una unidad monolítica en vez de elementos individuales).
 
 
 # Objetivos del miniproyecto
-El objetivo de este Miniproyecto de Desarrollo de Software es implementar un sistema capaz de proveerle a los estudiantes de Ingeniería de la Computación de la Universidad Simón Bolívar una herramienta para solicitar los permisos relacionados con la inscripción de materias más fácil y cómoda de utilizar y a su vez mucho más barata y ecológica ya que, como se mencionó en el punto anterior, quedaría eliminado el uso innecesario de papel y tinta de impresiones para la solicitud de estos permisos.
 
-A su vez, del lado del procesamiento de los permisos, es objetivo del Miniproyecto proveerle a la coordinadora de la carrera una interfaz sencilla pero efectiva y poderosa para el procesamiento manual de los permisos solicitados por los estudiantes mediante la herramienta provista la cual será capaz de descargarlos, almacenarlos y , para cada estudiante, el carnet suministrado por él mismo ser utilizado para descargar su expediente de manera automática para poder ser extraídos datos pertinentes de los estudiantes para el momento de procesar sus permisos y una vez finalizado todo el procesamiento, poder generar un archivo contenedor del resultado de este procesamiento de manera automática.
+El objetivo de este Miniproyecto de Desarrollo de Software es implementar un sistema capaz de proveerle a los estudiantes de Ingeniería de la Computación de la Universidad Simón Bolívar una herramienta para solicitar los permisos relacionados con la inscripción de materias de una manera más fácil y cómoda de utilizar y a su vez mucho más barata y ecológica ya que como se mencionó en el punto anterior, quedaría eliminado el uso innecesario de papel y tinta de impresiones para la solicitud de estos permisos.
+
+A su vez, del lado del procesamiento de los permisos, es objetivo del Miniproyecto proveerle a la coordinadora de la carrera un programa con interfaz sencilla, efectiva y poderosa para el procesamiento manual de los permisos solicitados por los estudiantes. La herramienta provista deberá ser capaz de descargar los permisos, almacenarlos, descargar los respectivos expedientes académicos de manera automática, llevar control de su estado de aprobación y una vez finalizado todo el procesamiento, debe poder notificar a los estudiantes el estado de sus permisos y generar archivos en formatos específicos para la Dirección de Adimisión y Control de Estudios (DACE)
 
 Todo lo mencionado logrará cumplir con el objetivo general de este Miniproyecto de automatizar una serie de tareas que hasta este trimestre han sido manuales y ahorrar una cantidad considerable de tiempo, esfuerzo y dinero a la coordinación de Ingeniería de la Computación.
 
 # Análisis
 
-## Flujo de trabajo ahora en el sistema
+Para entender mejor el sistema presentamos paso a paso el proceso que realiza la coordinación para poder dar respuesta a las solicitudes de permioso, primero se presentará el algoritmo de trabajo seguido y posteriormente las reglas necesarias para el cumplimiento de los objetivos iniciales del miniproyecto.
+
+## Flujo de trabajo posterior a la implemenación
+
+Luego de la implemenación del sistema procesador de permisos, la coordinación para poder procesar los permisos debe publicar el link al formulario de permisos y activarlo para aceptar las respuestas de los estudiantes, al terminar el período de soliticiud se desactiva el formulario y se inicia el procesamiento. 
+
+Antes procesar todas las respuestas estudiantes la coordinadora deberá utilizar el módulo de *descargar permisos* (ver figura 1 \ref{fig1}), el cual descargará la hoja de cálculo (alojada en Google Drive), adicionalmente a esto se descargarán los expedientes académicos de todos los estudiantes presentes en la solicitud y se generarán de forma automática los flujográmas respectivos representando las materias ya cursadas
+
+![figura 1 - Vista de descarga de permisos {fig1}](descarga.png)
+
+Posteriormente la coordinación puede aprobar y negar permisos, para ello se debe utilizar el módulo *programa de permisos* en donde se pueden realizar diferentes consultas sobre los estudiantes, buscar permisos por materia, por tipo de permiso y por estado (ver figura 2 \ref{fig2}). También se requiere hacer un análisis
+
+![figura 2 - Menu principal {fig2}](principal.png)
+
+Por último con los módulos de *enviar correos* (figura 3 \ref{fig3} y 4 \ref{fig4}) y *generar archivos csv* se envían las notificaciones a cada estudiante si sus permisos fueron negados y se generan las tablas para DACE en formato CSV (Comma-Separated Values). 
+![figura 3 - Módulo de envío de correos {fig3}](correos.png)
+![figura 4 - Generación de csv {fig4}](csv.png)
+
+Antes de iniciar un nuevo proceso de recepción de permisos se debe limpiar la hoja de cálculo de Google Drive y la base de datos de la aplicación de escritorio.
+
+De forma resumida el flujo para el procesamiento de permisos se realiza en los siguientes pasos:
+
+1. Limpiar hoja de cálculo y base de datos, activar y publicar el formulario
+1. Descargar permisos de estudiantes
+1. Aprobar y negar permisos
+1. Enviar correos y tablas de resultados
+
+De forma gráfica la figura 5 representa los pasos a tomar, en donde los bloques coloreados son las acciones ya automatizadas y las restantes las cuales solo pueden ser realizadas de forma manual.
+
+![figura 5 - Flujo de trabajo {fig5}](flujo.png)
+
 
 ## Especificación de reglas
 
-# Diseño
+Las reglas de trabajo pueden ser especificadas en los siguientes 4 conjuntos:
 
+* Restricciones de formulario y permisos
+* Visualización de datos en pantalla
+* Formato de tablas para dace
+* Especificación de correos
+
+Las restricciones se relacionan directamente con diferentes aspectos como la base de datos, la interfaz gráfica, las reglas de trabajo que son parte del procesamiento de los permisos y el formato de salida del programa. A continuación serán presentadas las reglas de cada uno de estos conjuntos.
+
+### Restricciones de formulario
+
+Antes de seleccionar Google Form como herramienta para almacenar las solicitudes se tuvo que verificar que la plataforma tuviese soporte para la verificación de credenciales institucionales y lo cumplió, adicionalmente fue elegida ya que se tenían restricciones en cuanto al uso de servidores para alojar una aplicación web propia y esta solución ya se había intentando en el miniproyecto anterior sin éxito.
+
+Al diseñar el formulario que los estudiantes llenarían se tomó en cuenta el formato ya existente para poder cubrir de manera completa todos los tipos de permisos necesarios, también fue necesario realizar verificaciones de campos mediante expresiones regulares, rangos numéricos y de opciones de permisos que eran mutuamente excluyentes.
+
+### Visualización de datos en pantalla
+
+Los requerimientos de la interfaz incluían las siguientes reglas puntuales:
+
+* Poder observar los grafos con materias aprobadas.
+* Permitir la consulta todos los permisos pendientes y tenerlos de forma adyacente para poder procesarlos de manera rápida.
+* Visualización de todos los permisos de un tipo específico.
+* Consulta para los permisos de materias electivas y visualización de la cantidad de permisos ya aprobados y pendientes para poder decidir a que estudiantes otorgar los puestos disponibles (los cuales son limitados)
+* Que permitiera observar todos los permisos de un estudiante para poder estudiar mejor su situación académica y para decidir con base en su conjunto de datos (índice, créditos aprobados, materias aprobadas).
+* Visualización de los datos personales de los estudiantes para poder tener comunicación si es necesario (correos, número de teléfono y nombre)
+
+Todas estas reglas fueron seguidas en la implemenación del sistema.
+
+### Formato de tablas
+
+Las tablas generadas debían estar en formato xls o xlsx, o cualquier otro que pudiese ser importado por Libre Office y pudiese ser exportado a un archivo con alguna de las extensiones ya mencionadas.
+
+En cuanto a las reglas de generación de las tablas, cada uno de los tres archivos requeridos por DACE requiere un orden de las columnas como se puede observar a continuación en formato CSV:
+
+* Para el archivo de materias
+```
+COD_ASIGNATURA,ANIO_CARNET,NUM_CARNET,SIGLO,ANIOP,MESIP,
+MESFP,BLOQUE,SECCION,NRO_CREDITOS,PERMISO,RENGLON,
+NOTA_ASIGNATURA,IND_NOTA_SIN_EFECTO
+```
+
+
+
+* Para el archvivo de permiso generales
+```
+ANIO_CARNET,NUM_CARNET,SIGLO,ANIOP,MESIP,MESFP,SITUACION,
+SITUACIONINSCRIP,GENERAL,LIMITE CR,
+=NOTA_X_CREDITO_PONDERADO,TOTAL_CREDITOS,PP
+```
+
+* Para el memo
+```
+N°,CARNÉ,NOMBRES Y APELLIDOS.,PERMISO,PERIODO
+```
+
+Cada permiso aprobado puede aparecer en uno o varios de estos archivos dependiendo de su tipo, para los dos primeros archivos mencionados existen algunos parámetros fijos como *"SIGLO"* el cual siempre posee un valor de *'1'* y *"PERMISO"* en donde vale *'s'* (ya que el archivo solo posee permisos aprobados).
+
+Las columnas de *"ANIO_CARNET"* y *"NUM_CARNET"* poseen el carnet del estudiante separando el año de la cohorte del resto del número de 7 dígitos, 
+las columnas *"ANIOP"*, *"MESIP"* y *"MESFP"* especifican el período para el cual será vaĺido el permiso mediante año, número de mes del inicio del trimestre y número del mes de finalización respectivamente.
+
+Por último para cada tipo de permiso se deben generar las siguientes salidas en cada unos de los archivos:
+
+
+* PP: Agregar créditos en archivo de materias
+* Dos Generales: Agregar E2 en la columna "GENERAL" del archivo de generales y agrega en memo.
+* Límite de créditos: agregar número de créditos en columna "LIMITE CR" del archivo de generales.
+* Permiso de electiva: agregar código en columna "COD_ASIGNATURA" del archivo de materias.
+* Sin requisito: agregar código de la asignatura en la columna "COD_ASIGNATURA" del archivo de materias.
+* Se debe agregar el código de asignatura en "COD_ASIGNATURA" del archivo de materias y una línea el en archivo de memos para los siguientes tipos:
+    - General extra
+    - Extraplan
+    - Extraplan de general más un general
+    - Extraplan de general
+
+
+### Especificación de correos
+
+Para en el envío de correos se especificó que solo se enviaran correos a cada uno de estudiantes con permisos negados, debía ser un mensaje único especificando todos los permisos negados.
+
+# Diseño
 
 La aplicación se encuentra distribuida en los siguientes módulos y plataformas:
 
