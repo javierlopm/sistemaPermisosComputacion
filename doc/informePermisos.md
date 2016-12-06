@@ -194,9 +194,12 @@ El diseño de las vistas para la aplicación de escritorio se realizó mediante 
 
 La correspondencia entre el diseño y la implementación programática del sistema se asocia de la manera expuesta en la siguiente tabla
 
+\newpage
+
 | Módulo de diseño                   | Clase en la implementación                             |
 |------------------------------------|--------------------------------------------------------|
-| Plataforma google                  | Implementado directamente con la herramienta de Google |
+| Plataforma google                  | Implementado directamente  |
+|                                    | con la herramienta de Google |
 | Generador de grafos                | createPngGraph.class                                   |
 | Módulo de extración de expedientes | coord_crawler.py                                       |
 | Módulo csv                         | csv_creator.py                                         |
