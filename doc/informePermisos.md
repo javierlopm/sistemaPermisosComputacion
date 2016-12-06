@@ -192,6 +192,18 @@ proc procesar_formulario(form):
 
 El diseño de las vistas para la aplicación de escritorio se realizó mediante la extensión de clases proporcionadas por Gtk para python. (CAMBIAR O ELIMINAR)
 
+La correspondencia entre el diseño y la implementación programática del sistema se asocia de la manera expuesta en la siguiente tabla
+
+| Módulo de diseño                   | Clase en la implementación                             |
+|------------------------------------|--------------------------------------------------------|
+| Plataforma google                  | Implementado directamente con la herramienta de Google |
+| Generador de grafos                | createPngGraph.class                                   |
+| Módulo de extración de expedientes | coord_crawler.py                                       |
+| Módulo csv                         | csv_creator.py                                         |
+| Módulo de bd                       | perm_store.py                                          |
+| Módulo consulta de formulario      | check_answers.py                                       |
+| Aplicación de escritorio           | main_app.py                                            |
+
 ## Arquitectura
 Este miniproyecto fue desarrollado en *python3*, haciendo uso de las siguiente bibliotecas disponibles a través del manejador de paquete *pip*:
 
