@@ -2,7 +2,7 @@
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 26/10/2016
+# Fecha: 7/12/2016
 # Descripción: Programa principal. Este program realiza las siguientes funciones:
 #   - Generar ofertas a partir de documentos de los departamentos y una
 #     lista de DACE.
@@ -15,14 +15,24 @@ from procesadorDOC import procesarDOC
 from procesadorPDF import procesarPDF
 from procesadorDACE import procesarDACE
 from funcionesAuxiliares import imprimirResultados, Vacio_Error, cargarOfertasCSV
+from os.path import splitext, isfile, join
+from os import remove, listdir
 import sys
 import getopt
 import re
-from os.path import splitext, isfile, join
-from os import remove, listdir
 
-
-
+# Función: cargarOfertas
+# Argumentos: 
+#   listaArchivos:  [String], lista de nombre de los archivos.
+#   nomDirectorio:  String, camino hacia el directorio
+#   nomArchivoDace: String, nombre del archivo de DACE.
+#   opcionDir:      Booleano, modo directorio
+#   listaMaterias: [String], lista de materias
+# Salida: ([[String]],[[String]]) , lista de ofertas en estilo CSV.
+# 
+# Descripción: despacho de archivos de ofertas para cada procesador que sea acoplado
+# a esta función. En caso que alguna variable de salida esté vacia, se levanta una
+# excepción y se detendrá el programa. 
 def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
                   opcionDir, nomArchivoDace):
 
@@ -63,6 +73,15 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
 
     return (listaOfertas, listaDACE)
 
+# Función: generarOferta
+# Argumentos: 
+#   listaOfertas:   [[String]], lista de ofertas en estilo CSV.
+#   listaDACE:      [[String]], lista de ofertas en estilo CSV.
+# Salida: [[String]], lista de ofertas en estilo CSV.
+# 
+# Descripción: etapa de analisis y comparación, cada oferta se análiza de acuerdo
+# ciertas reglas (ver informe) y se agrega a una lista final. En caso que la 
+# variable de salida esté vacia, se levanta una excepción y se detendrá el programa. 
 def generarOferta(listaOfertas,listaDACE):
     # Lista necesaria para evitar eliminar materias especiales que no se
     # incluyen en la ofertas
@@ -96,9 +115,6 @@ def generarOferta(listaOfertas,listaDACE):
     # que no se encuentren en la oferta de dptos
     for filaPorBorrar in materiasDacePorBorrar:
         listaDACE.remove(filaPorBorrar)
-
-    # imprimirResultados("ListaDace E",listaDACE)
-    # imprimirResultados("ListaOfertas E",listaOfertas)
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas
     filaEncontrada = None
@@ -135,26 +151,6 @@ def generarOferta(listaOfertas,listaDACE):
 def reanalizarOferta(listaOfertas,listaDACE):
     materiasDacePorBorrar = []
     procesado = []
-    #filaEncontrada = False
-
-    # Realizar comparación entre listas del dpto y las listas de DACE.
-    # Se aborda desde el pto de vista de lista de DACE. Se realizan operaciones
-    # de E e inclusión de materias que existen sólo en DACE.
-
-    # for filaDace in listaDACE:
-    #     for filaOfertas in listaOfertas:
-    #         #print("fi", filaOfertas, filaDace)
-    #         if filaOfertas[0] == filaDace[0]:
-    #             filaEncontrada = True
-    #             #print("encontrado", filaOfertas, filaOfertas[9])
-    #             #print("General encontrado", re.search("[A-Z]{3}\d\d\d", filaDace[0]), filaEncontrada)
-    #             break
-    #     #Caso 2:
-    #     if not ((filaEncontrada) or re.search("[A-Z]{3}\d\d\d", filaDace[0])):
-    #         print("Agregar DACE",filaDace + ['0800', ''])
-    #         procesado.append(filaDace + ['0800', 'I'])
-
-    #     filaEncontrada = False
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
     # Se agregan las filas con operación E. Se analizan otras.
@@ -168,30 +164,22 @@ def reanalizarOferta(listaOfertas,listaDACE):
 
         # Caso 1:
         if filaEncontrada:
-            #print("Comparar", filaEncontrada, filaOfertas)
+
             for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                 match = itemOferta == itemDace
                 if not match:
                     break
 
             if match:
-                #print("Acierto", filaEncontrada, "||", filaOfertas)
                 procesado.append(filaOfertas[:9] + [''])
             elif filaOfertas[9] == 'E':
                 procesado.append(filaEncontrada[:9] + ['M'])
             else:
-                #print("Materia modificada", filaOfertas)
-                # for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
-                # print((itemOferta,itemDace))
                 procesado.append(filaOfertas[:9] + ['M'])
-            # if not match:
-            #     procesado.append(filaOfertas[:9] + ['M'])
         else:
-            #print("Agregar " ,filaOfertas[:9] + ['I'])
             procesado.append(filaOfertas[:9] + ['I'])
 
         filaEncontrada = None
-
 
     return procesado
 

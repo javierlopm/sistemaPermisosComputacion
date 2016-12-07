@@ -1,14 +1,18 @@
-#!/usr/bin/python3.5
-#!/usr/bin/python3.4
+#!/usr/bin/python3
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 18/09/2016
-# Descripción: Procesa los archivos xml producidos por LibreOffice de acuerdo al siguiente
-# comando: ./soffice --headless --convert-to xml archivo.doc. Solamente procesa DOC.
-# Para ello se apoya en las etiquetas "table:table-cell" y table:table-row". La
+# Fecha: 7/12/2016
+# Descripción: Procesa los archivos FODT producidos por LibreOffice de acuerdo al siguiente
+# comando: ./soffice --headless --convert-to fodt archivo.doc. El comando anterior lo ejecuta el usuario,
+# Diseñado para reconocer el estilo de presentación del departamento de cómputo;
+# para ello se apoya en las etiquetas "table:table-cell" y table:table-row". La
 # salida es un archivo.csv conforme al siguiente formato :
-# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES)
+# (COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES, ESPECIAL)
+#
+# Se utiliza el caracter ';' en las cadenas para distinguir el espacio en blanco.
+# Esto es para reorganizar la información dado que libreoffice, en ocasiones, 
+# la particiona. 
 
 import xml.sax
 import re
@@ -18,15 +22,22 @@ from os import remove
 from funcionesAuxiliares import dividirStr, obtArgs, cargarMaterias, \
                                   componerHorarioCSV, normalizarMateria, \
                                     ordenarDias, usoAyuda
-
+#
 # Clase usada por xml.sax para procesar el archivo.xml
+#
 class Ofertas( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
+        # Acumuladores
+        # Fila de asignaturas
         self.filas = []
+        # Buffer
         self.celda = ""
+        # Lista de filas de asignaturas
         self.tuplas = []
+        # Lista de materias
         self.listaMaterias = listaMaterias
-        self.ultimoDia = ''
+
+        # Patrones usados por expresiones regulares
         self.patronDia = "(L;?[Uu];?[Nn];?(es)?|M;?[Aa];?[Rr];?(tes)?|M;?[Ii];?[Eeé];?([Rr];?|rcoles)?|" \
             + "[Jj];?[Uu];?[Ee];?(ves)?|V;?[Ii];?[Ee];?([Rr];?|nes)?)"
         self.patronDiasFrac = self.patronDia + "(\s*-\s*" + self.patronDia + ")?"
@@ -36,92 +47,114 @@ class Ofertas( xml.sax.ContentHandler ):
          + "(\s+|;)" + self.patronHoras + "(\s+|;)?){1,2}"
         self.patronBloque = "\(?[Bb][Ll][Oo][Qq][Uu]?[Ee]?(\s)+[A-Z]\)?"
 
-   # Call when an element starts
+   
+    # Función: startElement
+    # Argumentos: 
+    #   tag: String, nombre de la etiqueta proveniente del documento XML.
+    # Salida: Ninguna 
+    # 
+    # Descripción: ejecutar una acción por cada etiqueta inicial 
     def startElement(self, tag, attributes):
         pass
 
-   # Call when an elements ends
+    # Función: endElement
+    # Argumentos: 
+    #   tag: String, nombre etiqueta proveniente del documento XML.
+    # Salida: Ninguna 
+    # 
+    # Descripción: ejecutar una acción por cada etiqueta final
     def endElement(self, tag):
         if tag == "table:table-row":
-            #print("termina agregar", self.filas, "\n\n")
+            # Descartar materias que no se encuentren en la lista de materias
             if self.filas and self.filas[0] in self.listaMaterias:
-                #print("table:table-row", self.filas, end='\n')
                 self.tuplas.append(self.filas)
             self.filas = []
             self.celda = ""
 
+        # Someter a analisis de texto a el buffer self.celda
         if tag == "table:table-cell":
-            #print("table:table-cell", self.celda.encode('UTF-8','replace'))
+            # Reconocer códigos de materias
             searchMateria = re.search(self.patronMateria,self.celda, re.I)
             if searchMateria:
-                #print("Materia", searchMateria.group())
                 self.filas.append(normalizarMateria(searchMateria.group()))
 
+            # Reconocer bloques de ofertas
             searchBloque = re.search(self.patronBloque,self.celda, re.I)
             if searchBloque:
-                #print( "BLoque", searchBloque.group(), "||", self.celda)
                 self.filas.append(self.filtrarBloque(searchBloque.group()))
 
+            # Reconocer horarios de acuerdo a: Dia-Dia Hora ó Dia Hora.
             searchHor = re.search(self.patronHorario, self.celda, re.I)
-            #print("\n\nfila", self.celda , "||", searchHor)
             if searchHor:
-                #print("\n\nlistaHorarios", self.celda , "||", searchHor.group() , "||", dividirStr(searchHor.group(), ';'), "||",self.normalizarHorario(dividirStr(searchHor.group(), ';')))
-                #print("inicia horario", self.filas, self.normalizarHorario(dividirStr(searchHor.group(), ';')))
                 for hor in self.normalizarHorario( \
                                 dividirStr(searchHor.group(), ';')):
-                    #print("hor", hor)
                     txt = dividirStr(hor)
                     dias = dividirStr(txt[0],"-")
                     # Garantizar que solo los digitos de las horas
                     txt =  txt[1][0:4]
-                    #print(dias, txt)
                     if len(dias) > 1:
                        self.filas.append((txt,dias[0][0:2].upper()))
                        self.filas.append((txt,dias[1][0:2].upper()))
                     else:
                        self.filas.append((txt,dias[0][0:2].upper()))
-                #print("termina horario", self.filas)
             self.celda = ""
 
-   # Call when a character is read
+    # Función: characters
+    # Argumentos: 
+    #   content: String
+    # Salida: Ninguna 
+    # 
+    # Descripción: ejecutar una acción al encontrar al menos un caracter.
     def characters(self, content):
         if not (content.isspace()) and content.isprintable():
-            #print (content.strip(' \t\n\r'))
             self.celda += ";" + content.strip(' \t\n\r.*()')
-        #print("characters", content)
 
+    # Función: filtrarBloque
+    # Argumentos: 
+    #   txt: String
+    # Salida: Caracter, letra del bloque
+    # 
+    # Descripción: al reconocer un bloque, particiona por espacio en blanco. 
+    # Almacena la letra del bloque.
     def filtrarBloque(self,txt):
         return dividirStr(txt)[1]
 
+    # Función: normalizarHorario
+    # Argumentos: 
+    #   txt: String
+    # Salida: [String] 
+    # 
+    # Descripción: reconstruye la información de los horarios.
+    # Los horarios se reconstruyen al formato: Dia-Dia Hora ó Dia Hora.
     def normalizarHorario(self,txt):
         hor = ""
         nuevoTxt = []
-        fragmentado = False
         for item in txt:
             if re.search('^\s*' + self.patronHoras + '\s*$', item):
                 hor += ' ' + item.strip()
             else:
                 hor += item
-            #print(hor, "||", item)
             # Reconocer horarios completos
             if re.search(self.patronHorario, hor, re.I):
-                #print("frag completo")
                 nuevoTxt.append(hor)
                 hor = ""
-            #elif re.search(self.patronDia + "\s*-?\s*", hor, re.I):
-            # Parte de dias fraccionado.
-            elif re.search(self.patronDiasFrac, hor, re.I):
-                #print("frag")
-                hor = "".join(dividirStr(hor))
             # Unir dias fraccionados con horas
-        #print("Salida horario", nuevoTxt)
+            elif re.search(self.patronDiasFrac, hor, re.I):
+                hor = "".join(dividirStr(hor))
         return nuevoTxt
 
-# Función principal exportada para otros modulos.
-def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
-    # create an XMLReader
+# Función: procesarDOC
+# Argumentos: 
+#   nombreArchivoEntrada: String, camino hacia le archivo FODT
+#   listaMaterias: [String],
+#   fdSalida: [String]
+# Salida: [[String]] , lista de ofertas en estilo CSV.
+# 
+# Descripción: Función principal de procesamiento de horarios.
+def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida): 
+    # Crear un lector XML-
     parser = xml.sax.make_parser()
-    # turn off namepsaces
+    # Desactivar namespaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
 
     # override the default ContextHandler
@@ -134,7 +167,6 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
     # escribir filas en un archivo estilo csv.
     acum = ""
     for fil in Handler.tuplas:
-        #Eliminar Len si todos las filas deben tener horario
         if len(fil) > 1:
             if isinstance(fil[1],tuple):
                 acum = fil[0] + ',A'
@@ -155,8 +187,6 @@ def procesarDOC(nombreArchivoEntrada,listaMaterias,fdSalida):
 
 # Programa principal para pruebas
 if ( __name__ == "__main__"):
-    #corresDiaDistancia = { 'LU' : 1, 'MA' : 2, 'MI' : 3, 'JU' : 4, 'VI' : 5}
-
     # Pasaje de argumentos por la entrada estandar
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
