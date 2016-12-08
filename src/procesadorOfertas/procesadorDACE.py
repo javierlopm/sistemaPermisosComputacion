@@ -5,7 +5,7 @@
 # Carné: 09-10977
 # Fecha: 7/12/2016
 # Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
-# Se apoya en las etiquetas "<span>" y "<char>" emitidas por la libreria . 
+# Se apoya en las etiquetas "<span>" y "<char>" emitidas por la libreria .
 # Este procesador es específico al formato PDF de lista de materias de DACE.
 # Si se utiliza -f, su formato será CSV conforme al siguiente formato :
 # COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES
@@ -14,14 +14,14 @@
 
 # Se utilizan expresiones regulares para reconocer el contenido relevantes. Las variables *self.patrónX*
 # contiene los patrones utilizados.
-# Las posiciones que se guardan se comparar contras las posiciones de los elementos reconocidos. 
+# Las posiciones que se guardan se comparar contras las posiciones de los elementos reconocidos.
 # Esquema:
 # -----limSup (posición + paddingRecon)-----
 #       -----posSup-----
 #       elemento por asignar
 #       -----posInf-----
 # -----limInf (posición - paddingRecon) -----
-# 
+#
 
 # Notas:
 # Se aprovecha las variables y funciones definidas en procesadorPDF.
@@ -60,14 +60,13 @@ class OfertasDace( OfertasGeneral ):
         self.cabeceraTest = []
         self.paddReconHorario = 5
 
-
     # Función: endElement
-    # Argumentos: 
+    # Argumentos:
     #   tag:        String, nombre de la etiqueta proveniente del documento XML.
     #   atributes:  String, atributos de la etiqueta XML.
-    # Salida: Ninguna 
-    # 
-    # Descripción: ejecutar una acción por cada etiqueta inicial 
+    # Salida: Ninguna
+    #
+    # Descripción: ejecutar una acción por cada etiqueta inicial
     def startElement(self, tag, attributes):
         # Se acumulan las caracteres a través del atributo.
         if tag == "char":
@@ -84,10 +83,10 @@ class OfertasDace( OfertasGeneral ):
 
 
     # Función: endElement
-    # Argumentos: 
+    # Argumentos:
     #   tag: String, nombre etiqueta proveniente del documento XML.
-    # Salida: Ninguna 
-    # 
+    # Salida: Ninguna
+    #
     # Descripción: ejecutar una acción por cada etiqueta final
     def endElement(self, tag):
         # Se procesa el texto acumulado en self.celda.
@@ -99,12 +98,12 @@ class OfertasDace( OfertasGeneral ):
             self.posCaracteres = []
 
     # Función: filtroCabecera
-    # Argumentos: 
+    # Argumentos:
     #   txt: String
     #   posCaracterres: una tupla (String,String,String,String)
-    # Salida: Ninguna 
-    # 
-    # Descripción: procesa la cabecera de los dias de semana en la página y 
+    # Salida: Ninguna
+    #
+    # Descripción: procesa la cabecera de los dias de semana en la página y
     # guarda sus posiciones. Se imprime los dias reconocidos.
     # Por otra parte, si existe y se reconoce el campo "Especial", se imprime en la salida estandar.
     # Se activa el reconocimiento de este campo.
@@ -114,7 +113,7 @@ class OfertasDace( OfertasGeneral ):
 
         if searchDias and (not self.cabeceraLista):
             # Se guarda las primeras dos letras del dia y su posición en el documento
-            # Esto es a fin de acoplar cada horario a cada fila de asignatura. 
+            # Esto es a fin de acoplar cada horario a cada fila de asignatura.
             self.cabeceraDias.append((searchDias.group()[0:2],
                                       Decimal(posCaracteres[0]) - self.paddReconHorario,
                                       Decimal(posCaracteres[2]) + self.paddReconHorario))
@@ -134,12 +133,12 @@ class OfertasDace( OfertasGeneral ):
         return
 
     # Función: filtrarTexto
-    # Argumentos: 
+    # Argumentos:
     #   txt: String
     #   posCaracterres: una tupla (String,String,String,String)
-    # Salida: Ninguna 
-    # 
-    # Descripción: procesa cadenas de código de materias, bloque y horarios 
+    # Salida: Ninguna
+    #
+    # Descripción: procesa cadenas de código de materias, bloque y horarios
     # de acuerdo al estilo de la lista general de DACE.
     def filtrarTexto(self,txt, posCaracteres):
         searchMat = re.search(self.patronMateria, txt, re.I)
@@ -157,11 +156,11 @@ class OfertasDace( OfertasGeneral ):
                                      Decimal(posCaracteres[3])))
 
         elif self.cabeceraLista and re.search(self.patronHoras, txt):
-            # Usar las posiciones previas de los dias en la cabecera para asignar 
+            # Usar las posiciones previas de los dias en la cabecera para asignar
             # los horarios. Se compara contra las posiciones de los horarios reconocidos.
             # En caso de éxito, se anexa como una tupla: (Dia,Horas). Los dias tienen
             # las primeras dos letras; esto es para organizar los horarios
-            # en formato CSV posteriormente. 
+            # en formato CSV posteriormente.
             for (dia,limInf,limSup) in self.cabeceraDias:
                 if limInf <= Decimal(posCaracteres[0]) \
                     and Decimal(posCaracteres[2]) <= limSup:
@@ -175,11 +174,11 @@ class OfertasDace( OfertasGeneral ):
     #   codigoCarr: String, código de la carrera a reconocer.
     #   nombreArchivoEntrada: camino hacia el archivo de DACE.
     #   fdSalida: [[String]], lista vacia. Funciona como parametro de entrada-salida
-    # Salida: 
+    # Salida:
     #   fdSalida: [[String]], lista de reglones de materias reconocidas en estilo CSV.
-    # 
-    # Descripción: Función principal para procesar la lista general de DACE. 
-    # En cada página donde exista el código de la carrera, procesar las asignaturas. 
+    #
+    # Descripción: Función principal para procesar la lista general de DACE.
+    # En cada página donde exista el código de la carrera, procesar las asignaturas.
 def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
     doc = fitz.open(nombreArchivoEntrada)
     # Crear un lector XML
@@ -231,7 +230,7 @@ def procesarDACE(codigoCarr,nombreArchivoEntrada,fdSalida):
                 for i in listaHorasBorrar:
                     contenedor.listaHorarios.remove(i)
 
-                # Si existe el campo 'Especial', se asigna mediante el mismo 
+                # Si existe el campo 'Especial', se asigna mediante el mismo
                 # mecanismo de los horarios.
                 esp = ''
                 for (espe,alto,bajo) in contenedor.listaEspeciales:

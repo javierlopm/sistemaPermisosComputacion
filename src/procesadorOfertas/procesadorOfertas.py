@@ -8,7 +8,10 @@
 #     lista de DACE.
 #   - Reanalizar ofertas realizadas con nuevas listas de DACE. Esto se realiza
 #     mediante la opción -r.
-# En ambos casos, la salida es un archivo en formato CSV
+# En ambos casos, la salida es un archivo en formato CSV.
+#
+# En caso de requerir expandir el procesador a formatos adicionales sólo se debe
+# agregar las lineas pertienentes en la funcion cargarOfertas.
 
 from procesadorXLS import procesarXLS
 from procesadorDOC import procesarDOC
@@ -22,17 +25,17 @@ import getopt
 import re
 
 # Función: cargarOfertas
-# Argumentos: 
+# Argumentos:
 #   listaArchivos:  [String], lista de nombre de los archivos.
 #   nomDirectorio:  String, camino hacia el directorio
 #   nomArchivoDace: String, nombre del archivo de DACE.
 #   opcionDir:      Booleano, modo directorio
 #   listaMaterias: [String], lista de materias
 # Salida: ([[String]],[[String]]) , lista de ofertas en estilo CSV.
-# 
+#
 # Descripción: despacho de archivos de ofertas para cada procesador que sea acoplado
 # a esta función. En caso que alguna variable de salida esté vacia, se levanta una
-# excepción y se detendrá el programa. 
+# excepción y se detendrá el programa.
 def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
                   opcionDir, nomArchivoDace):
 
@@ -49,6 +52,8 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
                 camino = join(nomDirectorio,archivo)
                 print(camino)
 
+        # En caso de abarcar más formatos, se agrega en este espacio para las ofertas
+        # 0800.
         if  nomArchivoDace == archivo:
             if  ext == ".fodt" or ext == ".xml":
                 procesarDOC(camino,listaMaterias ,listaDACE)
@@ -58,6 +63,8 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
                 procesarXLS(camino, False, listaMaterias, listaDACE)
             continue
 
+        # En caso de abarcar más formatos, se agrega en este espacio para las ofertas
+        # departamentales
         if  ext == ".fodt" or ext == ".xml":
             procesarDOC(camino,listaMaterias ,listaOfertas)
         elif ext == ".pdf":
@@ -74,14 +81,14 @@ def cargarOfertas(listaArchivos, nomDirectorio, listaMaterias,
     return (listaOfertas, listaDACE)
 
 # Función: generarOferta
-# Argumentos: 
+# Argumentos:
 #   listaOfertas:   [[String]], lista de ofertas en estilo CSV.
 #   listaDACE:      [[String]], lista de ofertas en estilo CSV.
 # Salida: [[String]], lista de ofertas en estilo CSV.
-# 
+#
 # Descripción: etapa de analisis y comparación, cada oferta se análiza de acuerdo
-# ciertas reglas (ver informe) y se agrega a una lista final. En caso que la 
-# variable de salida esté vacia, se levanta una excepción y se detendrá el programa. 
+# ciertas reglas (ver informe) y se agrega a una lista final. En caso que la
+# variable de salida esté vacia, se levanta una excepción y se detendrá el programa.
 def generarOferta(listaOfertas,listaDACE):
     # Lista necesaria para evitar eliminar materias especiales que no se
     # incluyen en la ofertas
@@ -148,12 +155,20 @@ def generarOferta(listaOfertas,listaDACE):
     return procesado
 
 
+# Función: generarOferta
+# Argumentos:
+#   listaOfertas:   [[String]], lista de ofertas en estilo CSV.
+#   listaDACE:      [[String]], lista de ofertas en estilo CSV.
+# Salida: [[String]], lista de ofertas en estilo CSV.
+#
+# Descripción: etapa de analisis y comparación con una lista general de DACE,
+# cada oferta se análiza de acuerdo a ciertas reglas (ver informe) contra la listaDACE
+# y se agrega a una lista final. En caso que la variable de salida esté vacia, se
+# levanta una excepción y se detendrá el programa.
 def reanalizarOferta(listaOfertas,listaDACE):
-    materiasDacePorBorrar = []
     procesado = []
 
     # Realizar comparaciones para I y M. Desde el pto de vista de las ofertas.
-    # Se agregan las filas con operación E. Se analizan otras.
     filaEncontrada = None
     for filaOfertas in listaOfertas:
         for filaDace in listaDACE:
@@ -164,7 +179,6 @@ def reanalizarOferta(listaOfertas,listaDACE):
 
         # Caso 1:
         if filaEncontrada:
-
             for (itemOferta,itemDace) in zip(filaOfertas,filaEncontrada):
                 match = itemOferta == itemDace
                 if not match:
@@ -183,12 +197,25 @@ def reanalizarOferta(listaOfertas,listaDACE):
 
     return procesado
 
+# Función: usoAyuda
+# Argumentos:
+#   Ninguno
+# Salida:
+#   Ninguno
+#
+# Descripción: imprimir ayuda de uso. Para uso de procesadorOfertas
 def usoAyuda():
     print("""Uso: prog -f nombre_archivo_salida -d nombre_archivo_dace
                     -m archivo_materias_requeridas [--dir-input=nomDir ]
                     archivo1.pdf archivo2.xls ... archivoN
     prog [-h, --help] """)
 
+# Función: obtArgs
+# Argumentos:
+#   entrada: String, argumentos de la linea de comando
+# Salida: (String, String, String, String, Booleano, String, String)
+#
+# Descripción: pasaje de argumentos para al procesador de ofertas.
 def obtArgs(entrada):
     nomArchivoDace = ""
     nomArchivoSalida = ""
@@ -247,8 +274,9 @@ if __name__ == '__main__':
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
-    # Obtener las materias requeridas
+    # Código para ejecutar etapa 1
     if not reanalisis:
+        # Obtener las materias requeridas
         listaMaterias = []
         try:
             matArch = open(nomArchivoMaterias, 'r')
@@ -271,8 +299,6 @@ if __name__ == '__main__':
                                              nomDirectorio,listaMaterias,
                                              opcionDir,nomArchivoDace)
             print("\nOfertas cargadas con éxito")
-            # imprimirResultados("ListaDace",listaDACE)
-            # imprimirResultados("ListaOfertas",listaOfertas)
             procesado = generarOferta(listaOfertas,listaDACE)
         except Vacio_Error as ve:
             print("Falta información en: ", ve)
@@ -289,6 +315,7 @@ if __name__ == '__main__':
             print("Archivo no codificado para UTF-8. Recodifique.")
             sys.exit(2)
     else:
+        # Código para ejecutar etapa 2
         print("\nReanalizando Ofertas ")
         listaOfertas = cargarOfertasCSV(args[0],9)
         listaDACE = []
@@ -311,11 +338,3 @@ if __name__ == '__main__':
     finally:
         fdSalida.close()
     print("Ofertas procesadas exitosamente")
-
-
-    # python procesadorOfertas.py -f OfertasProcesadas.csv
-#-d 0800.xls -m materiasRequeridas.txt OfertaPB.xml
-# OfertaSIG.pdf OfertaID.xlsx OfertaCE.xls OfertaMatematicas.xls ofertaComputo.xml
-
-# python procesadorOfertas.py -f OfertasProcesadas.csv -d 0800.xls
-# -m materiasRequeridas.txt --dir-input=archivos_de_prueba/
