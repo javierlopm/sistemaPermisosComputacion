@@ -152,6 +152,10 @@ std_qry = """SELECT *
              FROM estudiante
              WHERE carnet = (?)"""
 
+name_qry = """SELECT * 
+              FROM estudiante
+              WHERE """
+
 del_all_perm = "DELETE FROM estudiante"
 del_all_std  = "DELETE FROM permiso"
 
@@ -235,6 +239,16 @@ class PermStore():
 
     def get_student(self,carnet):
         return self._run_with_args(std_qry,(carnet,))
+
+    def get_by_names(self,names):
+        n_list = names.split()
+        # El escape de sql siempre agrega comillas y dana la regex :( SHAME
+        qry = "AND ".join(["nombre LIKE '%{0}%'\n".format(w) for w in n_list])
+
+
+        result = self._run_with_args(name_qry+qry, () )
+        return result
+
 
     def get_perm(self,id_perm):
         return self._run_with_args(single_perm,(id_perm,))

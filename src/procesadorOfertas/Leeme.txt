@@ -5,10 +5,6 @@ Simón Bolívar . Las fuentes son archivos DOC, XLS y PDF cuyo contenido debe
 incluir códigos, bloque y horario. Opcionalmente podria incluir codigo de la carrera
 para discriminar las materias relevantes a la coordinación.
 
-Existe un caso especial para el manejo de las asignaturas del departamento ID.
-Si se encuentra el simbolo "Cerrar" se salta la fila y pasa a otra.
-
-
 # Ejecución
 * por shell Bash
     - Colocar los permisos adecuados. $ chmod 744 procesadorOferta.sh
@@ -39,7 +35,7 @@ donde:
 Se puede usar o --dir-input o argumentos de insumo pero no ambos.
 
 # Instalaciones requeridas
-* python >=3.4
+* python >= 3.4
 * pip
 * MuPDF 1.9.2
 * xlrd 1.0.0
@@ -61,7 +57,7 @@ MuPDF 1.9.2 para Linux (Debian y Ubuntu)
 
         Debe quedar como sigue: CFLAGS += -Wall -fPIC.
 
-        Guardar.
+    - Guardar.
     - $ sudo make prefix=/usr/local/ install
     - En la carpeta PyFitz, editar setup.py. Comentar la linea 15 y 16.
         Debe quedar asi:

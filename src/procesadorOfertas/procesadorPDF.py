@@ -1,18 +1,33 @@
-#!/usr/bin/python3.5
-#!/usr/bin/python3.4
+#!/usr/bin/python3
 
 # Nombre: Daniel Leones
 # Carné: 09-10977
-# Fecha: 26/10/2016
-# Descripción: Procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
+# Fecha: 7/12/2016
+# Descripción: procesa los archivos xml producidos por la libreria MuPDf 1.9.2.
 # Se apoya en las etiquetas "<span>" y "<char>".
 # En caso que se haya un archivo de salida, su formato será CSV conforme al
 # siguiente formato :
-# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES
+# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES, ESPECIAL
 # En otro caso, se devuelve una [fila1,fila2,..., filaN] al estilo CSV de acuerdo
 # al formato anterior.
+# El procesador reconoce los estilos:
+#   Códigos, Bloques o sección, horarios. (Estilo computo)
+#   Código, Nombre Asignatura, Bloque, Lunes, Martes, Miercoles,
+#        Jueves, Viernes, Carrera. (Estilo general)
+# Al reconocer alguno de estos, será notificado por la salida estandar.
 
-import fitz # Usando MuPDf 1.9.2
+# Se utilizan expresiones regulares para reconocer el contenido relevantes.
+# Las variables *self.patrónX* contiene los patrones utilizados.
+# Las posiciones se guardan se comparar contra las posiciones de los elementos reconocidos.
+# Esquema:
+# -----limSup (posición + paddingRecon)-----
+#       -----posSup-----
+#       elemento por asignar
+#       -----posInf-----
+# -----limInf (posición - paddingRecon) -----
+#
+
+import fitz     # Usando MuPDf 1.9.2
 import xml.sax
 import re
 import sys
@@ -23,18 +38,25 @@ from funcionesAuxiliares import dividirStr, obtArgs, cargarMaterias, \
                                   componerHorarioCSV, normalizarMateria,  \
                                   ordenarDias, usoAyuda
 
+#
+# Clase utilizada para parsing del XML exportado por PyMuPDF.
+#
 class OfertasGeneral( xml.sax.ContentHandler ):
     def __init__(self, listaMaterias):
+        # Acumuladores
         self.filaMatBloq = []
         self.filaHorario = []
+        self.celda = ""
         self.posCaracteres = []
         self.cabeceraDias = []
         self.cabeceraDiasTest = []
-        self.celda = ""
+        # Lista de materias
         self.listaMaterias = listaMaterias
+        # Modos de operación
         self.cabeceraLista = False
         self.modoHorario = False
         self.bloque = False
+        # Patrones de recocimiento usados por las expresiones regulares
         self.patronHoras = "\d{1,2}(-\d{1,2})?"
         self.patronDias = "(L[Uu][Nn](\.|es)?|M[Aa][Rr](\.|tes)?|" + \
             "M[Ii][Ee](\.|rcoles|r)?|[Jj][Uu][Ee](\.|ves)?|V[Ii][Ee](\.|es|r)?)"
@@ -49,11 +71,20 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             "(\s+(-|–)?\s+)?){1,}"
         self.patronDiasFrac = self.patronDias + "(\s*-\s*" + self.patronDias + ")?"
 
-   # Call when an element starts
+    # Función: endElement
+    # Argumentos:
+    #   tag:        String, nombre de la etiqueta proveniente del documento XML.
+    #   atributes:  String, atributos de la etiqueta XML.
+    # Salida: Ninguna
+    #
+    # Descripción: ejecutar una acción por cada etiqueta inicial
     def startElement(self, tag, attributes):
         if tag == "char":
+            # Se acumulan las caracteres a través del atributo.
             self.celda += attributes["c"]
 
+        # Guardar las posiciones para comparaciones. Esta etiqueta anida <char>
+        # directamente.
         if tag == "span":
             self.posCaracteres = \
                 (attributes['bbox'].split(" ")[0],
@@ -61,16 +92,20 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                  attributes['bbox'].split(" ")[2],
                  attributes['bbox'].split(" ")[3])
 
-   # Call when an elements ends
+    # Función: endElement
+    # Argumentos:
+    #   tag: String, nombre etiqueta proveniente del documento XML.
+    # Salida: Ninguna
+    #
+    # Descripción: ejecutar una acción por cada etiqueta final
     def endElement(self, tag):
         if tag == "span":
-            #print("Celda", self.celda, self.posCaracteres)
+            # Leer cabecera
             if not self.cabeceraLista:
-                #print("Celda", self.celda)
                 self.cabeceraLista = \
                     self.filtroCabecera(self.celda, self.posCaracteres)
 
-            #print("Celda", self.celda)
+            # Modos de procesamiento del texto
             if self.modoHorario:
                 self.filtrarTextoEstiloComputo(self.celda.strip())
             else:
@@ -79,15 +114,26 @@ class OfertasGeneral( xml.sax.ContentHandler ):
             self.celda = ""
             self.posCaracteres = []
 
-   # Call when a character is read
+    # Función: characters
+    # Argumentos:
+    #   content: String
+    # Salida: Ninguna
+    #
+    # Descripción: ejecutar una acción al encontrar al menos un caracter.
     def characters(self, content):
         pass
 
-    # Encuentra los dias de semana y guarda sus posiciones en la página.
+    # Función: filtroCabecera
+    # Argumentos:
+    #   txt: String
+    #   posCaracterres: una tupla (String,String,String,String)
+    # Salida: Booleano, Detener y seguir el análisis de la cabecera
+    #
+    # Descripción: procesa la cabecera de los dias de semana en la página y
+    # guarda sus posiciones. Se imprime los dias reconocidos.
     def filtroCabecera(self,txt, posCaracteres):
         searchDias = re.search(self.patronDias, txt, re.I)
         if searchDias:
-            #print("posCaracteres", txt , posCaracteres)
             self.cabeceraDias.append((searchDias.group()[0:2],
                                       Decimal(posCaracteres[0]),
                                       Decimal(posCaracteres[2])))
@@ -104,50 +150,48 @@ class OfertasGeneral( xml.sax.ContentHandler ):
 
         return False
 
+    # Función: filtrarTextoEstiloComputo
+    # Argumentos:
+    #   txt: String
+    # Salida: Ninguna
+    #
+    # Descripción: procesa cadenas de código de materias, bloque y horarios
+    # de acuerdo al estilo del departamento de cómputo.
     def filtrarTextoEstiloComputo(self,txt):
         searchMat = re.search(self.patronMateria, txt, re.I)
         searchBloq2 = re.search(self.patronBloque2, txt, re.I)
         searchHorario = re.search(self.patronHorario, txt, re.I)
         searchHorario2 = re.search(self.patronHorario2, txt, re.I)
         searchSeccion = re.search(self.patronSeccion, txt, re.I)
-        #print(txt, searchBloq2)
         if searchMat:
             self.filaMatBloq.append((normalizarMateria(searchMat.group()),
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
-            #print(searchMat)
-            #print(searchBloq2)
-
         if searchBloq2:
-            #print("BLoqe", dividirStr(searchBloq2.group()), dividirStr(searchBloq2.group())[1])
             self.filaMatBloq.append((dividirStr(searchBloq2.group(),' ()')[1],
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
             self.bloque = True
+
+        # En caso de no haber bloques sino Sección, se lee e interpreta como bloque
         elif not self.bloque and searchSeccion:
-            #print(searchSeccion)
             self.filaMatBloq.append((self.corresSecBloq[
                              dividirStr(searchSeccion.group(),' ()')[1]],
                              Decimal(self.posCaracteres[1]),
                              Decimal(self.posCaracteres[3])))
             self.bloque = False
 
+        # Reconocer horarios de acuerdo a: Dia-Dia Hora ó Dia Hora.
         if searchHorario or searchHorario2:
-            # print(searchHorario)
-            # print(searchHorario2)
-            #print(self.normalizarHorario(dividirStr(txt)), dividirStr(txt))
             for hor in self.normalizarHorario(
                               dividirStr(txt)):
                 txt = dividirStr(hor)
-                #print("hor", txt)
                 dias = dividirStr(txt[0],"-")
                 # Garantizar que solo los digitos de las horas
                 txt =  txt[1][0:4]
-                #print(dias, txt)
+                # Los horarios se almacenan en la forma (dia,posInf,posSup)
+                # donde dias son las primeras 2 letras del día.
                 if len(dias) > 1:
-                    #print((txt,dias[0][0:2].upper()), "   ", 
-                          # (Decimal(self.posCaracteres[1]),
-                          #     Decimal(self.posCaracteres[3])))
                     self.filaHorario.append((txt,dias[0][0:2].upper(),
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
@@ -155,10 +199,16 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                               Decimal(self.posCaracteres[1]),
                               Decimal(self.posCaracteres[3])))
                 else:
-                    #print((txt,dias[0][0:2].upper()))
                     self.filaHorario.append((txt,dias[0][0:2].upper(),
                               Decimal(self.posCaracteres[1]), Decimal(self.posCaracteres[3])))
 
+    # Función: filtrarTexto
+    # Argumentos:
+    #   txt: String
+    # Salida: Ninguna
+    #
+    # Descripción: procesa cadenas de código de materias, bloque y horarios
+    # de acuerdo al estilo del departamento de cómputo.
     def filtrarTexto(self,txt):
         searchMat = re.search(self.patronMateria, txt, re.I)
         if searchMat:
@@ -172,11 +222,7 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                               Decimal(self.posCaracteres[3])))
 
         elif re.search(self.patronHoras, txt):
-            #print(re.search(self.patronHoras, txt))
-            #print(self.fila[0])
             for (dia,limInf,limSup) in self.cabeceraDias:
-                # print(limInf, "posIniTxt <=", dia, "posIniDia ", Decimal(self.posCaracteres[0][0]), \
-                #       "posFinTxt", Decimal(self.posCaracteres[-1][0]),"<= posFinDia", limSup )
                 if (limInf - 3) <= Decimal(self.posCaracteres[0]) \
                     and Decimal(self.posCaracteres[2]) <= (limSup + 3):
                     self.filaHorario.append((txt,dia,
@@ -184,42 +230,48 @@ class OfertasGeneral( xml.sax.ContentHandler ):
                                     Decimal(self.posCaracteres[3])))
                     #print((txt,dia))
                     break
+        return
 
+    # Función: subdividirFilas
+    # Argumentos:
+    #   ninguno
+    # Salida: [[String]]
+    #
+    # Descripción: ensamblar las asignaturas, bloques y horarios reconocidos.
     def subdividirFilas(self):
         nuevaFila = []
         tuplas = []
         materiaValida = False
         pSupFila = None
         pInfFila = None
+        # Token para reconocer final de la lista
         self.filaMatBloq.append(('$',0,0))
         for (item, pSup, pInf) in self.filaMatBloq:
-            #print("Mi item", item)
+            # Partir fila de asignatura 
             if re.search(self.patronMateria, item, re.I) or item == '$':
                 if nuevaFila and (nuevaFila[0] in self.listaMaterias):
+                    # Acoplar horarios a la fila a partir.
                     for (hora,dia,pSupH,pInfH) in self.filaHorario:
-                        #print((hora,dia), "pSupFila", pSupFila, "<=", pSupH, "pInfFila", pInfFila, ">=", pInfH)
                         if pSupFila <= pSupH and pInfFila  >= pInfH:
-                            #print("Aceptada", (hora,dia))
-                            #print("pSupFila", pSupFila - 5, "<=", pSup, "pInfFila", pInfFila + 5, ">=", pInf)
                             nuevaFila.append((hora,dia))
 
-                    #print("Nueva Fila", nuevaFila)
                     tuplas.append(nuevaFila)
 
                 nuevaFila = []
                 nuevaFila.append(item)
                 pSupFila = pSup - 6
                 pInfFila = pInf + 12
-                #print("pSupFila", pSupFila, "<=", pSup, "pInfFila", pInfFila, ">=", pInf)
             elif pSupFila <= pSup and pInfFila  >= pInf:
                 nuevaFila.append(item)
 
-        # print("Tuplas")
-        # for item in tuplas:
-        #     print(item)
         return tuplas
 
-
+    # Función: subdividirFilas
+    # Argumentos:
+    #   ninguno
+    # Salida: [[String]]
+    #
+    # Descripción: ensamblar las asignaturas, bloques y horarios reconocidos.
     def normalizarHorario(self,txt):
         hor = ""
         nuevoTxt = []
@@ -243,11 +295,20 @@ class OfertasGeneral( xml.sax.ContentHandler ):
 
         return nuevoTxt
 
+# Función: procesarPDF
+# Argumentos:
+#   nombreArchivoEntrada: String, camino hacia 
+#   listaMaterias, 
+#   fdSalida
+# Salida: [[String]], lista de ofertas
+#
+# Descripción: función principal de procesamiento. Leer cada pagina y capturar
+# los datos pertinentes.
 def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     doc = fitz.open(nombreArchivoEntrada)
-    # create an XMLReader
+    # Crear un lector XML
     parser = xml.sax.make_parser()
-    # turn off namepsaces
+    # Desactivar namespaces
     parser.setFeature(xml.sax.handler.feature_namespaces, 0)
     Handler = OfertasGeneral(listaMaterias)
     # override the default ContextHandler
@@ -270,19 +331,14 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
     f.close()
     remove('textPDFXML1.xml')
 
-    # Ordenar de acuerdo al formato (COD_ASIGNATURA,BLOQUE,L,M,MI,J,V)
     # Concatenar en un solo string e imprimir filas en formato CSV.
     for fil in Handler.subdividirFilas():
         if fil:
-            #print(fil)
             if len(fil) > 1:
-                #print("Fila", fil, "\nhorario", fil[1:], "\n")
                 if isinstance(fil[1],tuple):
                     acum = fil[0] + ',A'
-                    #print("Seleccion1", fil[1:])
                     horariosOrdenados = sorted(fil[1:], key=ordenarDias)
                 else:
-                    #print("Seleccion2", fil[2:])
                     acum = ",".join(fil[:2])
                     horariosOrdenados = sorted(fil[2:], key=ordenarDias)
 
@@ -297,7 +353,7 @@ def procesarPDF(nombreArchivoEntrada, listaMaterias, fdSalida):
             fdSalida.append(acum.split(','))
             acum = ""
 
-
+# Programa principal para ejecutar el procesador invidualmente.
 if ( __name__ == "__main__"):
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
@@ -322,7 +378,7 @@ if ( __name__ == "__main__"):
     else:
         print("COD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIALES")
 
-
+    # Escribir resultados
     for fila in fdSalida:
         if nomArchivoSalida:
             try:

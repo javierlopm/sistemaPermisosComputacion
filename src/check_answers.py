@@ -176,6 +176,8 @@ class AnswersChecker():
             nombre,indice,aprobadas = ("",0.0,0)
             print("Error trying to get student")
 
+
+
         perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[9])
         
         for k in range(5,9):
@@ -235,7 +237,8 @@ class AnswersChecker():
             nombre,indice,aprobadas = ("",0.0,0)
             print("Error trying to get student")
 
-        perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[11])
+
+        perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[12])
         for k in range(5,12):
             pasantias = k == 10
             if line[k] != "":

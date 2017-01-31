@@ -1,4 +1,16 @@
-from mmap import mmap,ACCESS_READ
+#!/usr/bin/python3
+# Nombre: Daniel Leones
+# Carné: 09-10977
+# Fecha: 7/12/2016
+# Descripción: procesa los archivos xls y xlsx usando la libreria xlrd. Se analiza
+# la cabecera de los archivos en búsqueda del patrón:
+# COD_ASIGNATURA,BLOQUE,LUNES,MARTES,MIERCOLES,JUEVES,VIERNES, ESPECIAL.
+# En caso de existir el campo Especial y/o Carrera, se notificará en la salida
+# estandar.
+# Si existe el campo carrera, se superpone al reconocimiento por lista de materias.
+# Si se detecta alguna palabra Cerrar, se omite la fila en la lista final.
+# 
+
 from xlrd import open_workbook,cellname
 from os.path import isfile
 from os import remove
@@ -8,14 +20,23 @@ from funcionesAuxiliares import obtArgs, cargarMaterias, \
 import sys
 import re
 
-
+# Patrones usados por las expresiones regulares
 patronMateria = "(\w\w\s*-?\s*\d\d\d\d|\w\w\w\s*-?\s*\d\d\d)"
 patronDias = "^(L[Uu][Nn](\.?|es)?|M[Aa][Rr](\.?|tes)?|" + \
     "M[Ii][Ee](\.?|rcoles)?|[Jj][Uu][Ee](\.?|ves)?|V[Ii][Ee](\.?|rnes)?)$"
 patronBloque = "[Bb][Ll][Oo][Qq](\.|[Uu][Ee])?"
 patronHoras = "^(\d{1,2}((-|..)\d{1,2})?)$"
 existeEspecial = False
-
+   
+# Función: analizarCabecera
+# Argumentos: 
+#   cabecera: [String], fila de una hoja de cálculo.
+# Salida:
+#   (Booleano,[Int], Booleano, Int, Booleano, Int, Booleano, Int),
+#       Posiciones y modos de operación detectados.
+# 
+# Descripción: Leer la cabecera usando expresiones regulares para reconocer el estilo 
+# formato de la información y activar los modos de operación necesarios. 
 def analizarCabecera(cabecera):
     nroCampo = 0
     posCamposValidos = []
@@ -70,35 +91,64 @@ def analizarCabecera(cabecera):
         return (False,posCamposValidos, existeCarrera, campoCarrera,
                 existeAccion, campoAccion, existeEspecial, campoEspecial)
 
+# Función: filtrarBloque
+# Argumentos: 
+#   txt: [String]
+# Salida:
+#   Booleano
+# 
+# Descripción: Reconocer bloque. Se regresa True, en caso de encontrar un bloque
 def filtrarBloque(txt):
     return len(txt) == 1 and txt[0].isalpha()
 
+# Función: verificarCerrar
+# Argumentos: 
+#   txt: [String]
+# Salida:
+#   Booleano
+# 
+# Descripción: Reconocer la palabra clave cerrar. Esto activa la omisión de la fila
+# que se esté procesando.
 def verificarCerrar(txt):
     return re.search("cerrar", txt, re.I)
 
+# Función: normalizarHoras
+# Argumentos: 
+#   txt: [String]
+# Salida:
+#   String, 
+# 
+# Descripción: toma las horas previamente reconocidas y las convierte en el siguiente
+# formato: Hora-Hora. 
 def normalizarHoras(txt):
-    #print("entrada", txt)
     nuevo = dividirStr(txt,'.')
     if len(nuevo) > 1:
         temp = nuevo[1]
         nuevo[1] = '-'
         nuevo.append(temp)
     nuevo = "".join(nuevo)
-    #print("salida", nuevo)
     return nuevo
 
+# Función: procesarXLS
+# Argumentos: 
+#   nomArchivoEntrante: String, camino hacia el archivo a procesar.
+#   activarFiltrado:    Booleano, activar supresión de materias.
+#   listaMaterias:      [String], lista de materias
+#   fdSalida:           [[String]], lista de ofertas posiblemente vacia.
+# Salida:
+#   fdSalida: [[String]]
+# 
+# Descripción: función principal de procesamiento. 
 def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
     global existeEspecial
     # Abrir el la hoja de cálculo en cuestión
     book = open_workbook(nomArchivoEntrante)
     # Acceder a la primera hoja.
     sheet0 = book.sheet_by_index(0)
-    # Concatenar en un solo string e imprimir filas y
-    # escribir filas en un archivo estilo csv.
+
     cabeceraProcesada = False
     for nroFila in range(sheet0.nrows):
         if not cabeceraProcesada:
-            #print(sheet0.row_values(nroFila))
             (cabeceraProcesada, posCamposValidos,
              existeCarrera,campoCarrera,
              existeAccion, campoAccion,
@@ -106,29 +156,23 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
              campoEspecial) = analizarCabecera(sheet0.row_values(nroFila))
         else:
             entrada = sheet0.row_values(nroFila)
-            #print(entrada)
             # Comprueba si pertenece al pensum de computación
             if activarFiltrado:
                 if (existeCarrera and \
                     (not re.search("0?800",str(entrada[campoCarrera])))):
-                    #print("Eliminar por Carrera",str(entrada[campoCarrera]))
                     continue
 
                 if (not normalizarMateria(entrada[posCamposValidos[0]]) in listaMaterias):
-                    #print("Ignorar codCarrera", re.search("0800",str(entrada[campoCarrera])))
-                     #print("Eliminar por lista materias ",
-                    #       normalizarMateria(entrada[posCamposValidos[0]]), entrada, "\n")
                     continue
                 if existeAccion and verificarCerrar(entrada[campoAccion]):
-                    # print("Eliminada por cerrar", entrada[posCamposValidos[0]],
-                    #       entrada[posCamposValidos[1]])
                     continue
 
             nuevaEntrada = ""
             horarioNoVacio = True
             for pos in posCamposValidos:
+                # Normalizar la entrada
                 if isinstance(entrada[pos],float):
-                    #Compvertir numeros unitarios flotantes en enteros.
+                    #Convertir numeros unitarios flotantes en enteros.
                     txt = str(floor(entrada[pos]))
                 elif entrada[pos] != '':
                     txt = str(entrada[pos]).strip()
@@ -142,20 +186,22 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
                 # Para verificar semántica de archivo del dpto ID
                 if verificarCerrar(txt):
                     nuevaEntrada = ""
-                    #print("Tienen cerrar", ','.join(entrada))
                     break
 
+                # Reconocimiento de códigos de materias
                 searchMat = re.search(patronMateria,txt, re.I)
                 if searchMat:
                     nuevaEntrada += ',' + normalizarMateria(searchMat.group())
+                # Reconocimiento de horas
                 elif re.search(patronHoras, txt):
                     nuevaEntrada += ',' + normalizarHoras(txt)
                     horarioNoVacio = False
+                # Reconocimiento de bloques
                 elif filtrarBloque(txt) \
                     or txt == '':
-                    #print("pasa el filtro", txt)
                     nuevaEntrada += ',' + txt
 
+            # Reconocimiento de campo Especial
             if existeEspecial and re.search("^[A-Z]$",
                           entrada[campoEspecial].strip(), re.I):
                 nuevaEntrada += ',' + entrada[campoEspecial].strip()
@@ -166,25 +212,24 @@ def procesarXLS(nomArchivoEntrante, activarFiltrado, listaMaterias, fdSalida):
 
             nuevaEntrada = nuevaEntrada[1:]
             if nuevaEntrada and nuevaEntrada[0] != ',' :
-                #fdSalida.write(nuevaEntrada + "\n") # Salida para archivo
-                #print(nuevaEntrada)
                 fdSalida.append(nuevaEntrada.split(','))
 
+# Programa principal para ejecutar el procesador individualmente.
 if ( __name__ == "__main__"):
     global modoDACE
+    # Pasaje de parametros
     (nomArchivoSalida, nomArchivoMaterias, args) = obtArgs(sys.argv[1:])
 
+    # Cargar lista de materias
     listaMaterias = cargarMaterias(nomArchivoMaterias)
 
-    fdSalida = []
-    sheet0 = open_workbook(args[0]).sheet_by_index(0)
-    # Concatenar en un solo string e imprimir filas y
-    # escribir filas en un archivo estilo csv.
     if isfile(nomArchivoSalida):
         remove(nomArchivoSalida)
 
+    fdSalida = []
     procesarXLS(args[0],True,listaMaterias,fdSalida)
 
+    # Si se usa '-f'
     if nomArchivoSalida:
         try:
             f = open(nomArchivoSalida, 'a')
@@ -195,7 +240,7 @@ if ( __name__ == "__main__"):
     else:
         print("\nCOD_ASIGNATURA,BLOQUE,L,M,MI,J,V,ESPECIAL")
 
-
+    # Escribir los resultados
     for fila in fdSalida:
         if nomArchivoSalida:
             try:

@@ -72,6 +72,7 @@ function pasajeParametros() {
 
     # Acceder a los operandos
     shift $((OPTIND-1))
+    # Verificaciones de errores
     if [[ $reanalisis -eq 1 ]]; then
         if [[ !( -a "$1")]]; then
             if [[ -z "$1" ]]; then
