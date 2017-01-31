@@ -793,9 +793,12 @@ class MainWindow(Gtk.Window):
 
         self.label = None
 
+        name_box   = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
         std_box   = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
         class_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
 
+        button0 = Gtk.Button(label="Buscar por nombres/apellidos")
+        self.name_entry = Gtk.Entry()
         button1 = Gtk.Button(label="Buscar por carnet ")
         self.student_entry = Gtk.Entry()
         button2 = Gtk.Button(label="Buscar por materia")
@@ -839,6 +842,9 @@ class MainWindow(Gtk.Window):
         self.refresh_main_lab()
 
         # Composite buttons
+        name_box.pack_start(button0           ,True,True,0)
+        name_box.pack_start(self.name_entry,True,True,0)
+
         std_box.pack_start(button1           ,True,True,0)
         std_box.pack_start(self.student_entry,True,True,0)
         class_box.pack_start(button2         ,True,True,0)
@@ -851,6 +857,7 @@ class MainWindow(Gtk.Window):
 
         # All buttons
         main_box.pack_start(std_box  ,True,True,0)
+        main_box.pack_start(name_box  ,True,True,0)
         main_box.pack_start(class_box,True,True,0)
         main_box.pack_start(search_box,True,True,0)
         main_box.pack_start(search_boxSE,True,True,0)
@@ -861,6 +868,7 @@ class MainWindow(Gtk.Window):
 
 
 
+        button0.connect("clicked", self.on_name_clicked)
         button1.connect("clicked", self.on_student_clicked)
         button2.connect("clicked", self.on_search_view_clicked)
        
@@ -912,6 +920,20 @@ class MainWindow(Gtk.Window):
             response = new_win.show_all()
         else:
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
+
+    def on_name_clicked(self, widget):
+        name =  self.name_entry.get_text()
+
+        result = db.get_by_names(name)
+
+        if result:
+            # formated_carnet = format_id(result[0]['carnet'])
+            student_perms   = db.get_student_perms(result[0]['carnet'])
+            self.hide()
+            new_win = StudentAllPerms(self,result[0],student_perms)
+            response = new_win.show_all()
+        else:
+            msgbox("No se encontro a ningún estudiante con nombre {}".format(name))
     
     def on_combo_search(self,widget,is_type):
         mat = None
