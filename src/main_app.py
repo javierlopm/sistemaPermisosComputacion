@@ -4,7 +4,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader
-from easygui       import msgbox,ccbox,filesavebox
+from easygui       import msgbox,ccbox,filesavebox, choicebox
 import os.path
 import sys
 from csv_creator import CsvCreator
@@ -402,7 +402,6 @@ class SearchWindow(HeaderBarWindow):
 
         self.new_val  = None
         self.last_val = None
-
 
 
 class InitWindow(Gtk.Window):
@@ -922,15 +921,27 @@ class MainWindow(Gtk.Window):
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
 
     def on_name_clicked(self, widget):
+        title = "Seleccione un estudiante"
         name =  self.name_entry.get_text()
+        msg = "Estudiantes encontrados con " + name + " en nombre/apellido"
+        choice_list = []
+        result_i = 0
 
         result = db.get_by_names(name)
-
         if result:
             # formated_carnet = format_id(result[0]['carnet'])
-            student_perms   = db.get_student_perms(result[0]['carnet'])
+            if len(result) == 1:
+                choice = result[0]['carnet']
+            else:
+                for i, found_student in enumerate(result):
+                    choice_list.append(str(i) + ". " + show_carnet(found_student['carnet']) + " - " + found_student['nombre'])
+                choice = choicebox(msg, title, choice_list)
+                aux_tmp = choice.split(". ")
+                result_i = int(aux_tmp[0])
+                choice = int(format_id(aux_tmp[1].split(" - ")[0]))
+            student_perms   = db.get_student_perms(choice)
             self.hide()
-            new_win = StudentAllPerms(self,result[0],student_perms)
+            new_win = StudentAllPerms(self,result[result_i],student_perms)
             response = new_win.show_all()
         else:
             msgbox("No se encontro a ningún estudiante con nombre {}".format(name))

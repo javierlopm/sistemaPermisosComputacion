@@ -281,12 +281,23 @@ class PermStore():
                            ,"Javier López"
                            ,"04129349938"
                            ,"javierloplom@gmail.com"
+                           ,4.12
+                           ,666
                            ,"Por favor podrían agregar mi permiso? es de suma importancia para salvar a mi perrito y a mi gato y para resolver la complicada situación de Burkina Faso")
 
         self.insert_student(1110584
                            ,"Carlos Martínez"
                            ,"0424222222"
                            ,"1110584@usb.ve"
+                           ,3.45
+                           ,432
+                           ,"")
+        self.insert_student(1110564
+                           ,"Javier Ernesto"
+                           ,"0424222222"
+                           ,"1110564@usb.ve"
+                           ,5.0
+                           ,235
                            ,"")
 
         # Extra credito
