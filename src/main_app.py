@@ -3,7 +3,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
-from coord_crawler import format_id,show_carnet,StudentDownloader
+from coord_crawler import format_id,show_carnet,StudentDownloader,get_gen,get_elect
 from easygui       import msgbox,ccbox,filesavebox, choicebox
 import os.path
 import sys
@@ -84,6 +84,8 @@ class StudentWindow(Gtk.Window):
         self.old_window   = old_window
         Gtk.Window.__init__(self, title="Permisos coordinación")
 
+        self.carnet = show_carnet(std_data['carnet'])
+
         self.connect("delete-event", Gtk.main_quit)
 
         self.set_default_size(640,200)
@@ -96,16 +98,9 @@ class StudentWindow(Gtk.Window):
 
         self.add(self.wrapper_grid)
 
-        grid.insert_row(0)
-        grid.insert_row(1)
-        grid.insert_row(2)
-        grid.insert_row(3)
-        grid.insert_row(4)
-        grid.insert_column(0)
-        grid.insert_column(1)
-        grid.insert_column(2)
-        grid.insert_column(3)
-        grid.insert_column(4)
+
+        grid.insert_row(15)
+        grid.insert_column(15)
 
         grid.set_row_spacing(10)
         grid.set_column_spacing(30)
@@ -156,6 +151,11 @@ class StudentWindow(Gtk.Window):
 
 
         inv_box = Gtk.Box(spacing=20)
+
+        button_gen   = Gtk.Button(label="Ver Generales")
+        button_gen.connect("clicked",self.check_gen)
+        button_elect = Gtk.Button(label="Ver Electivas")
+        button_elect.connect("clicked",self.check_elect)
         
         self.outter_grid.attach(grid,0,0,1,1)
 
@@ -167,6 +167,10 @@ class StudentWindow(Gtk.Window):
         self.outter_grid.attach(img,1,0,1,1)
 
         self.wrapper_grid.attach(self.outter_grid,0,0,1,1)
+
+        grid.attach(button_gen  ,2,14,1,1)
+        grid.attach(button_elect,4,14,1,1)
+        # choicebox("yes", "2", ["CI4564 | fundamentos de la música | 3", "CI4564 | fundamentos de la música | 5"])
 
         button_ret.connect("clicked", self.go_back)
 
@@ -180,6 +184,28 @@ class StudentWindow(Gtk.Window):
 
         self.old_window.show()
         self.destroy()
+
+    def check_gen(self,widget):
+        try:
+            choice_list = get_gen(self.informe_acad_file())
+            option = choicebox("Lista de generales, presione aceptar o cancerlar","Generales", choice_list)
+        except Exception as e:
+            print("got an exception")
+            print(e)
+            return
+
+    def check_elect(self,widget):
+        try:
+            choice_list = get_elect(self.informe_acad_file())
+            print(choice_list)
+            option = choicebox("Lista de electivas, presione aceptar o cancerlar","Electivas libres", choice_list)
+        except Exception as e:
+            print("got an exception")
+            print(e)
+            return
+
+    def informe_acad_file(self):
+        return "graphs_manager/HTML/"+self.carnet+".html"
 
     def is_main(self):
         return False

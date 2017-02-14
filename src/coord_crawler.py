@@ -2,6 +2,7 @@
 #!/usr/bin/python
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from electivas import *
 import pdb
 import codecs
 import re
@@ -101,3 +102,35 @@ class StudentDownloader():
     def close(self):
         self.browser.close()
 
+
+CODIGO = 0
+NOMBRE = 1
+NOTA   = 3
+
+def get_all_classes(inf_acad,filtro=None):
+    from bs4 import BeautifulSoup
+    all_classes = []
+    file = codecs.open( inf_acad, "r",encoding="iso-8859-1").read()
+    parser = BeautifulSoup(file, 'html.parser')
+
+    table = parser.table.table
+    codigo = table.findAll("td",{"width":"50","align":"left"})
+    nombre = table.findAll("td",{"width":"380","align":"left"})
+    nota   = table.findAll("td",{"width":"45","align":"center"})
+    for i in range(len(codigo)):
+        if filtro(codigo[i].text):
+            all_classes.append("{}|{}|{}".format(codigo[i].text,nombre[i].text,nota[i].text))
+
+    return all_classes
+
+def get_gen(inf_acad):
+    from re import compile,match
+    patt = re.compile("[A-Z]{3}\d{3}")
+    filtro = lambda x: patt.match(x) and not (x in ciclo_basico)
+
+    return get_all_classes(inf_acad,filtro)
+    
+
+def get_elect(inf_acad):
+    filtro = lambda x: (x in area) or (x in libres)
+    return get_all_classes(inf_acad,filtro)
