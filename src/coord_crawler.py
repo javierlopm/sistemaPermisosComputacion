@@ -119,7 +119,8 @@ def get_all_classes(inf_acad,filtro=None):
     nota   = table.findAll("td",{"width":"45","align":"center"})
     for i in range(len(codigo)):
         if filtro(codigo[i].text):
-            all_classes.append("{}|{}|{}".format(codigo[i].text,nombre[i].text,nota[i].text))
+            trim = codigo[i].findParents()[5].td.text[4:]
+            all_classes.append("{}|{}|{}|{}".format(codigo[i].text,nombre[i].text,nota[i].text,trim))
 
     return all_classes
 
