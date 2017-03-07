@@ -4,7 +4,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader,get_gen,get_elect
-from easygui       import msgbox,ccbox,filesavebox, choicebox
+from easygui       import msgbox,ccbox,filesavebox,choicebox,enterbox
 import os.path
 import sys
 from csv_creator import CsvCreator
@@ -333,6 +333,14 @@ class SearchWindow(HeaderBarWindow):
         self.fst_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=0)
         main_box.pack_start(self.fst_box,True,True,0)
 
+        export_button = Gtk.Button(label="Exportar permisos")
+        export_button.connect("clicked", self.on_export_click)
+        main_box.pack_start(export_button,True,True,0)
+
+        approve_all_button = Gtk.Button(label="Aprobar todos")
+        approve_all_button.connect("clicked", self.on_approve_all_click)
+        main_box.pack_start(approve_all_button,True,True,0)
+
         # scrollable view para permisos
         scrollable = Gtk.ScrolledWindow(vexpand=True)
         scrollable.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -361,6 +369,36 @@ class SearchWindow(HeaderBarWindow):
 
 
         self.update_missing_perms(self.count,self.count_a)
+
+    def on_export_click(self,widget):
+        from os import getenv
+        archivo = enterbox(msg='Lugar a exportar CSV'
+                          ,default=getenv('HOME')+'/export.csv'
+                          ,strip=False)
+        
+        export = "nombre,carnet,trimestre,anio,valor,tipo\n"
+        for p in self.std_perms:
+            # import pdb; pdb.set_trace()
+            export += ",".join(
+                [db.get_student(p['fk_carnet'])[0]["nombre"]
+                ,str(p['fk_carnet'])
+                ,Trimestre(p['trimestre']).memo_name()
+                ,str(p['anio'])
+                ,p['string_extra'] or str(p['int_extra']) or ""
+                ,TipoPermiso(str(p['tipo'])).name
+                ]) + "\n"
+
+        f = open(archivo, 'w')
+        f.write(export)
+        f.close()
+
+    def on_approve_all_click(self,widget):
+        for i,elem in enumerate(self.std_perms):
+            self.other_updates(EstadoPermiso(elem['aprobado'])
+                          ,EstadoPermiso.aprobado)
+            db.update_perm_state(elem['id_permiso'], EstadoPermiso.aprobado)
+            self.liststore[i][Col.estado.value] = "aprobado"
+            self.old_window.new_val = EstadoPermiso('a')
 
 
     def update_missing_perms(self,new_val,new_val_a):
