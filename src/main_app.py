@@ -337,6 +337,10 @@ class SearchWindow(HeaderBarWindow):
         export_button.connect("clicked", self.on_export_click)
         main_box.pack_start(export_button,True,True,0)
 
+        approve_all_button = Gtk.Button(label="Aprobar todos")
+        approve_all_button.connect("clicked", self.on_approve_all_click)
+        main_box.pack_start(approve_all_button,True,True,0)
+
         # scrollable view para permisos
         scrollable = Gtk.ScrolledWindow(vexpand=True)
         scrollable.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -387,6 +391,15 @@ class SearchWindow(HeaderBarWindow):
         f = open(archivo, 'w')
         f.write(export)
         f.close()
+
+    def on_approve_all_click(self,widget):
+        for i,elem in enumerate(self.std_perms):
+            self.other_updates(EstadoPermiso(elem['aprobado'])
+                          ,EstadoPermiso.aprobado)
+            db.update_perm_state(elem['id_permiso'], EstadoPermiso.aprobado)
+            self.liststore[i][Col.estado.value] = "aprobado"
+            self.old_window.new_val = EstadoPermiso('a')
+
 
     def update_missing_perms(self,new_val,new_val_a):
         if self.missing_count:
