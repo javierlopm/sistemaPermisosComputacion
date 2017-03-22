@@ -376,7 +376,7 @@ class SearchWindow(HeaderBarWindow):
                           ,default=getenv('HOME')+'/export.csv'
                           ,strip=False)
         
-        export = "nombre,carnet,trimestre,anio,valor,tipo\n"
+        export = "nombre,carnet,trimestre,anio,valor,tipo,status\n"
         for p in self.std_perms:
             # import pdb; pdb.set_trace()
             export += ",".join(
@@ -386,7 +386,7 @@ class SearchWindow(HeaderBarWindow):
                 ,str(p['anio'])
                 ,p['string_extra'] or str(p['int_extra']) or ""
                 ,TipoPermiso(str(p['tipo'])).name
-                ]) + "\n"
+                ,EstadoPermiso(p['aprobado']).name]) + "\n"
 
         f = open(archivo, 'w')
         f.write(export)
