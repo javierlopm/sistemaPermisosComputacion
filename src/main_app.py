@@ -1019,7 +1019,7 @@ class MainWindow(Gtk.Window):
             carnet =  int(spl[0])*100000 + int(spl[1])
 
             # (carnet,nombre,telefono,correo,indice,aprobados,comentario)
-            perm_storer.insert_student(carnet, nombre,"???","???",indice, aprobadas,"Entrada generada solo para observar el grafo")
+            db.insert_student(carnet, nombre,"???","???",indice, aprobadas,"Entrada generada solo para observar el grafo")
             
             import subprocess
             graphs_command = "cd graphs_manager && java createPngGraph "
