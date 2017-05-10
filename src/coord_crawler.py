@@ -33,7 +33,7 @@ class StudentDownloader():
     """Class for web crawler that search for students id and downloads
         their academic info
     """
-    def __init__(self,user,password,save_dir):
+    def __init__(self,user,password,save_dir="graphs_manager/HTML"):
         chromedriver = "./chromedriver"
         os.environ["webdriver.chrome.driver"] = chromedriver
         driver = webdriver.Chrome(chromedriver)

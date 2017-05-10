@@ -4,7 +4,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader,get_gen,get_elect
-from easygui       import msgbox,ccbox,filesavebox,choicebox,enterbox
+from easygui       import msgbox,ccbox,filesavebox,choicebox,enterbox,ynbox,multpasswordbox
 import os.path
 import sys
 from csv_creator import CsvCreator
@@ -856,9 +856,10 @@ class MainWindow(Gtk.Window):
 
         self.label = None
 
-        name_box   = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        name_box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
         std_box   = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
         class_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
+        graph_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,spacing=0)
 
         button0 = Gtk.Button(label="Buscar por nombres/apellidos")
         self.name_entry = Gtk.Entry()
@@ -867,6 +868,9 @@ class MainWindow(Gtk.Window):
         button2 = Gtk.Button(label="Buscar por materia")
         self.class_entry   = Gtk.Entry()
         button6 = Gtk.Button(label="Permisos pendientes")
+
+        button7 = Gtk.Button(label="Consultar grafo")
+        self.student_graph_entry = Gtk.Entry()
 
         button_csv = Gtk.Button(label="Generar archivos csv")
         button_em  = Gtk.Button(label="Enviar correos")
@@ -897,6 +901,7 @@ class MainWindow(Gtk.Window):
 
         button2.type = TipoPermiso.permiso_materia
         button6.type = None
+        button7.type = None
 
 
 
@@ -916,7 +921,8 @@ class MainWindow(Gtk.Window):
         search_box.pack_start(type_combo,True,True,0)
         search_boxSE.pack_start(buttonSE,True,True,0)
         search_boxSE.pack_start(state_combo,True,True,0)
-
+        graph_box.pack_start(button7,True,True,0)
+        graph_box.pack_start(self.student_graph_entry,True,True,0)
 
         # All buttons
         main_box.pack_start(std_box  ,True,True,0)
@@ -927,6 +933,9 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(button6  ,True,True,0)
         main_box.pack_start(button_csv  ,True,True,0)
         main_box.pack_start(button_em  ,True,True,0)
+        
+        # Caja para buscar el grafo unicamente
+        # main_box.pack_start(graph_box  ,True,True,0)
 
 
 
@@ -936,6 +945,7 @@ class MainWindow(Gtk.Window):
         button2.connect("clicked", self.on_search_view_clicked)
        
         button6.connect("clicked", self.on_search_view_clicked)
+        button7.connect("clicked", self.on_graph_search_clicked)
 
         button_csv.connect("clicked", self.on_write_csv_clicked)
         button_em.connect("clicked", self.on_email_send)
@@ -961,28 +971,89 @@ class MainWindow(Gtk.Window):
 
     def on_student_clicked(self, widget):
         formated_carnet = format_id(self.student_entry.get_text())
+        str_carnet      = show_carnet(formated_carnet)
 
-        if formated_carnet:
-            formated_carnet = int(formated_carnet)
-            student_data    = db.get_student(formated_carnet)
-            student_perms   = db.get_student_perms(formated_carnet)
-            # print(student_data )
-            # print(student_perms)
-
-            if (not student_data):
-                msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la bd")
-                return
-
-            if (not student_perms):
-                msgbox("El estudiante " + show_carnet(formated_carnet) + " no ha solicitado permisos")
-                return
-
-            self.hide()
-            new_win = StudentAllPerms(self,student_data[0],student_perms)
-            # new_win = SearchWindow(self,"carnet")
-            response = new_win.show_all()
-        else:
+        if not formated_carnet:
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
+            return
+
+        formated_carnet = int(formated_carnet)
+        student_data    = db.get_student(formated_carnet)
+        student_perms   = db.get_student_perms(formated_carnet)
+        # print(student_data )
+        # print(student_perms)
+
+        if (not student_data):
+            msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la bd")
+            continuar = ynbox(\
+                  msg='¿Desea descargar el expendiente?\nSolo podrá obsevar el grafo'
+                 ,title='Revisión de gráfo'
+                 ,choices=('[<F1>]Si', '[<F2>]No')
+                 ,default_choice='[<F1>]Si', cancel_choice='[<F2>]No')
+
+            if not continuar:
+                return
+
+            msg   = "Introduzca las credenciales para descargar el expediente de " + str_carnet
+            title = "Descargar expediente de " + str_carnet
+            fieldNames = ["Usuario","Password"]
+            fieldValues = ["coord-comp"]
+            fieldValues = multpasswordbox(msg,title, fieldNames)
+
+            while (fieldValues is None) or ('' in fieldValues):
+                msgbox("Debe completar las credenciales")
+                fieldValues = multpasswordbox(msg,title, fieldNames)
+
+            # import pdb;pdb.set_trace()
+            sd = StudentDownloader(fieldValues[0],fieldValues[1])
+
+            try:
+                (nombre,indice,aprobadas) = sd.search_student(str_carnet)
+                sd.close()
+            except Exception as e:
+                msgbox("Ha ocurrido un error descargando el comprobante, intente de nuevo.")
+                sd.close()
+                return
+
+            spl    = str_carnet.split('-')
+            carnet =  int(spl[0])*100000 + int(spl[1])
+
+            # (carnet,nombre,telefono,correo,indice,aprobados,comentario)
+            perm_storer.insert_student(carnet, nombre,"???","???",indice, aprobadas,"Entrada generada solo para observar el grafo")
+            
+            import subprocess
+            graphs_command = "cd graphs_manager && java createPngGraph "
+
+            process = subprocess.Popen(graphs_command+str_carnet,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            process.communicate()
+
+            student_data    = db.get_student(formated_carnet)
+
+        if (not student_perms):
+            msgbox("El estudiante " + str_carnet + " no ha solicitado permisos")
+            # return
+
+        self.hide()
+        new_win = StudentAllPerms(self,student_data[0],student_perms)
+        # new_win = SearchWindow(self,"carnet")
+        response = new_win.show_all()
+        
+            
+    # unused still
+    def on_graph_search_clicked(self,widget):
+        formated_carnet = format_id(self.student_graph_entry.get_text())
+        
+        if not formated_carnet:
+            msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
+            return
+
+        # import pdb; pdb.set_trace()
+
+        # student_data    = db.get_student(formated_carnet)
+        # student_perms   = db.get_student_perms(formated_carnet)
+
+
+
 
     def on_name_clicked(self, widget):
         title = "Seleccione un estudiante"
