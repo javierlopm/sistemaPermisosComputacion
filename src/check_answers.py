@@ -63,9 +63,9 @@ trimestre_dict = {
 }
 
 mod_dict = {
-    1 : "1YyiA_-5n1u0aY9tXWCpjDFQIWkpOXGo-_MqfL5cakN8",
-    2 : "19brVUZXLWxu49JjleeEiR4rzGJdZcUDVXoJMgA1x7bw",
-    3 : "1kkVCFP3zwq3PO6sNR12l2VloxNXA98lM6zGWGHfeom0"
+    1 : "1YyiA_-5n1u0aY9tXWCpjDFQIWkpOXGo-_MqfL5cakN8", # todos
+    2 : "1spBf3ei7EunkuYv0CDWRgJG36XNZY5LDi6V1k-8J-CA", # solo generales
+    3 : "1PLuTOglJKCilu97LbZnMURnrm62Xp7nWcrg1carCXHc"  # sin generales
 }
 
 graphs_command = "cd graphs_manager && java createPngGraph "
@@ -149,7 +149,7 @@ class AnswersChecker():
         sheet = self.gc.open_by_key(mod_dict[self.modality])
         print("{} - {}".format(sheet.title, sheet.id))
         print("▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔")
-
+        print(len(sheet.get_worksheet(0).get_all_values()))
         for i,line in enumerate(sheet.get_worksheet(0).get_all_values()):
             print(str(i) + ".- " + str(line))
             if(line[0] == ""): continue
