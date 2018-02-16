@@ -21,12 +21,12 @@ RATIO = 0.75
 
 
 class Col(Enum):
-    carnet    = 0 
-    trimestre = 1 
-    anio      = 2 
-    tipo      = 3 
-    valor     = 4 
-    estado    = 5 
+    carnet    = 0
+    trimestre = 1
+    anio      = 2
+    tipo      = 3
+    valor     = 4
+    estado    = 5
 
 
 def purge(dir, pattern):
@@ -55,7 +55,7 @@ class HeaderBarWindow(Gtk.Window):
         hb.props.title = "Permisos coordinación"
         self.set_titlebar(hb)
 
-        
+
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         Gtk.StyleContext.add_class(box.get_style_context(), "linked")
 
@@ -65,7 +65,7 @@ class HeaderBarWindow(Gtk.Window):
         button.connect("clicked",self.on_button_ret_clicked)
 
         hb.pack_start(box)
-        
+
     def on_button_ret_clicked(self, widget):
         if self.old_window.is_main():
             self.old_window.refresh_main_lab()
@@ -156,7 +156,7 @@ class StudentWindow(Gtk.Window):
         button_gen.connect("clicked",self.check_gen)
         button_elect = Gtk.Button(label="Ver Electivas")
         button_elect.connect("clicked",self.check_elect)
-        
+
         self.outter_grid.attach(grid,0,0,1,1)
 
         grid.attach(label     ,2,0,1,1)
@@ -303,9 +303,9 @@ class StudentAllPerms(StudentWindow):
         self.wrapper_grid.attach(treeview,0,1,1,1)
 
 
- 
+
 class SearchWindow(HeaderBarWindow):
-    """ 
+    """
         Clase para todas las búsquedas de permisos
     """
     def __init__(self,old_window,perm_type=None,code=None):
@@ -313,10 +313,10 @@ class SearchWindow(HeaderBarWindow):
         extend_instance(self,WithPermTable)
 
         self.perm_type  = perm_type
-        self.set_default_size(320,500)
+        self.set_default_size(700,1000)
         self.missing_count = None
 
-        main_box     = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.add(main_box)
 
         try:
@@ -327,19 +327,19 @@ class SearchWindow(HeaderBarWindow):
         description = Gtk.Label()
         description.set_text(window_title)
         description.set_justify(Gtk.Justification.CENTER)
-        main_box.pack_start(description,True,True,0)
+        main_box.pack_start(description,False,False,0)
 
         # Box for label with count
         self.fst_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,spacing=0)
-        main_box.pack_start(self.fst_box,True,True,0)
+        main_box.pack_start(self.fst_box,False,False,0)
 
         export_button = Gtk.Button(label="Exportar permisos")
         export_button.connect("clicked", self.on_export_click)
-        main_box.pack_start(export_button,True,True,0)
+        main_box.pack_start(export_button,False,False,0)
 
         approve_all_button = Gtk.Button(label="Aprobar todos")
         approve_all_button.connect("clicked", self.on_approve_all_click)
-        main_box.pack_start(approve_all_button,True,True,0)
+        main_box.pack_start(approve_all_button,False,False,0)
 
         # scrollable view para permisos
         scrollable = Gtk.ScrolledWindow(vexpand=True)
@@ -375,7 +375,7 @@ class SearchWindow(HeaderBarWindow):
         archivo = enterbox(msg='Lugar a exportar CSV'
                           ,default=getenv('HOME')+'/export.csv'
                           ,strip=False)
-        
+
         export = "nombre,carnet,trimestre,anio,valor,tipo,status\n"
         for p in self.std_perms:
             # import pdb; pdb.set_trace()
@@ -442,7 +442,7 @@ class SearchWindow(HeaderBarWindow):
 
     def clicked_cell(self,tree,path,col):
         if col.get_title() == "Carnet":
-            
+
             self.last_path = path
             self.last_val  = EstadoPermiso(self.liststore[self.last_path][Col.estado.value][0])
 
@@ -584,7 +584,7 @@ class LoginWindow(Gtk.Window):
         ok_button.connect("clicked", self.on_ok_button_clicked)
         cancel_button.connect("clicked", self.on_cancel_button_clicked)
 
-	
+
 
         main_box.pack_start(main_label      ,True,True,0)
         main_box.pack_start(username_label  ,True,True,0)
@@ -640,7 +640,7 @@ class LoginWindow(Gtk.Window):
 
 
 class CsvWindow(HeaderBarWindow):
-    """ 
+    """
         Clase para todas las búsquedas de permisos
     """
     def __init__(self,old_window):
@@ -777,17 +777,17 @@ class CsvWindow(HeaderBarWindow):
                     elif t_perm == TipoPermiso.limite_creditos:
                         csv.write_gen(str(perm['fk_carnet'])
                                      ,limite_cred=str(perm['int_extra']))
-                        gen_count += 1 
+                        gen_count += 1
                     elif t_perm == TipoPermiso.pp:
                         csv.write_gen(str(perm['fk_carnet']),pp=str(perm['int_extra']))
-                        gen_count += 1 
+                        gen_count += 1
                     elif (t_perm in [TipoPermiso.general_extra
                                     ,TipoPermiso.xplan_gen_gen
                                     ,TipoPermiso.xplan_d_gen
                                     ,TipoPermiso.extraplan]):
                         # Escribir en permiso de materia
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                        
+
                         # Escribir memo
                         student = db.get_student(perm['fk_carnet'])[0]
                         csv.write_memo(show_carnet(perm['fk_carnet'])
@@ -799,7 +799,7 @@ class CsvWindow(HeaderBarWindow):
                 else:
                     if t_perm == TipoPermiso.permiso_materia:
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
-                        mat_count += 1                     
+                        mat_count += 1
                     elif t_perm == TipoPermiso.sin_requisito:
                         csv.write_perm(perm['string_extra'],str(perm['fk_carnet']))
                         mat_count += 1
@@ -933,7 +933,7 @@ class MainWindow(Gtk.Window):
         main_box.pack_start(button6  ,True,True,0)
         main_box.pack_start(button_csv  ,True,True,0)
         main_box.pack_start(button_em  ,True,True,0)
-        
+
         # Caja para buscar el grafo unicamente
         # main_box.pack_start(graph_box  ,True,True,0)
 
@@ -943,7 +943,7 @@ class MainWindow(Gtk.Window):
         button0.connect("clicked", self.on_name_clicked)
         button1.connect("clicked", self.on_student_clicked)
         button2.connect("clicked", self.on_search_view_clicked)
-       
+
         button6.connect("clicked", self.on_search_view_clicked)
         button7.connect("clicked", self.on_graph_search_clicked)
 
@@ -1020,7 +1020,7 @@ class MainWindow(Gtk.Window):
 
             # (carnet,nombre,telefono,correo,indice,aprobados,comentario)
             db.insert_student(carnet, nombre,"???","???",indice, aprobadas,"Entrada generada solo para observar el grafo")
-            
+
             import subprocess
             graphs_command = "cd graphs_manager && java createPngGraph "
 
@@ -1037,12 +1037,12 @@ class MainWindow(Gtk.Window):
         new_win = StudentAllPerms(self,student_data[0],student_perms)
         # new_win = SearchWindow(self,"carnet")
         response = new_win.show_all()
-        
-            
+
+
     # unused still
     def on_graph_search_clicked(self,widget):
         formated_carnet = format_id(self.student_graph_entry.get_text())
-        
+
         if not formated_carnet:
             msgbox("Formato inválido, intente con 0000000,00-00000 ó 00-00000@usb.ve")
             return
@@ -1080,7 +1080,7 @@ class MainWindow(Gtk.Window):
             response = new_win.show_all()
         else:
             msgbox("No se encontro a ningún estudiante con nombre {}".format(name))
-    
+
     def on_combo_search(self,widget,is_type):
         mat = None
         self.hide()
@@ -1097,7 +1097,7 @@ class MainWindow(Gtk.Window):
             if mat == "":
                 # Revisar además si es una materia válida
                 msgbox("Debe incluir una materia")
-                return 
+                return
         else:
             mat = None
         self.hide()
@@ -1106,12 +1106,12 @@ class MainWindow(Gtk.Window):
 
     def on_write_csv_clicked(self, widget):
         pendientes = len(self.pending)
-        if pendientes > 0:  
+        if pendientes > 0:
             msg = "Todavía queda(n) {0} permisos por procesar\n".format(pendientes)
             msg +=  "¿Desea continuar?"
             title = "Por favor confirme"
             if ccbox(msg, title):
-                pass 
+                pass
             else:
                 return
 
@@ -1140,7 +1140,7 @@ class MainWindow(Gtk.Window):
 
         self.label = Gtk.Label()
         self.label.set_justify(Gtk.Justification.LEFT)
-        
+
         self.label.set_text("Queda{0} permiso{1} por procesar".format(
                                                          plural[0],plural[1]))
 
@@ -1186,7 +1186,7 @@ class SendEmailsWindow(Gtk.Window):
         ok_button.connect("clicked", self.on_ok_button_clicked)
         cancel_button.connect("clicked", self.on_cancel_button_clicked)
 
-    
+
 
         main_box.pack_start(main_label      ,True,True,0)
         main_box.pack_start(username_label  ,True,True,0)
