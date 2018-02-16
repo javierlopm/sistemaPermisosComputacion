@@ -910,17 +910,29 @@ class MainWindow(Gtk.Window):
         self.refresh_main_lab()
 
         # Composite buttons
-        name_box.pack_start(button0           ,True,True,0)
-        name_box.pack_start(self.name_entry,True,True,0)
 
-        std_box.pack_start(button1           ,True,True,0)
+        # "Buscar por carnet"
+        name_box.pack_start(self.name_entry,True,True,0)
+        name_box.pack_start(button0           ,True,True,0)
+
+        # "Buscar por nombres/apellidos"
         std_box.pack_start(self.student_entry,True,True,0)
-        class_box.pack_start(button2         ,True,True,0)
+        std_box.pack_start(button1           ,True,True,0)
+
+        # "Buscar por materia"
         class_box.pack_start(self.class_entry,True,True,0)
-        search_box.pack_start(buttonS,True,True,0)
+        class_box.pack_start(button2         ,True,True,0)
+
+        # "Buscar tipo"
         search_box.pack_start(type_combo,True,True,0)
-        search_boxSE.pack_start(buttonSE,True,True,0)
+        search_box.pack_start(buttonS,True,True,0)
+
+        # "Buscar por estado"
         search_boxSE.pack_start(state_combo,True,True,0)
+        search_boxSE.pack_start(buttonSE,True,True,0)
+
+
+
         graph_box.pack_start(button7,True,True,0)
         graph_box.pack_start(self.student_graph_entry,True,True,0)
 
