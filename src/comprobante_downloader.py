@@ -26,9 +26,6 @@ import comprobante_crawler
 user = str(input("Usuario: "))
 password = getpass.getpass("Clave: ")
 
-#user = "12-105
-#password = "2306anayfer"
-
 driver = webdriver.Chrome("./chromedriver")
 driver.get("http://comprobante.dii.usb.ve")
 driver.find_element_by_name("username").send_keys(user)

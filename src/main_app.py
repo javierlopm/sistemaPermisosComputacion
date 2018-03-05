@@ -4,6 +4,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk,GdkPixbuf,Gdk
 
 from coord_crawler import format_id,show_carnet,StudentDownloader,get_gen,get_elect
+from comprobante_crawler import StudentCurrentDownloader,get_current_classes
 from easygui       import msgbox,ccbox,filesavebox,choicebox,enterbox,ynbox,multpasswordbox
 import os.path
 import sys
@@ -152,10 +153,17 @@ class StudentWindow(Gtk.Window):
 
         inv_box = Gtk.Box(spacing=20)
 
-        button_gen   = Gtk.Button(label="Ver Generales")
+        # Botón para ver las materias generales aprobadas
+        button_gen   = Gtk.Button(label="Generales")
         button_gen.connect("clicked",self.check_gen)
-        button_elect = Gtk.Button(label="Ver Electivas")
+
+        # Botón para ver las materias electivas aprobadas
+        button_elect = Gtk.Button(label="Electivas")
         button_elect.connect("clicked",self.check_elect)
+
+        # Botón para ver las materias en curso
+        button_current = Gtk.Button(label="Cursando")
+        button_current.connect("clicked",self.check_current)
 
         self.outter_grid.attach(grid,0,0,1,1)
 
@@ -168,8 +176,9 @@ class StudentWindow(Gtk.Window):
 
         self.wrapper_grid.attach(self.outter_grid,0,0,1,1)
 
-        grid.attach(button_gen  ,2,14,1,1)
+        grid.attach(button_gen ,2,14,1,1)
         grid.attach(button_elect,4,14,1,1)
+        grid.attach(button_current,6,14,1,1)
         # choicebox("yes", "2", ["CI4564 | fundamentos de la música | 3", "CI4564 | fundamentos de la música | 5"])
 
         button_ret.connect("clicked", self.go_back)
@@ -188,7 +197,7 @@ class StudentWindow(Gtk.Window):
     def check_gen(self,widget):
         try:
             choice_list = get_gen(self.informe_acad_file())
-            option = choicebox("Lista de generales, presione aceptar o cancerlar","Generales", choice_list)
+            option = choicebox("Lista de generales, presione aceptar o cancelar","Generales", choice_list)
         except Exception as e:
             print("got an exception")
             print(e)
@@ -198,7 +207,16 @@ class StudentWindow(Gtk.Window):
         try:
             choice_list = get_elect(self.informe_acad_file())
             print(choice_list)
-            option = choicebox("Lista de electivas, presione aceptar o cancerlar","Electivas libres", choice_list)
+            option = choicebox("Lista de electivas, presione aceptar o cancelar","Electivas libres", choice_list)
+        except Exception as e:
+            print("got an exception")
+            print(e)
+            return
+
+    def check_current(self,widget):
+        try:
+            choice_list = get_current_classes(self.comprobante_file())
+            option = choicebox("Lista de materias en curso, presione aceptar o cancelar","Materias en curso", choice_list)
         except Exception as e:
             print("got an exception")
             print(e)
@@ -206,6 +224,9 @@ class StudentWindow(Gtk.Window):
 
     def informe_acad_file(self):
         return "graphs_manager/HTML/"+self.carnet+".html"
+
+    def comprobante_file(self):
+        return "graphs_manager/COMPR_HTML/"+self.carnet+".html"
 
     def is_main(self):
         return False
@@ -1018,6 +1039,7 @@ class MainWindow(Gtk.Window):
 
             # import pdb;pdb.set_trace()
             sd = StudentDownloader(fieldValues[0],fieldValues[1])
+            scd = StudentCurrentDownloader(fieldValued[0],fieldValues[1])
 
             try:
                 (nombre,indice,aprobadas) = sd.search_student(str_carnet)
@@ -1039,7 +1061,7 @@ class MainWindow(Gtk.Window):
             process = subprocess.Popen(graphs_command+str_carnet,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             process.communicate()
 
-            student_data    = db.get_student(formated_carnet)
+            student_data  = db.get_student(formated_carnet)
 
         if (not student_perms):
             msgbox("El estudiante " + str_carnet + " no ha solicitado permisos")
