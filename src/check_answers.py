@@ -10,6 +10,7 @@ from perm_store import PermStore, TipoPermiso, Trimestre
 
 # from csv_creator   import *
 from coord_crawler import *
+from comprobante_crawler import StudentCurrentDownloader
 
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
@@ -110,8 +111,9 @@ class AnswersChecker():
     def __init__(self, username, password, modality):
         try:
             self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
+            self.aranita_comprobante = StudentCurrentDownloader(username,password)
         except:
-            print("aranita startup failed")
+            print("error inicializacion")
 
         # Authenticate using the signed key
         try:
@@ -141,6 +143,7 @@ class AnswersChecker():
         if self.do_nothing:
             try:
                 self.aranita.close()
+                self.aranita_comprobante.close()
             except:
                 pass
             return False
@@ -158,8 +161,9 @@ class AnswersChecker():
 
         try:
             self.aranita.close()
+            self.aranita_comprobante.close()
         except :
-            print("aranita startup failed")
+            print("aranita closing failed")
 
         print("\n\n")
 
@@ -172,6 +176,7 @@ class AnswersChecker():
 
         try:
             (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
+            self.aranita_comprobante.search_student(user_id)
         except :
             nombre,indice,aprobadas = ("",0.0,0)
             print("Error trying to get student")
@@ -179,7 +184,7 @@ class AnswersChecker():
 
 
         perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[9])
-        
+
         for k in range(5,9):
             if line[k] != "":
                 if onlyg_perms_dict[k] == 'e' or onlyg_perms_dict[k] == 'g':
@@ -188,7 +193,7 @@ class AnswersChecker():
                     for elem in parseCoursesId  (line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
         print(graphs_command+user_id)
-        
+
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.communicate())
 
@@ -200,9 +205,11 @@ class AnswersChecker():
 
         try:
             (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
-        except :
+            self.aranita_comprobante.search_student(user_id)
+        except Exception as e:
             nombre,indice,aprobadas = ("",0.0,0)
             print("Error trying to get student")
+            print(e)
 
         perm_storer.insert_student(carnet, nombre, line[4], line[3], indice, aprobadas, line[15])
         for k in range(5,17):
@@ -222,10 +229,10 @@ class AnswersChecker():
                 elif all_perms_dict[k] == 'x' or all_perms_dict[k] == 'z':
                     for elem in parseCoursesId(line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-        
+
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
-        
+
     def process_sin_generales(self, line):
         user_id = line[1].split('@')[0]
         if user_id == "coord-comp": return
@@ -233,6 +240,8 @@ class AnswersChecker():
 
         try:
             (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
+            #print("Descargando el comprobante del estudiante" + user_id)
+            self.aranita_comprobante.search_student(user_id)
         except :
             nombre,indice,aprobadas = ("",0.0,0)
             print("Error trying to get student")
@@ -255,4 +264,3 @@ class AnswersChecker():
 
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
-

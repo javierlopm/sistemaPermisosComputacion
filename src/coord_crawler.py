@@ -20,9 +20,9 @@ def format_id(student_id):
     elif (re.match(pattern[1],student_id) or re.match(pattern[2],student_id)):
         return student_id[0:2] + student_id[3:8]
     else:
-        print ("Error: formato de carnet invalido para " + student_id + 
+        print ("Error: formato de carnet invalido para " + student_id +
                " probar con 0000000 , 00-00000 o 00-00000@usb.ve" )
-        # raise Exception("studen_id format error" ) 
+        # raise Exception("studen_id format error" )
         return None
 
 def show_carnet(int_carnet):
@@ -45,10 +45,10 @@ class StudentDownloader():
         self.browser.find_element_by_name("username").send_keys(user)
         self.browser.find_element_by_name("password").send_keys(password)
         self.browser.find_element_by_name("submit").click()
-        
+
 
     def __str__(self):
-        return ("(StudentDownloader  first_seach:" + str(self.first_search) + 
+        return ("(StudentDownloader  first_seach:" + str(self.first_search) +
                 "   save_dir:" + save_dir)
 
     def format_id(self,student_id):
@@ -57,9 +57,9 @@ class StudentDownloader():
         elif (re.match(pattern[1],student_id) or re.match(pattern[2],student_id)):
             return student_id[0:2] + student_id[3:8]
         else:
-            print ("Error: formato de carnet invalido para " + student_id + 
+            print ("Error: formato de carnet invalido para " + student_id +
                    " probar con 0000000 , 00-00000 o 00-00000@usb.ve" )
-            # raise Exception("studen_id format error" ) 
+            # raise Exception("studen_id format error" )
             return None
 
     def search_student(self,student_id):
@@ -70,7 +70,7 @@ class StudentDownloader():
                 self.first_search = False
             else:
                 self.browser.find_element_by_link_text("Nueva Consulta").click()
-        
+
             self.browser.find_element_by_name("texto").send_keys(student_id)
             self.browser.find_element_by_tag_name("form").submit()
             self.browser.find_element_by_link_text("Informe Académico").click()
@@ -90,7 +90,7 @@ class StudentDownloader():
 
         nombres = parser.body.strong.text.split("\n")
         last_table = parser.body.table.table.find_all("table")[-3]
-        
+
         aprobadas  = int(last_table.find_all("td")[5].text)
         indice     = float(parser.body.table.table.find_all("table")[-6].
                                 td.text.split("\n")[1].split(" ")[-1])
@@ -120,7 +120,7 @@ def get_all_classes(inf_acad,filtro=None):
     for i in range(len(codigo)):
         if filtro(codigo[i].text):
             trim = codigo[i].findParents()[5].td.text[4:]
-            all_classes.append("{}|{}|{}|{}".format(codigo[i].text,nombre[i].text,nota[i].text,trim))
+            all_classes.append("{} | {} | {} | {}".format(codigo[i].text,nombre[i].text,nota[i].text,trim))
 
     return all_classes
 
@@ -130,7 +130,7 @@ def get_gen(inf_acad):
     filtro = lambda x: patt.match(x) and not (x in ciclo_basico)
 
     return get_all_classes(inf_acad,filtro)
-    
+
 
 def get_elect(inf_acad):
     filtro = lambda x: (x in area) or (x in libres)

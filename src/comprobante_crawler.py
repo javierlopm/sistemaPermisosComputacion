@@ -16,6 +16,14 @@ import os
 import re
 import requests
 
+# Valid students id formats
+pattern    = []
+pattern.insert(0 , re.compile("\d{7}"))
+pattern.insert(1 , re.compile("\d{2}\-\d{5}"))
+pattern.insert(2 , re.compile("\d{2}\-\d{5}\@usb\.ve"))
+
+DST_URL = "https://secure.dst.usb.ve/login"
+
 ## PENDIENTE: Modularizar esto para que no haya codigo repetido de esta funcion
 ## en comprobante_crawler y coord_crawler
 def format_id(student_id):
@@ -45,43 +53,59 @@ class StudentCurrentDownloader():
         """
 
         # Logs in with Coordination credentials
-        session = requests.Session()
-        first_response = session.get(DST_URL, verify=False)
-        soup = bs4.BeautifulSoup(first_response.content, 'html.parser')
-        lt = soup.find("input", {"name": "lt"}).attrs["value"]
-        jsessionid = first_response.cookies.get('JSESSIONID')
-        params = {
-            'username': user,
-            'password': password,
-            'lt': lt,
-            '_eventId': 'submit',
-            'submit': 'INICIAR SESIÓN'
-        }
-        second_response = session.post(DST_URL + ';jsessionid=' + jsessionid, data=params)
-        resp = session.get(DST_URL + "?service=https%3A%2F%2Fcomprobante.dii.usb.ve%2FCAS%2Flogin.do", verify=False)
 
-        self.save_dir = save_dir
-        self.session = session
+        try:
+            session = requests.Session()
+            first_response = session.get(DST_URL, verify=False)
+            soup = bs4.BeautifulSoup(first_response.content, 'html.parser')
+            lt = soup.find("input", {"name": "lt"}).attrs["value"]
+            jsessionid = first_response.cookies.get('JSESSIONID')
+            params = {
+                'username': user,
+                'password': password,
+                'lt': lt,
+                '_eventId': 'submit',
+                'submit': 'INICIAR SESIÓN'
+            }
+            second_response = session.post(DST_URL + ';jsessionid=' + jsessionid, data=params)
+            resp = session.get(DST_URL + "?service=https%3A%2F%2Fcomprobante.dii.usb.ve%2FCAS%2Flogin.do", verify=False)
+
+            self.save_dir = save_dir
+            self.session = session
+
+        except Exception as e:
+            print("Error iniciando sesión")
+            print(e)
 
     def search_student(self, student_id):
 
-        student_id = self.format_id(student_id)
+        try:
+            print("SEARCH_STUDENT con el carnet " + student_id)
 
-        if student_id:
+            student_id = format_id(student_id)
 
-            params = {
-                "cedula" : student_id,
-                "tipo" : "1"
-            }
+            print("El carnet leido es " + student_id)
 
-            resp_buscador = self.session.post("https://comprobante.dii.usb.ve/CAS/consultaCarnet.do",data=params, verify=False)
+            if student_id:
 
-            file = codecs.open("./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[2:] + ".html", "w",encoding="iso-8859-1")
-            file.write(resp_buscador.text)
-            file.close()
+                print("Se realizará la búsqueda de " + student_id)
 
+                params = {
+                    "cedula" : student_id,
+                    "tipo" : "1"
+                }
 
+                resp_buscador = self.session.post("https://comprobante.dii.usb.ve/CAS/consultaCarnet.do",data=params, verify=False)
 
+                file = codecs.open("./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[2:] + ".html", "w",encoding="iso-8859-1")
+                file.write(resp_buscador.text)
+                file.close()
+
+                print("Se escribió el archivo de " + student_id)
+
+        except Exception as e:
+            print("Error en la búsqueda del estudiante en search_student")
+            print(e)
 
 def get_current_classes(comprobante_html, filtro=None):
 
@@ -95,11 +119,3 @@ def get_current_classes(comprobante_html, filtro=None):
         all_classes.append(trimmed_course)
 
     return all_classes
-
-#---------------------------------------------------------#
-#                 INICIO DEL CÓDIGO PRINCIPAL             #
-#---------------------------------------------------------#
-
-#with open("/home/prmm95/Bureau/comprobantePablo.html","r",encoding="iso-8859-1") as comprobante:
-#    data_comprobante = comprobante.read()
-#    get_student_data(data_comprobante)

@@ -206,7 +206,7 @@ class StudentWindow(Gtk.Window):
     def check_elect(self,widget):
         try:
             choice_list = get_elect(self.informe_acad_file())
-            print(choice_list)
+            #print(choice_list)
             option = choicebox("Lista de electivas, presione aceptar o cancelar","Electivas libres", choice_list)
         except Exception as e:
             print("got an exception")
@@ -1017,12 +1017,10 @@ class MainWindow(Gtk.Window):
         # print(student_perms)
 
         if (not student_data):
-            msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la bd")
-            continuar = ynbox(\
-                  msg='¿Desea descargar el expendiente?\nSolo podrá obsevar el grafo'
-                 ,title='Revisión de gráfo'
-                 ,choices=('[<F1>]Si', '[<F2>]No')
-                 ,default_choice='[<F1>]Si', cancel_choice='[<F2>]No')
+            msgbox("El estudiante " + show_carnet(formated_carnet) + " no existe en la BD")
+            continuar = ynbox(msg='¿Desea descargar el expendiente?\nSolo podrá obsevar el grafo',
+                              title='Revisión de gráfo',
+                              choices=('[<F1>]Si', '[<F2>]No'))
 
             if not continuar:
                 return
@@ -1042,8 +1040,15 @@ class MainWindow(Gtk.Window):
             scd = StudentCurrentDownloader(fieldValued[0],fieldValues[1])
 
             try:
+                # Saves the student academic record HTML file and obtains
+                # the student data
                 (nombre,indice,aprobadas) = sd.search_student(str_carnet)
                 sd.close()
+
+                # Saves the student current courses HTML file
+                scd.search_student(str_carnet)
+                scd.close()
+
             except Exception as e:
                 msgbox("Ha ocurrido un error descargando el comprobante, intente de nuevo.")
                 sd.close()
