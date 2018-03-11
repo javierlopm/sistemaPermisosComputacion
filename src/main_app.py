@@ -218,7 +218,7 @@ class StudentWindow(Gtk.Window):
     def check_current(self,widget):
         try:
             choice_list = get_current_classes(self.comprobante_file())
-            
+
             if (len(choice_list) == 0):
                 choice_list += ["El estudiante no ha inscrito el trimestre actual."]
 
@@ -510,7 +510,7 @@ class SearchWindow(HeaderBarWindow):
 
 class InitWindow(Gtk.Window):
     def __init__(self):
-        Gtk.Window.__init__(self, title="Permisos coordinacion")
+        Gtk.Window.__init__(self, title="Permisos coordinación")
 
         self.set_default_size(320,140)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -530,7 +530,7 @@ class InitWindow(Gtk.Window):
 
         # Widgets
         label = Gtk.Label()
-        label.set_text("Bienvenidos al sistema de permisos.\nSeleccione una opcion")
+        label.set_text("Bienvenidos al sistema de permisos.\nSeleccione una opción")
         label.set_justify(Gtk.Justification.CENTER)
 
 
@@ -542,7 +542,7 @@ class InitWindow(Gtk.Window):
         grid.attach(label,0,0,2,2)
         grid.attach(button1,0,5,2,2)
         grid.attach(button2,0,25,2,2)
-        grid.attach(button3,0,45,2,2)
+        grid.attach(button3,0,45,2,3)
 
         button1.connect("clicked", self.on_button1_clicked)
         button2.connect("clicked", self.on_button2_clicked)

@@ -111,11 +111,19 @@ def get_current_classes(comprobante_html, filtro=None):
 
     all_classes = []
     file = codecs.open(comprobante_html,"r",encoding="iso-8859-1").read()
+
     parser = bs4.BeautifulSoup(file,'html.parser')
     schedule_table = parser.body.find_all("td",colspan="10")
 
     for course in schedule_table:
+
         trimmed_course = course.text.strip()
-        all_classes.append(trimmed_course)
+        retired_verification = course.parent.previous_sibling.previous_sibling.td.text.strip()
+        course_row = trimmed_course
+
+        if (retired_verification == "RETIRADA"):
+            course_row += " | " + retired_verification
+
+        all_classes.append(course_row)
 
     return all_classes
