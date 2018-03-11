@@ -218,6 +218,10 @@ class StudentWindow(Gtk.Window):
     def check_current(self,widget):
         try:
             choice_list = get_current_classes(self.comprobante_file())
+            
+            if (len(choice_list) == 0):
+                choice_list += ["El estudiante no ha inscrito el trimestre actual."]
+
             option = choicebox("Lista de materias en curso, presione aceptar o cancelar","Materias en curso", choice_list)
         except Exception as e:
             print("got an exception")
