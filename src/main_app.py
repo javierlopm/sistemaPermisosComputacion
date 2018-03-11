@@ -573,8 +573,8 @@ class LoginWindow(Gtk.Window):
     def __init__(self):
         self.mod_dict = {
             "Todos" : 1,
-            "Solo permisos de generales" : 2,
-            "Permisos sin los de generales" : 3
+            "Permisos de generales" : 2,
+            "Permisos sin generales" : 3
         }
 
         self.processing = False
@@ -609,7 +609,7 @@ class LoginWindow(Gtk.Window):
         mod_label.set_justify(Gtk.Justification.CENTER)
 
         mod_store = Gtk.ListStore(str)
-        modalities = ["Todos", "Solo permisos de generales", "Permisos sin los de generales"]
+        modalities = ["Todos", "Permisos de generales", "Permisos sin generales"]
         self.mod_combo = Gtk.ComboBoxText()
         self.mod_combo.set_entry_text_column(0)
         self.mod_combo.connect("changed", self.on_mod_combo_changed)
