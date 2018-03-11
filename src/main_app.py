@@ -99,12 +99,11 @@ class StudentWindow(Gtk.Window):
 
         self.add(self.wrapper_grid)
 
-
         grid.insert_row(15)
-        grid.insert_column(15)
+        grid.insert_column(10)
 
         grid.set_row_spacing(10)
-        grid.set_column_spacing(30)
+        grid.set_column_spacing(10)
         self.wrapper_grid.set_row_spacing(10)
 
         # Widgets
@@ -150,35 +149,38 @@ class StudentWindow(Gtk.Window):
         img.set_from_pixbuf(scaled_buff)
         # Fin de grafo
 
-
         inv_box = Gtk.Box(spacing=20)
 
         # Botón para ver las materias generales aprobadas
-        button_gen   = Gtk.Button(label="Generales")
+        button_gen   = Gtk.Button(label="Generales aprobados")
         button_gen.connect("clicked",self.check_gen)
 
         # Botón para ver las materias electivas aprobadas
-        button_elect = Gtk.Button(label="Electivas")
+        button_elect = Gtk.Button(label="Electivas aprobadas")
         button_elect.connect("clicked",self.check_elect)
 
         # Botón para ver las materias en curso
-        button_current = Gtk.Button(label="Cursando")
+        button_current = Gtk.Button(label="Materias del trimestre actual")
         button_current.connect("clicked",self.check_current)
+
+        button_sc = Gtk.Button(label="Servicio Comunitario")
+        button_sc.connect("clicked",self.check_sc)
 
         self.outter_grid.attach(grid,0,0,1,1)
 
-        grid.attach(label     ,2,0,1,1)
+        grid.attach(label     ,1,0,1,1)
         grid.attach(button_ret,0,0,1,1)
-        grid.attach(inv_box   ,4,2,2,2)
-        grid.attach(treeview  ,2,3,2,2)
+        grid.attach(inv_box   ,2,2,1,1)
+        grid.attach(treeview  ,1,2,1,1)
 
         self.outter_grid.attach(img,1,0,1,1)
 
         self.wrapper_grid.attach(self.outter_grid,0,0,1,1)
 
-        grid.attach(button_gen ,2,14,1,1)
-        grid.attach(button_elect,4,14,1,1)
-        grid.attach(button_current,6,14,1,1)
+        grid.attach(button_gen,1,14,1,1)
+        grid.attach_next_to(button_elect,button_gen,Gtk.PositionType.BOTTOM,1,1)
+        grid.attach_next_to(button_current,button_elect,Gtk.PositionType.BOTTOM,1,1)
+        grid.attach_next_to(button_sc,button_current,Gtk.PositionType.BOTTOM,1,1)
         # choicebox("yes", "2", ["CI4564 | fundamentos de la música | 3", "CI4564 | fundamentos de la música | 5"])
 
         button_ret.connect("clicked", self.go_back)
@@ -219,6 +221,19 @@ class StudentWindow(Gtk.Window):
             option = choicebox("Lista de materias en curso, presione aceptar o cancelar","Materias en curso", choice_list)
         except Exception as e:
             print("got an exception")
+            print(e)
+            return
+
+    def check_sc(self,widget):
+        try:
+            print("Botón de servicio comunitario")
+
+            ret_code = 0
+            ret_code = subprocess.call(['xdg-open',"/home/prmm95/Desktop/prueba.png"])
+
+            return
+        except Exception as e:
+            print("Error abriendo el botón del general")
             print(e)
             return
 
