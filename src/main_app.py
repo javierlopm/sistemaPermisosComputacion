@@ -613,7 +613,7 @@ class LoginWindow(Gtk.Window):
         mod_label.set_justify(Gtk.Justification.CENTER)
 
         mod_store = Gtk.ListStore(str)
-        modalities = ["Todos", "Permisos de generales", "Permisos sin generales"]
+        modalities = ["Todos", "Permisos de generales", "Permisos de carrera"]
         self.mod_combo = Gtk.ComboBoxText()
         self.mod_combo.set_entry_text_column(0)
         self.mod_combo.connect("changed", self.on_mod_combo_changed)
