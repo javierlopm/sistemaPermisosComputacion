@@ -163,8 +163,10 @@ class StudentWindow(Gtk.Window):
         button_current = Gtk.Button(label="Materias del trimestre actual")
         button_current.connect("clicked",self.check_current)
 
+        sc_image_path = "SC_Imagenes/"+show_carnet(std_data['carnet'])
+
         button_sc = Gtk.Button(label="Servicio Comunitario")
-        button_sc.connect("clicked",self.check_sc)
+        button_sc.connect("clicked",self.check_sc, sc_image_path)
 
         self.outter_grid.attach(grid,0,0,1,1)
 
@@ -228,12 +230,11 @@ class StudentWindow(Gtk.Window):
             print(e)
             return
 
-    def check_sc(self,widget):
+    def check_sc(self,widget, *data):
         try:
             print("Botón de servicio comunitario")
-
             ret_code = 0
-            ret_code = subprocess.call(['xdg-open',"/home/prmm95/Desktop/prueba.png"])
+            ret_code = subprocess.call(['xdg-open',data[0]])
 
             return
         except Exception as e:
