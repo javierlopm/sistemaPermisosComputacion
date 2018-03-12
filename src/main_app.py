@@ -9,6 +9,7 @@ from easygui       import msgbox,ccbox,filesavebox,choicebox,enterbox,ynbox,mult
 import os.path
 import sys
 from csv_creator import CsvCreator
+from pathlib import Path
 from perm_store import *
 from copy import deepcopy
 import subprocess
@@ -163,7 +164,8 @@ class StudentWindow(Gtk.Window):
         button_current = Gtk.Button(label="Materias del trimestre actual")
         button_current.connect("clicked",self.check_current)
 
-        sc_image_path = "SC_Imagenes/"+show_carnet(std_data['carnet'])
+        str_image_sc = "SC_Imagenes/"+show_carnet(std_data['carnet'])
+        sc_image_path = str_image_sc if os.path.isfile(str_image_sc) else "SC_Imagenes/noFile.png"
 
         button_sc = Gtk.Button(label="Servicio Comunitario")
         button_sc.connect("clicked",self.check_sc, sc_image_path)
@@ -232,6 +234,7 @@ class StudentWindow(Gtk.Window):
 
     def check_sc(self,widget, *data):
         try:
+
             print("Botón de servicio comunitario")
             ret_code = 0
             ret_code = subprocess.call(['xdg-open',data[0]])

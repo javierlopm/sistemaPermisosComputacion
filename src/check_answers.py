@@ -11,6 +11,7 @@ from perm_store import PermStore, TipoPermiso, Trimestre
 # from csv_creator   import *
 from coord_crawler import *
 from comprobante_crawler import StudentCurrentDownloader
+from sc_image_downloader import *
 
 #dirname = raw_input("Introduzca el nombre de la carpeta: ")
 
@@ -110,10 +111,10 @@ def parseCoursesId(c_string, pasantia):
 class AnswersChecker():
     def __init__(self, username, password, modality):
         try:
-            self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
-            self.aranita_comprobante = StudentCurrentDownloader(username,password)
+           self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
+           self.aranita_comprobante = StudentCurrentDownloader(username,password)
         except:
-            print("error inicializacion")
+           print("error inicializacion")
 
         # Authenticate using the signed key
         try:
@@ -123,6 +124,13 @@ class AnswersChecker():
         except:
             self.do_nothing = True
             msgbox("Error, no hay internet. Cierre la ventana e intente nuevamente")
+
+        try:
+            self.community_service_downloader = CommunityServiceDownloader()
+        except Exception as e:
+            print("Error inicializando el downloader de imagenes del SC")
+            print(e)
+
 
         self.modality = modality
         if self.modality == 1:
@@ -160,10 +168,10 @@ class AnswersChecker():
                 self.process_fn(line)
 
         try:
-            self.aranita.close()
-            self.aranita_comprobante.close()
+           self.aranita.close()
+           self.aranita_comprobante.close()
         except :
-            print("aranita closing failed")
+           print("aranita closing failed")
 
         print("\n\n")
 
@@ -234,13 +242,14 @@ class AnswersChecker():
         process.communicate()
 
     def process_sin_generales(self, line):
+
         user_id = line[1].split('@')[0]
         if user_id == "coord-comp": return
         carnet = carnetToInt(user_id)
 
         try:
             (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
-            #print("Descargando el comprobante del estudiante" + user_id)
+            print("Descargando el comprobante del estudiante" + user_id)
             self.aranita_comprobante.search_student(user_id)
         except :
             nombre,indice,aprobadas = ("",0.0,0)
@@ -261,6 +270,11 @@ class AnswersChecker():
                     for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso('r'), Trimestre(trimestre_dict[line[2]]), self.year, elem)
                             # Store user grades
+
+        # SC IMAGE FILE
+        if (len(line[-1]) > 0):
+            sc_image_id = self.community_service_downloader.get_googledrivefile_id(line[-1])
+            self.community_service_downloader.download_image(sc_image_id,user_id)
 
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         process.communicate()
