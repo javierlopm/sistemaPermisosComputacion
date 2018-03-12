@@ -202,12 +202,6 @@ class AnswersChecker():
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
         print(graphs_command+user_id)
 
-        # SC IMAGE FILE
-        if (len(line[-1]) > 0):
-            sc_image_id = self.community_service_downloader.get_googledrivefile_id(line[-1])
-            self.community_service_downloader.download_image(sc_image_id,user_id)
-
-
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(process.communicate())
 
