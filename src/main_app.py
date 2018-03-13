@@ -1060,7 +1060,7 @@ class MainWindow(Gtk.Window):
 
             # import pdb;pdb.set_trace()
             sd = StudentDownloader(fieldValues[0],fieldValues[1])
-            scd = StudentCurrentDownloader(fieldValued[0],fieldValues[1])
+            scd = StudentCurrentDownloader(fieldValues[0],fieldValues[1])
 
             try:
                 # Saves the student academic record HTML file and obtains
