@@ -1070,7 +1070,7 @@ class MainWindow(Gtk.Window):
 
                 # Saves the student current courses HTML file
                 scd.search_student(str_carnet)
-                scd.close()
+                #scd.close()
 
             except Exception as e:
                 msgbox("Ha ocurrido un error descargando el comprobante, intente de nuevo.")
