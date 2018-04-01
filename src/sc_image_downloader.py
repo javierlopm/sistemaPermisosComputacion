@@ -35,10 +35,7 @@ class CommunityServiceDownloader():
 
     def download_image(self,image_drive_id,student_id):
         try:
-            print(image_drive_id)
-            print(student_id)
-            print(self.save_dir)
-
+            
             #student_id = format_id(str(student_id))
             save_path = "./" + self.save_dir + student_id
             image_file = self.google_drive.CreateFile({'id': image_drive_id})

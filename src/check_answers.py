@@ -110,27 +110,31 @@ def parseCoursesId(c_string, pasantia):
 
 class AnswersChecker():
     def __init__(self, username, password, modality):
+
+        # Expediente & Comprobante
         try:
            self.aranita  = StudentDownloader(username,password,"graphs_manager/HTML")
            self.aranita_comprobante = StudentCurrentDownloader(username,password)
-        except:
-           print("error inicializacion")
+        except Exception as e:
+           print("Error inicializando el downloader de Expediente o Comprobante")
+           print(e)
 
         # Authenticate using the signed key
         try:
             credentials = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', SCOPE)
             self.gc = gspread.authorize(credentials)
             self.do_nothing = False
-        except:
+        except Exception as e:
             self.do_nothing = True
-            msgbox("Error, no hay internet. Cierre la ventana e intente nuevamente")
+            msgbox("Error conectándose con la descarga del Google Form. Verifique la presencia de la llave secreta.")
+            print(e)
 
+        # Community Service
         try:
             self.community_service_downloader = CommunityServiceDownloader()
         except Exception as e:
-            print("Error inicializando el downloader de imagenes del SC")
+            print("Error inicializando el downloader de imágenes del SC")
             print(e)
-
 
         self.modality = modality
         if self.modality == 1:
@@ -169,9 +173,8 @@ class AnswersChecker():
 
         try:
            self.aranita.close()
-           self.aranita_comprobante.close()
         except :
-           print("aranita closing failed")
+           print("Aranita closing failed")
 
         print("\n\n")
 
@@ -200,10 +203,10 @@ class AnswersChecker():
                 if onlyg_perms_dict[k] == 'x' or onlyg_perms_dict[k] == 'z':
                     for elem in parseCoursesId  (line[k], False):
                         perm_storer.insert_perm(carnet, TipoPermiso(onlyg_perms_dict[k]), Trimestre(trimestre_dict[line[2]]), self.year, elem)
-        print(graphs_command+user_id)
+        #print(graphs_command+user_id)
 
         process = subprocess.Popen(graphs_command+user_id,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(process.communicate())
+        #print(process.communicate())
 
     def process_all(self, line):
         user_id = line[1].split('@')[0]
@@ -254,7 +257,7 @@ class AnswersChecker():
 
         try:
             (nombre,indice,aprobadas) = self.aranita.search_student(user_id)
-            print("Descargando el comprobante del estudiante" + user_id)
+            #print("Descargando el comprobante del estudiante" + user_id)
             self.aranita_comprobante.search_student(user_id)
         except :
             nombre,indice,aprobadas = ("",0.0,0)

@@ -80,16 +80,9 @@ class StudentCurrentDownloader():
     def search_student(self, student_id):
 
         try:
-            print("SEARCH_STUDENT con el carnet " + student_id)
 
             student_id = format_id(student_id)
-
-            print("El carnet leido es " + student_id)
-
             if student_id:
-
-                print("Se realizará la búsqueda de " + student_id)
-
                 params = {
                     "cedula" : student_id,
                     "tipo" : "1"
@@ -100,8 +93,6 @@ class StudentCurrentDownloader():
                 file = codecs.open("./" + self.save_dir + "/" + student_id[0:2] + "-" + student_id[2:] + ".html", "w",encoding="iso-8859-1")
                 file.write(resp_buscador.text)
                 file.close()
-
-                print("Se escribió el archivo de " + student_id)
 
         except Exception as e:
             print("Error en la búsqueda del estudiante en search_student")
