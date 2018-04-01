@@ -16,6 +16,8 @@ import os
 import re
 import requests
 
+requests.packages.urllib3.disable_warnings()
+
 # Valid students id formats
 pattern    = []
 pattern.insert(0 , re.compile("\d{7}"))
