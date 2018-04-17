@@ -54,7 +54,7 @@ nogen_perms_dict = {
     8: 'l',
     9: 'p',
     10: 'm',
-    11	: 'r'
+    11: 'r'
 }
 
 trimestre_dict = {
@@ -120,13 +120,13 @@ class AnswersChecker():
 
         # Expediente & Comprobante
         try:
-           self.aranita = StudentDownloader(
+            self.aranita = StudentDownloader(
                username, password, "graphs_manager/HTML")
-           self.aranita_comprobante = StudentCurrentDownloader(
+            self.aranita_comprobante = StudentCurrentDownloader(
                username, password)
         except Exception as e:
-           print("Error inicializando el downloader de Expediente o Comprobante")
-           print(e)
+            print("Error con el downloader de Expediente o Comprobante")
+            print(e)
 
         # Authenticate using the signed key
         try:

@@ -29,24 +29,28 @@ def login(user, password):
         '_eventId': 'submit',
         'submit': 'INICIAR SESIÓN'
     }
-    second_response = session.post(DST_URL + ';jsessionid=' + jsessionid, data=params)
+    second_response = session.post(
+        DST_URL + ';jsessionid=' + jsessionid, data=params)
     return second_response.cookies.get_dict(), session
 
 
 def main():
     user = input("User: ")
-    password =  getpass.getpass("Password: ")
+    password = getpass.getpass("Password: ")
     token, session = login(user, password)
-    resp = session.get(DST_URL + "?service=https%3A%2F%2Fcomprobante.dii.usb.ve%2FCAS%2Flogin.do", verify=False)
+    resp = session.get(
+        DST_URL + "?service=https%3A%2F%2Fcomprobante.dii.usb.ve%2FCAS%2Flogin.do", verify=False)
 
     params = {
-        "cedula" : "1210561",
-        "tipo" : "1"
+        "cedula": "1210561",
+        "tipo": "1"
     }
 
-    resp_buscador = session.post("https://comprobante.dii.usb.ve/CAS/consultaCarnet.do",data=params, verify=False)
+    resp_buscador = session.post(
+        "https://comprobante.dii.usb.ve/CAS/consultaCarnet.do", data=params, verify=False)
 
     comprobante_crawler.get_student_data(resp_buscador.text)
+
 
 if __name__ == '__main__':
     main()

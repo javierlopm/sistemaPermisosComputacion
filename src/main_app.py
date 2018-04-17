@@ -1055,11 +1055,10 @@ class MainWindow(Gtk.Window):
 
                 # Saves the student current courses HTML file
                 scd.search_student(str_carnet)
-                #scd.close()
 
-            except Exception as e:
+            except Exception:
                 msgbox(
-                    "Ha ocurrido un error descargando el comprobante, intente de nuevo.")
+                    "Ha ocurrido un error descargando el comprobante.")
                 sd.close()
                 return
 
@@ -1080,9 +1079,7 @@ class MainWindow(Gtk.Window):
             student_data = db.get_student(formated_carnet)
 
         if (not student_perms):
-            msgbox("El estudiante " + str_carnet +
-                   " no ha solicitado permisos")
-            # return
+            msgbox("El estudiante " + str_carnet + " no ha pedido permisos")
 
         self.hide()
         new_win = StudentAllPerms(self, student_data[0], student_perms)
