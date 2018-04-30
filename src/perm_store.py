@@ -14,6 +14,8 @@ class TipoPermiso(Enum):
     extraplan = 't'
     xplan_gen_gen = 'x'
     xplan_d_gen = 'z'
+    minimo_creditos = 'i'
+    maximo_creditos = 's'
 
     def memo_name(self):
         if self == TipoPermiso.extraplan:
@@ -123,6 +125,10 @@ type_qry = """SELECT *
                     anio      = (?)"""
 
 type_qry_no_trim = "SELECT * FROM permiso WHERE tipo = (?)"
+
+type_qry_min = "SELECT * FROM permiso WHERE tipo = (?) AND int_extra < 8"
+
+type_qry_max = "SELECT * FROM permiso WHERE tipo = (?) AND int_extra > 16"
 
 pending_qry = """SELECT *
                 FROM permiso
@@ -234,10 +240,17 @@ class PermStore():
 
     def get_type_perm(self, type_, trimestre=None, anio=None):
         # Procedimiento que obtiene todo los permisos de un tipo dado
+
         if trimestre:
             return self._run_with_args(type_qry, (type_.value, trimestre.value, anio))
         else:
-            return self._run_with_args(type_qry_no_trim, (type_.value))
+
+            if (type_.value == 'i'):
+                return self._run_with_args(type_qry_min, ('l'))
+            elif (type_.value == 's'):
+                return self._run_with_args(type_qry_max, ('l'))
+            else:
+                return self._run_with_args(type_qry_no_trim, (type_.value))
 
     def get_missign_perms(self):
         # Procedimiento que obtiene los permisos por aprobar

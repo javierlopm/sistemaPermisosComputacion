@@ -235,6 +235,8 @@ class StudentWindow(Gtk.Window):
         try:
             choice_list = get_current_classes(self.comprobante_file())
 
+            # print(choice_list)
+
             if (len(choice_list) == 0):
                 choice_list += ["El estudiante no ha inscrito el trimestre actual."]
 
