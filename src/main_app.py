@@ -201,7 +201,7 @@ class StudentWindow(Gtk.Window):
 
     def go_back(self, widget):
         if hasattr(self.old_window, 'last_val'):
-            print("calling")
+            # print("calling")
             self.old_window.refresh()
 
         if self.old_window.is_main():
@@ -279,7 +279,7 @@ class WithPermTable():
         liststore_status = Gtk.ListStore(str)
         [liststore_status.append((e,)) for e in get_all_names(EstadoPermiso)]
 
-        # tipo, trim, anio, extra_field, aprobado
+        # f, trim, anio, extra_field, aprobado
         liststore = Gtk.ListStore(int, str, int, str, str, str, int, int)
         self.liststore = liststore
 
@@ -500,14 +500,15 @@ class SearchWindow(HeaderBarWindow):
 
             student_data = db.get_student(
                 self.liststore[path][Col.carnet.value])
-            student_perms = db.get_perm(self.liststore[path][7])
+            student_perms = db.get_student_perms(
+                self.liststore[path][Col.carnet.value])
 
             self.hide()
             new_win = StudentAllPerms(self, student_data[0], student_perms)
             new_win.show_all()
 
     def refresh(self):
-        print(self.new_val)
+        # print(self.new_val)
         if self.new_val:
             print("refreshing to" + self.new_val.name)
             self.liststore[self.last_path][Col.estado.value] = self.new_val.name
