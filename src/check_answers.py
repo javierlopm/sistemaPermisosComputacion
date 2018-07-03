@@ -27,17 +27,17 @@ SCOPE = ["https://spreadsheets.google.com/feeds"]
 SECRETS_FILE = "client_secret.json"
 
 all_perms_dict = {
-    5: 'm',
-    6: 't',
-    7: 'z',
-    8: 't',
-    13: 'm',
-    14: 'r',
-    9: 'g',
-    11: 'l',
-    12: 'p',
-    10: 'e',
-    16: 'x'
+    6: 'm',
+    7: 't',
+    8: 'x',
+    9: 'z',
+    10: 't',
+    11: 'g',
+    12: 'e',
+    13: 'l',
+    14: 'p',
+    15: 'm',
+    16: 'r'
 }
 
 onlyg_perms_dict = {
@@ -237,10 +237,10 @@ class AnswersChecker():
             print(e)
 
         perm_storer.insert_student(
-            carnet, nombre, line[4], line[3], indice, aprobadas, line[15])
-        for k in range(5, 17):
-            pasantias = k == 13
-            if line[k] != "" and k != 15:
+            carnet, nombre, line[4], line[3], indice, aprobadas, line[17])
+        for k in range(6, 17):
+            pasantias = k == 15
+            if line[k] != "":
                 if all_perms_dict[k] == 'm' or all_perms_dict[k] == 't':
                     for elem in parseCoursesId(line[k], pasantias):
                         perm_storer.insert_perm(carnet, TipoPermiso(all_perms_dict[k]), Trimestre(
@@ -263,9 +263,9 @@ class AnswersChecker():
                             trimestre_dict[line[2]]), self.year, elem)
 
         # SC IMAGE FILE
-        if (len(line[-1]) > 0):
+        if (len(line[5]) > 0):
             sc_image_id = self.community_service_downloader.get_googledrivefile_id(
-                line[-1])
+                line[5])
             self.community_service_downloader.download_image(
                 sc_image_id, user_id)
 
