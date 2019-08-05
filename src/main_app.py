@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import gi
+import logging
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk
 
@@ -15,6 +16,8 @@ from copy import deepcopy
 import subprocess
 db = PermStore()
 RATIO = 0.75
+
+logging.basicConfig(level=logging.DEBUG)
 
 # TODO
 # Advertencia al cargar permisos con datos en tabla de permisos
@@ -1274,6 +1277,7 @@ class SendEmailsWindow(Gtk.Window):
                     print("done")
                     worked = True
                 except:
+                    logging.error('Error al intentar establecer conexion con el servidor de gmail',exc_info=True)
                     print("error al iniciar sesion, intentando de nuevo")
 
             for carnet, permisos in db.get_rejected():
@@ -1299,11 +1303,16 @@ class SendEmailsWindow(Gtk.Window):
                 while (not worked):
                     try:
                         #print("El correo no se esta mandando porque esto es una prueba")
+
+                        logging.debug('Intentando enviar email con parametros:')
+                        logging.debug('from_addr:' + sender)
+                        logging.debug('to_addrs:' + sender)
                         server.sendmail(gmail_sender, TO, BODY)
                         worked = True
                     except:
-                        print("Unexpected error:", sys.exc_info()[0])
-                        print("ups")
+                        logging.error('Error al intentar enviar el ultimo email',exc_info=True)
+                        # print("Unexpected error:", sys.exc_info()[0])
+                        # print("ups")
 
             server.quit()
             self.destroy()
